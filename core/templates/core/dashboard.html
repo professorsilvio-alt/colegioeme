@@ -1,0 +1,503 @@
+{% extends 'core/base.html' %}
+{% block title %}Dashboard - Sistema EME{% endblock %}
+
+{% block content %}
+
+<!-- DASHBOARD CARDS -->
+<div class="dashboard">
+    <img src="/static/core/logo.jpg" alt="Logo EME" class="logo-escola">
+    <div class="card">
+        <h3>Ocorrências Totais</h3>
+        <p>{{ total }}</p>
+    </div>
+    <div class="card">
+        <h3>Ocorrências Abertas</h3>
+        <p>{{ abertas }}</p>
+    </div>
+    <div class="card">
+        <h3>Ocorrências Resolvidas</h3>
+        <p>{{ resolvidas }}</p>
+    </div>
+</div>
+
+<!-- CARDS DIÁRIO DE CONTEÚDO — apenas para não-inspetores -->
+{% if prof.cargo != 'INSPETOR' %}
+<div class="dashboard" style="margin-top: -10px;">
+    <div style="width: 200px; flex-shrink: 0;"></div>
+    <div class="card" style="border-left-color: #4a90d9;">
+        <h3>Lançamentos Totais</h3>
+        <p>{{ total_conteudo }}</p>
+    </div>
+    <div class="card" style="border-left-color: #27ae60;">
+        <h3>Já Preenchidos</h3>
+        <p style="color: #7effa0;">{{ preenchidos }}</p>
+    </div>
+    <div class="card" style="border-left-color: #e74c3c;">
+        <h3>Faltam Preencher</h3>
+        <p style="color: #ff9090;">{{ faltam }}</p>
+    </div>
+</div>
+{% endif %}
+
+<!-- TABS -->
+<div class="tabs">
+    <button class="tab-btn active" onclick="showTab('ocorrencias', this)">📋 Ocorrências</button>
+    {% if prof.cargo != 'INSPETOR' %}
+    <button class="tab-btn" onclick="showTab('conteudos', this)">📚 Diário de Conteúdo</button>
+    {% endif %}
+</div>
+
+<!-- ═══════════════ ABA OCORRÊNCIAS ═══════════════ -->
+<div id="tab-ocorrencias" class="tab-pane active">
+
+    {% if prof.cargo != 'INSPETOR' and prof.cargo != 'AUX_COORD' and prof.cargo != 'ORIENTADOR' and prof.cargo != 'SECRETARIA' %}
+    <button class="btn-primary" onclick="toggleSection('formOcorrencia')">+ Registrar Nova Ocorrência</button>
+    {% endif %}
+
+    <!-- Formulário nova ocorrência -->
+    <div id="formOcorrencia" class="collapsible" style="display:none;">
+        <h2>Registrar Ocorrência</h2>
+        <form method="post" action="{% url 'ocorrencia_criar' %}">
+            {% csrf_token %}
+            <label>Data</label>
+            <input type="date" name="data" id="dataOcorrencia" value="{{ today }}" required>
+
+            <label>Turma</label>
+            <select name="turma" id="turmaSelect" required onchange="carregarAlunos(this.value)">
+                <option value="">Selecione...</option>
+                {% for t in turmas %}
+                <option value="{{ t.codigo }}">Turma {{ t.codigo }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Alunos</label>
+            <div id="alunosContainer" style="margin-top:10px;">
+                <em style="color:#999">Selecione a turma primeiro.</em>
+            </div>
+
+            <label>Disciplina</label>
+            <select name="disciplina" id="discSelectOc" required onchange="carregarProfessores(this.value, 'profSelectOc')">
+                <option value="">Selecione...</option>
+                {% for d in disciplinas %}
+                <option value="{{ d.pk }}">{{ d.nome }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Professor Responsável</label>
+            <select name="professor" id="profSelectOc" required>
+                <option value="">Selecione a disciplina primeiro...</option>
+            </select>
+
+            <label>Descrição da Ocorrência</label>
+            <textarea name="descricao" required></textarea>
+
+            <label>Status</label>
+            <select name="status">
+                <option value="Aberta">Aberta</option>
+                <option value="Resolvida">Resolvida</option>
+            </select>
+
+            <button type="submit">Salvar Ocorrência</button>
+            <button type="button" class="btn-cancel" onclick="toggleSection('formOcorrencia')">Cancelar</button>
+        </form>
+    </div>
+
+    <!-- Filtros ocorrências -->
+    <div class="filters-bar">
+        <form method="get" action="" id="filtroOcForm">
+            <input type="hidden" name="tab" value="ocorrencias">
+            <div class="filter-row">
+                <div>
+                    <label>Turma</label>
+                    <select name="filtro_turma" onchange="this.form.submit()">
+                        <option value="">Todas</option>
+                        {% for t in turmas %}
+                        <option value="{{ t.codigo }}" {% if filtro_turma == t.codigo %}selected{% endif %}>{{ t.codigo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label>Status</label>
+                    <select name="filtro_status" onchange="this.form.submit()">
+                        <option value="">Todos</option>
+                        <option value="Aberta" {% if filtro_status == "Aberta" %}selected{% endif %}>Aberta</option>
+                        <option value="Resolvida" {% if filtro_status == "Resolvida" %}selected{% endif %}>Resolvida</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Professor</label>
+                    <select name="filtro_professor" onchange="this.form.submit()">
+                        <option value="">Todos</option>
+                        {% for p in todos_professores %}
+                        <option value="{{ p.pk }}" {% if filtro_professor == p.pk|stringformat:"d" %}selected{% endif %}>{{ p.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label>Data Inicial</label>
+                    <input type="date" name="data_ini" value="{{ filtro_data_ini }}">
+                </div>
+                <div>
+                    <label>Data Final</label>
+                    <input type="date" name="data_fim" value="{{ filtro_data_fim }}">
+                </div>
+                <div class="filter-btns">
+                    <button type="submit">Filtrar</button>
+                    <a href="?" class="btn-gray">Limpar</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Ações em massa ocorrências -->
+    <form method="post" id="formMassaOc">
+        {% csrf_token %}
+        <div class="mass-actions">
+            {% if prof.pode_editar_tudo %}
+            <button type="submit" formaction="{% url 'ocorrencia_excluir_varios' %}" class="btn-danger"
+                onclick="return confirm('Excluir selecionadas?')">🗑 Excluir Selecionadas</button>
+            <button type="submit" formaction="{% url 'ocorrencia_mudar_status' %}"
+                class="btn-success" onclick="document.getElementById('statusMassa').value='Resolvida'">✔ Marcar Resolvidas</button>
+            <button type="submit" formaction="{% url 'ocorrencia_mudar_status' %}"
+                class="btn-warning" onclick="document.getElementById('statusMassa').value='Aberta'">↩ Marcar Abertas</button>
+            <input type="hidden" name="status" id="statusMassa" value="Resolvida">
+            {% endif %}
+            
+            {% if prof.pode_ver_tudo %}
+            <a href="{% url 'relatorio_alocacao' %}" class="btn-primary" style="background:#003366">👥 Alocação de Professores</a>
+            {% endif %}
+
+            {% if prof.pode_gerar_relatorios %}
+            <a href="{% url 'exportar_ocorrencias_csv' %}?{{ request.GET.urlencode }}" class="btn-export">📥 CSV</a>
+            <a href="{% url 'exportar_ocorrencias_pdf' %}?{{ request.GET.urlencode }}" class="btn-export btn-pdf">📄 PDF</a>
+            {% endif %}
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th><input type="checkbox" onclick="toggleAll(this, 'oc_check')"></th>
+                    <th>ID</th><th>Data</th><th>Turma</th><th>Alunos</th>
+                    <th>Professor</th><th>Disciplina</th><th>Status</th><th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for oc in ocorrencias %}
+            <tr>
+                <td><input type="checkbox" name="ids" value="{{ oc.pk }}" class="oc_check"></td>
+                <td>OC-{{ oc.pk|stringformat:"04d" }}</td>
+                <td>{{ oc.data|date:"d/m/Y" }}</td>
+                <td>{{ oc.turma.codigo|default:"-" }}</td>
+                <td>{{ oc.alunos_str|truncatechars:60 }}</td>
+                <td>{{ oc.professor.nome|default:"-" }}</td>
+                <td>{{ oc.disciplina.nome|default:"-" }}</td>
+                <td class="status-{{ oc.status|lower }}">{{ oc.status }}</td>
+                <td>
+                    {% if prof.pode_editar_tudo or oc.professor == prof %}
+                    <a href="{% url 'ocorrencia_editar' oc.pk %}" class="btn-sm">✏ Editar</a>
+                    <button type="submit" formaction="{% url 'ocorrencia_excluir' oc.pk %}" class="btn-sm btn-danger-sm"
+                        onclick="return confirm('Excluir OC-{{ oc.pk|stringformat:"04d" }}?')">🗑</button>
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="9" style="text-align:center;color:#999">Nenhuma ocorrência encontrada.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </form>
+</div><!-- /tab-ocorrencias -->
+
+
+<!-- ═══════════════ ABA CONTEÚDOS ═══════════════ -->
+{% if prof.cargo != 'INSPETOR' %}
+<div id="tab-conteudos" class="tab-pane" style="display:none;">
+
+    {% if prof.cargo == 'PROFESSOR' or prof.pode_editar_tudo %}
+    <button class="btn-primary" onclick="toggleSection('formConteudo')">+ Lançar Conteúdo Programático</button>
+    {% endif %}
+
+    {% if prof.pode_ver_tudo %}
+    <a href="{% url 'relatorio_pendencias' %}" class="btn-gray" style="text-decoration: none; padding: 10px 15px; display: inline-block;">📊 Relatório de Pendências</a>
+    {% endif %}
+
+    <!-- Formulário novo conteúdo -->
+    <div id="formConteudo" class="collapsible" style="display:none;">
+        <h2>Lançamento de Conteúdo Programático</h2>
+        <form method="post" action="{% url 'conteudo_criar' %}">
+            {% csrf_token %}
+
+            <label>Turma</label>
+            <select name="turmas" id="turmaSelectCont" required onchange="carregarDisciplinasDaTurma(this.value)">
+                <option value="">Selecione a turma...</option>
+                {% for t in turmas %}
+                <option value="{{ t.codigo }}">Turma {{ t.codigo }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Disciplina</label>
+            <select name="disciplina" id="discSelectCont" required onchange="carregarProfessoresDaTurmaDisc()">
+                <option value="">Selecione a turma primeiro...</option>
+            </select>
+
+            <label>Professor</label>
+            <select name="professor" id="profSelectCont" required onchange="carregarDatasValidas()">
+                <option value="">Selecione a disciplina primeiro...</option>
+            </select>
+
+            <label>Data da Aula</label>
+            <div id="dataContWrapper">
+                <em style="color:#999; font-size:13px;">Selecione turma, disciplina e professor primeiro.</em>
+                <input type="hidden" name="data" id="dataConteudo">
+            </div>
+            <select id="dataSelectCont" style="display:none;" required onchange="document.getElementById('dataConteudo').value=this.value">
+            </select>
+
+            <label>Conteúdo Ministrado</label>
+            <textarea name="descricao" required></textarea>
+
+            <button type="submit" id="btnSalvarCont" onclick="return validarFormCont()">Salvar Conteúdo</button>
+            <button type="button" class="btn-cancel" onclick="toggleSection('formConteudo')">Cancelar</button>
+        </form>
+    </div>
+
+
+    <!-- Filtros conteúdos -->
+    <div class="filters-bar">
+        <form method="get" action="">
+            <input type="hidden" name="tab" value="conteudos">
+            <div class="filter-row">
+                <div>
+                    <label>Turma</label>
+                    <select name="filtro_turma_c" onchange="this.form.submit()">
+                        <option value="">Todas</option>
+                        {% for t in turmas %}
+                        <option value="{{ t.codigo }}" {% if filtro_turma_c == t.codigo %}selected{% endif %}>{{ t.codigo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label>Disciplina</label>
+                    <select name="filtro_disc_c" onchange="this.form.submit()">
+                        <option value="">Todas</option>
+                        {% for d in disciplinas %}
+                        <option value="{{ d.pk }}" {% if filtro_disc_c == d.pk|stringformat:"d" %}selected{% endif %}>{{ d.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label>Professor</label>
+                    <select name="filtro_prof_c" onchange="this.form.submit()">
+                        <option value="">Todos</option>
+                        {% for p in todos_professores %}
+                        <option value="{{ p.pk }}" {% if filtro_prof_c == p.pk|stringformat:"d" %}selected{% endif %}>{{ p.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-btns">
+                    <a href="?tab=conteudos" class="btn-gray">Limpar</a>
+                    <a href="{% url 'exportar_conteudos_csv' %}" class="btn-export">📥 CSV</a>
+                    <a href="{% url 'exportar_conteudos_pdf' %}" class="btn-export btn-pdf">📄 PDF</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabela conteúdos -->
+    <form method="post">
+        {% csrf_token %}
+        <div class="mass-actions">
+            {% if prof.pode_editar_tudo %}
+            <button type="submit" formaction="{% url 'conteudo_excluir_varios' %}" class="btn-danger"
+                onclick="return confirm('Excluir selecionados?')">🗑 Excluir Selecionados</button>
+            {% endif %}
+
+            {% if prof.pode_gerar_relatorios %}
+            <a href="{% url 'exportar_conteudos_csv' %}?{{ request.GET.urlencode }}" class="btn-export">📥 CSV</a>
+            <a href="{% url 'exportar_conteudos_pdf' %}?{{ request.GET.urlencode }}" class="btn-export btn-pdf">📄 PDF</a>
+            {% endif %}
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th><input type="checkbox" onclick="toggleAll(this, 'cont_check')"></th>
+                    <th>Data</th><th>Turmas</th><th>Professor</th><th>Disciplina</th>
+                    <th>Descrição</th><th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for c in conteudos %}
+            <tr>
+                <td><input type="checkbox" name="ids" value="{{ c.pk }}" class="cont_check"></td>
+                <td>{{ c.data|date:"d/m/Y" }}</td>
+                <td>{{ c.turmas_str }}</td>
+                <td>{{ c.professor.nome|default:"-" }}</td>
+                <td>{{ c.disciplina.nome|default:"-" }}</td>
+                <td>{{ c.descricao|truncatechars:80 }}</td>
+                <td>
+                    <button type="submit" formaction="{% url 'conteudo_excluir' c.pk %}" class="btn-sm btn-danger-sm"
+                        onclick="return confirm('Excluir conteúdo?')">🗑</button>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" style="text-align:center;color:#999">Nenhum conteúdo lançado.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </form>
+
+</div><!-- /tab-conteudos -->
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── TABS ──
+function showTab(name, btn) {
+    document.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).style.display = 'block';
+    btn.classList.add('active');
+}
+
+// Restaurar aba ativa via query param
+const params = new URLSearchParams(location.search);
+if (params.get('tab') === 'conteudos') {
+    showTab('conteudos', document.querySelectorAll('.tab-btn')[1]);
+}
+
+// ── COLLAPSIBLE ──
+function toggleSection(id) {
+    const el = document.getElementById(id);
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+// ── SELECT ALL CHECKBOXES ──
+function toggleAll(master, cls) {
+    document.querySelectorAll('.' + cls).forEach(cb => cb.checked = master.checked);
+}
+
+// ── ALUNOS POR TURMA (AJAX) ──
+function carregarAlunos(codigo) {
+    const container = document.getElementById('alunosContainer');
+    if (!codigo) { container.innerHTML = '<em style="color:#999">Selecione a turma primeiro.</em>'; return; }
+    fetch('/api/alunos/' + codigo + '/')
+        .then(r => r.json())
+        .then(alunos => {
+            if (!alunos.length) { container.innerHTML = '<em>Nenhum aluno encontrado.</em>'; return; }
+            container.innerHTML = alunos.map(a =>
+                `<label class="checkbox-label"><input type="checkbox" name="alunos" value="${a.id}"> ${a.nome}</label>`
+            ).join('');
+        });
+}
+
+// ── PROFESSORES POR DISCIPLINA (AJAX) — usado no form de Ocorrências ──
+function carregarProfessores(discId, selectId) {
+    const sel = document.getElementById(selectId);
+    sel.innerHTML = '<option value="">Carregando...</option>';
+    if (!discId) { sel.innerHTML = '<option value="">Selecione a disciplina primeiro...</option>'; return; }
+    fetch('/api/professores/' + discId + '/')
+        .then(r => r.json())
+        .then(profs => {
+            sel.innerHTML = '<option value="">Selecione...</option>' +
+                profs.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+        });
+}
+
+// ── DISCIPLINAS POR TURMA (AJAX) — Conteúdo form step 1 ──
+function carregarDisciplinasDaTurma(codigo) {
+    const discSel = document.getElementById('discSelectCont');
+    const profSel = document.getElementById('profSelectCont');
+    discSel.innerHTML = '<option value="">Carregando...</option>';
+    profSel.innerHTML = '<option value="">Selecione a disciplina primeiro...</option>';
+    if (!codigo) { discSel.innerHTML = '<option value="">Selecione a turma primeiro...</option>'; return; }
+    fetch('/api/turma/' + codigo + '/disciplinas/')
+        .then(r => r.json())
+        .then(discs => {
+            discSel.innerHTML = '<option value="">Selecione a disciplina...</option>' +
+                discs.map(d => `<option value="${d.id}">${d.nome}</option>`).join('');
+        });
+}
+
+// ── PROFESSORES POR TURMA+DISCIPLINA (AJAX) — Conteúdo form step 2 ──
+function carregarProfessoresDaTurmaDisc() {
+    const codigo = document.getElementById('turmaSelectCont').value;
+    const discId = document.getElementById('discSelectCont').value;
+    const profSel = document.getElementById('profSelectCont');
+    profSel.innerHTML = '<option value="">Carregando...</option>';
+    if (!codigo || !discId) { profSel.innerHTML = '<option value="">Selecione turma e disciplina...</option>'; return; }
+    fetch('/api/turma/' + codigo + '/disciplina/' + discId + '/professores/')
+        .then(r => r.json())
+        .then(profs => {
+            if (!profs.length) {
+                profSel.innerHTML = '<option value="">Nenhum professor encontrado</option>';
+                return;
+            }
+            profSel.innerHTML = '<option value="">Selecione...</option>' +
+                profs.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+            // Auto-select if only one result, then load dates automatically
+            if (profs.length === 1) {
+                profSel.value = profs[0].id;
+                carregarDatasValidas();
+            }
+        });
+}
+
+// ── DATAS VÁLIDAS POR TURMA+PROFESSOR (AJAX) — Conteúdo form step 3 ──
+function carregarDatasValidas() {
+    const codigo = document.getElementById('turmaSelectCont').value;
+    const profId = document.getElementById('profSelectCont').value;
+    const wrapper = document.getElementById('dataContWrapper');
+    const dataSel = document.getElementById('dataSelectCont');
+    const dataHidden = document.getElementById('dataConteudo');
+
+    dataSel.style.display = 'none';
+    dataHidden.value = '';
+    wrapper.innerHTML = '<em style="color:#999; font-size:13px;">Selecione turma, disciplina e professor primeiro.</em><input type="hidden" name="data" id="dataConteudo">';
+
+    if (!codigo || !profId) return;
+
+    wrapper.innerHTML = '<em style="color:#999; font-size:13px;">Carregando datas...</em>';
+    fetch('/api/turma/' + codigo + '/professor/' + profId + '/datas/')
+        .then(r => r.json())
+        .then(datas => {
+            if (!datas.length) {
+                wrapper.innerHTML = '<em style="color:#c00; font-size:13px;">Nenhuma data de aula encontrada para esta turma.</em>';
+                return;
+            }
+            // Find first unlaunched date to pre-select
+            const primeiro = datas.find(d => !d.lancado) || datas[0];
+            dataSel.innerHTML = datas.map(d => {
+                const check = d.lancado ? ' ✓ já lançado' : '';
+                const style = d.lancado ? ' style="color:#666;"' : '';
+                return `<option value="${d.data}"${style}>${d.label}${check}</option>`;
+            }).join('');
+            dataSel.value = primeiro.data;
+            // Replace hidden input in wrapper and show select
+            wrapper.innerHTML = '';
+            dataSel.style.display = 'block';
+            // Keep the hidden input in sync
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'data';
+            hidden.id = 'dataConteudo';
+            hidden.value = primeiro.data;
+            wrapper.appendChild(hidden);
+            dataSel.onchange = () => { document.getElementById('dataConteudo').value = dataSel.value; };
+        });
+}
+
+// ── VALIDAÇÃO FORM CONTEÚDO ──
+function validarFormCont() {
+    const data = document.getElementById('dataConteudo') && document.getElementById('dataConteudo').value;
+    if (!data) {
+        alert('Selecione a data da aula antes de salvar.');
+        return false;
+    }
+    return true;
+}
+</script>
+{% endblock %}

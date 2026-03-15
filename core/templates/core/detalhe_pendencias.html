@@ -1,0 +1,58 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Detalhes de Pendências - {{ professor.nome }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div>
+            <h1 style="color: #003366; margin: 0;">Pendências: {{ professor.nome }}</h1>
+            <p style="color: #666; margin-top: 5px;">Listagem de aulas sem conteúdo lançado até hoje.</p>
+        </div>
+        <a href="{% url 'relatorio_pendencias' %}" class="btn-gray">Voltar ao Resumo</a>
+    </div>
+
+    {% for item in pendencias %}
+    <div class="card-pendencia" style="margin-bottom: 25px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); overflow: hidden; border-left: 5px solid #003366;">
+        <div style="background: #f8f9fa; padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; color: #003366;">
+                Turma {{ item.turma.codigo }} — <span style="font-weight: 400; font-style: italic;">{{ item.disciplina.nome }}</span>
+            </h3>
+            <span style="background: #e74c3c; color: white; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 700;">
+                {{ item.datas|length }} pendência(s)
+            </span>
+        </div>
+        <div style="padding: 15px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;">
+                {% for d in item.datas %}
+                <div style="background: #fff5f5; border: 1px solid #ffdada; padding: 8px; border-radius: 4px; text-align: center; color: #c0392b; font-size: 13px;">
+                    <strong>{{ d|date:"d/m/Y" }}</strong><br>
+                    <span style="font-size: 11px;">({{ d|date:"l"|slice:":3" }})</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div style="text-align: center; padding: 50px; background: #f0fff4; border-radius: 8px; border: 1px dashed #27ae60;">
+        <h2 style="color: #27ae60;">🎉 Tudo em dia!</h2>
+        <p style="color: #666;">Este professor não possui lançamentos pendentes para as turmas cadastradas.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+    .btn-gray {
+        background: #6c757d;
+        color: white;
+        text-decoration: none;
+        padding: 8px 20px;
+        border-radius: 4px;
+        font-size: 14px;
+        transition: 0.3s;
+    }
+    .btn-gray:hover {
+        background: #5a6268;
+    }
+</style>
+{% endblock %}

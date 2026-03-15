@@ -1,0 +1,43 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Sistema EME{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'core/style.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+{% block body %}
+<header>
+    <div class="header-inner">
+        <span>Sistema de Ocorrências Escolares</span>
+        {% if user.is_authenticated %}
+        <div class="header-right">
+            <span class="header-user">👤 {{ user.get_full_name|default:user.username }}</span>
+            <form method="post" action="{% url 'logout' %}" style="display:inline">
+                {% csrf_token %}
+                <button type="submit" class="btn-logout">Sair</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</header>
+
+{% if messages %}
+<div class="messages-container">
+  {% for msg in messages %}
+  <div class="alert alert-{{ msg.tags }}">{{ msg }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="container">
+{% block content %}{% endblock %}
+</div>
+{% endblock %}
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

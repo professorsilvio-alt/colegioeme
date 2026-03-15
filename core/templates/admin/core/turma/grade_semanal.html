@@ -1,0 +1,274 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% load core_tags %}
+{% block title %}Grade Semanal - {{ turma.codigo }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    .grade-container {
+        margin: 20px 0;
+        overflow-x: auto;
+    }
+    .grade-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--body-bg);
+        color: var(--body-fg);
+    }
+    .grade-table th, .grade-table td {
+        border: 1px solid var(--hairline-color);
+        padding: 5px;
+        text-align: center;
+        vertical-align: middle;
+    }
+    .grade-table th {
+        background: var(--darkened-bg);
+        font-weight: bold;
+        color: var(--header-link-color);
+    }
+    .hora-col {
+        width: 100px;
+        font-weight: bold;
+        background: var(--darkened-bg);
+    }
+    .cell-content {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+    .time-input {
+        width: 80px;
+        text-align: center;
+        padding: 4px;
+        border: 1px solid var(--border-color);
+        border-radius: 3px;
+        background-color: var(--body-bg);
+        color: var(--body-fg);
+    }
+    .cell-content select {
+        width: 100%;
+        padding: 4px;
+        border: 1px solid var(--border-color);
+        border-radius: 3px;
+        background-color: var(--body-bg);
+        color: var(--body-fg);
+    }
+    .horario-inputs {
+        display: none;
+    }
+    select.disciplina-select {
+        font-weight: bold;
+    }
+    select.professor-select {
+        color: var(--link-fg);
+    }
+    .actions-row {
+        margin-top: 15px;
+        display: flex;
+        justify-content: flex-end;
+    }
+    .btn-save {
+        background: var(--button-bg);
+        color: var(--button-fg);
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: bold;
+    }
+    .btn-save:hover {
+        background: var(--button-hover-bg);
+    }
+    .btn-delete-row {
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        opacity: 0.7;
+    }
+    .btn-delete-row:hover {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+    .btn-add-row {
+        background: var(--button-bg);
+        color: var(--button-fg);
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: bold;
+        margin-right: auto;
+    }
+    .btn-add-row:hover {
+        background: var(--button-hover-bg);
+    }
+    .row-break {
+        background-color: var(--darkened-bg) !important;
+    }
+    .break-cell {
+        text-align: center;
+        vertical-align: middle;
+        font-size: 16px;
+        color: var(--body-quiet-color);
+        background-color: var(--darkened-bg);
+        letter-spacing: 2px;
+    }
+    .message {
+        padding: 10px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+    }
+    .message.success {
+        background-color: var(--message-success-bg);
+        color: #fff;
+        border: 1px solid #c3e6cb;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <h1>Grade Semanal - Turma {{ turma.codigo }}</h1>
+    
+    {% if messages %}
+        <ul class="messagelist">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <p>Selecione os professores e disciplinas para cada horário. Deixe em branco se não houver aula neste horário.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="grade-container">
+            <table class="grade-table">
+                <thead>
+                    <tr>
+                        <th class="hora-col">Horário</th>
+                        <th>Segunda-feira</th>
+                        <th>Terça-feira</th>
+                        <th>Quarta-feira</th>
+                        <th>Quinta-feira</th>
+                        <th>Sexta-feira</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="grade-body">
+                    {% for slot in slots %}
+                    <tr class="grade-row {% if slot.is_break %}row-break{% endif %}">
+                        <td class="hora-col">
+                            {% if slot.is_break %}
+                            <input type="hidden" name="slot_{{ forloop.counter0 }}_ini" value="{{ slot.inicio }}">
+                            <input type="hidden" name="slot_{{ forloop.counter0 }}_fim" value="{{ slot.fim }}">
+                            {{ slot.inicio }} <br>até<br> {{ slot.fim }}
+                            {% else %}
+                            <input type="time" name="slot_{{ forloop.counter0 }}_ini" value="{{ slot.inicio }}" class="time-input">
+                            <br>até<br>
+                            <input type="time" name="slot_{{ forloop.counter0 }}_fim" value="{{ slot.fim }}" class="time-input">
+                            {% endif %}
+                        </td>
+                        
+                        {% if slot.is_break %}
+                            <td colspan="5" class="break-cell">
+                                <strong>☕ INTERVALO</strong>
+                            </td>
+                            <td>
+                                <!-- Sem botão de remover no intervalo fixo -->
+                            </td>
+                        {% else %}
+                            {% for dia_id, dia_nome in dias_semana %}
+                                <td>
+                                    <div class="cell-content">
+                                        
+                                        {% with cell_data=grade_dict|get_item:dia_id|get_item:slot.inicio_short %}
+                                            <select name="disciplina_{{ dia_id }}_{{ forloop.parentloop.counter0 }}" class="disciplina-select">
+                                                <option value="">-- Disciplina --</option>
+                                                {% for d in disciplinas %}
+                                                    <option value="{{ d.id }}" {% if cell_data and cell_data.disciplina_id == d.id %}selected{% endif %}>{{ d.nome }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            
+                                            <select name="professor_{{ dia_id }}_{{ forloop.parentloop.counter0 }}" class="professor-select">
+                                                <option value="">-- Professor --</option>
+                                                {% for p in professores %}
+                                                    <option value="{{ p.id }}" {% if cell_data and cell_data.professor_id == p.id %}selected{% endif %}>{{ p.nome }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        {% endwith %}
+                                    </div>
+                                </td>
+                            {% endfor %}
+                            <td>
+                                <button type="button" class="btn-delete-row" onclick="removerLinha(this)">❌</button>
+                            </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="actions-row">
+            <button type="button" class="btn-add-row" onclick="adicionarLinha()">➕ Adicionar Horário</button>
+            <button type="submit" class="btn-save">Salvar Grade Semanal</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function removerLinha(btn) {
+        if (confirm("Deseja realmente remover este horário inteiro?")) {
+            const linha = btn.closest(".grade-row");
+            linha.remove();
+        }
+    }
+
+    function adicionarLinha() {
+        const tbody = document.getElementById("grade-body");
+        const rows = tbody.querySelectorAll(".grade-row");
+        let newIndex = 0;
+        if (rows.length > 0) {
+            // Find the highest slot index currently via the names of inputs
+            rows.forEach(row => {
+                const input = row.querySelector("input[type='time']");
+                if (input) {
+                    const match = input.name.match(/slot_(\d+)_ini/);
+                    if (match) {
+                        const idx = parseInt(match[1]);
+                        if (idx >= newIndex) {
+                            newIndex = idx + 1;
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Clone the last row or create an empty one
+        if (rows.length > 0) {
+            const lastRow = rows[rows.length - 1];
+            const newRow = lastRow.cloneNode(true);
+            
+            // Clear inputs and update names
+            newRow.querySelectorAll("input").forEach(input => {
+                input.value = "";
+                input.name = input.name.replace(/_\d+_/, `_${newIndex}_`);
+            });
+            
+            newRow.querySelectorAll("select").forEach(select => {
+                select.value = "";
+                select.name = select.name.replace(/_\d+$/, `_${newIndex}`);
+            });
+            
+            tbody.appendChild(newRow);
+        } else {
+            alert("A tabela está vazia. Salve a página e adicione pelo menos um horário pelo console ou recarregue com horários padrão.");
+        }
+    }
+</script>
+{% endblock %}

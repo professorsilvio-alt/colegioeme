@@ -1,0 +1,61 @@
+# Django
+*.log
+*.pyc
+*.pyo
+__pycache__/
+*.pyo
+db.sqlite3
+media/
+
+# Environment variables
+.env
+.env.*
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Static files collected for production
+staticfiles/
+static_root/
+
+# Node modules (if ever used)
+node_modules/
+
+# Antigravity internals
+.antigravityignore
+
+# One-off scripts de importação (not needed for deployment)
+load_*.py
+fix_*.py
+apply_*.py
+merge_*.py
+cleanup_*.py
+purge_*.py
+update_*.py
+create_*.py
+setup_*.py
+sync_*.py
+balance_*.py
+check_*.py
+compare_*.py
+verify_*.py
+consolidate_*.py
+extract_pdf.py
+
+# Generated text/json reports
+*.txt
+grade_horaria_completa.json
+
+# PDFs
+*.pdf

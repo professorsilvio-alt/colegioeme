@@ -1,0 +1,89 @@
+{% extends 'core/base.html' %}
+{% block title %}Editar OC-{{ oc.pk|stringformat:"04d" }} - Sistema EME{% endblock %}
+
+{% block content %}
+<h2>Editar Ocorrência OC-{{ oc.pk|stringformat:"04d" }}</h2>
+<div class="collapsible">
+    <form method="post">
+        {% csrf_token %}
+        <label>Data</label>
+        <input type="date" name="data" value="{{ oc.data|date:'Y-m-d' }}" required>
+
+        <label>Turma</label>
+        <select name="turma" required onchange="carregarAlunos(this.value)">
+            <option value="">Selecione...</option>
+            {% for t in turmas %}
+            <option value="{{ t.codigo }}" {% if oc.turma and oc.turma.codigo == t.codigo %}selected{% endif %}>Turma {{ t.codigo }}</option>
+            {% endfor %}
+        </select>
+
+        <label>Alunos</label>
+        <div id="alunosContainer" style="margin-top:10px;">
+            {% if alunos_turma %}
+            {% for aluno in alunos_turma %}
+            <label class="checkbox-label">
+                <input type="checkbox" name="alunos" value="{{ aluno.pk }}"
+                    {% if aluno in oc.alunos.all %}checked{% endif %}> {{ aluno.nome }}
+            </label>
+            {% endfor %}
+            {% else %}
+            <em style="color:#999">Selecione a turma primeiro.</em>
+            {% endif %}
+        </div>
+
+        <label>Disciplina</label>
+        <select name="disciplina" id="discSelect" required onchange="carregarProfessores(this.value, 'profSelect')">
+            <option value="">Selecione...</option>
+            {% for d in disciplinas %}
+            <option value="{{ d.pk }}" {% if oc.disciplina and oc.disciplina.pk == d.pk %}selected{% endif %}>{{ d.nome }}</option>
+            {% endfor %}
+        </select>
+
+        <label>Professor</label>
+        <select name="professor" id="profSelect" required>
+            <option value="">Selecione...</option>
+            {% for p in todos_professores %}
+            <option value="{{ p.pk }}" {% if oc.professor and oc.professor.pk == p.pk %}selected{% endif %}>{{ p.nome }}</option>
+            {% endfor %}
+        </select>
+
+        <label>Descrição</label>
+        <textarea name="descricao" required>{{ oc.descricao }}</textarea>
+
+        <label>Status</label>
+        <select name="status">
+            <option value="Aberta" {% if oc.status == 'Aberta' %}selected{% endif %}>Aberta</option>
+            <option value="Resolvida" {% if oc.status == 'Resolvida' %}selected{% endif %}>Resolvida</option>
+        </select>
+
+        <button type="submit">Salvar Alterações</button>
+        <a href="/" class="btn-cancel" style="margin-left:8px;padding:11px 18px;border-radius:7px;text-decoration:none;color:#fff;">Cancelar</a>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function carregarAlunos(codigo) {
+    const container = document.getElementById('alunosContainer');
+    if (!codigo) { container.innerHTML = '<em style="color:#999">Selecione a turma primeiro.</em>'; return; }
+    fetch('/api/alunos/' + codigo + '/')
+        .then(r => r.json())
+        .then(alunos => {
+            container.innerHTML = alunos.map(a =>
+                `<label class="checkbox-label"><input type="checkbox" name="alunos" value="${a.id}"> ${a.nome}</label>`
+            ).join('');
+        });
+}
+function carregarProfessores(discId, selectId) {
+    const sel = document.getElementById(selectId);
+    if (!discId) return;
+    fetch('/api/professores/' + discId + '/')
+        .then(r => r.json())
+        .then(profs => {
+            sel.innerHTML = '<option value="">Selecione...</option>' +
+                profs.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+        });
+}
+</script>
+{% endblock %}

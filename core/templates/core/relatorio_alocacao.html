@@ -1,0 +1,179 @@
+{% extends 'core/dashboard.html' %}
+
+{% block content %}
+<style>
+    .relatorio-wrap {
+        margin-top: 20px;
+    }
+    .relatorio-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+    .relatorio-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.82em;
+        table-layout: fixed;
+    }
+    .relatorio-table thead tr {
+        background-color: #003366;
+        color: white;
+    }
+    .relatorio-table th {
+        padding: 8px 6px;
+        text-align: center;
+        border: 1px solid #b0c4de;
+        font-size: 0.9em;
+        white-space: nowrap;
+    }
+    .relatorio-table th.col-prof { width: 10%; }
+    .relatorio-table th.col-disc { width: 12%; }
+    .relatorio-table th.col-turma { width: 8%; }
+    .relatorio-table th.col-dia { width: 14%; }
+
+    .relatorio-table td {
+        padding: 6px;
+        border: 1px solid #ccd8ea;
+        vertical-align: middle;
+        text-align: center;
+    }
+    .relatorio-table tbody tr:nth-child(even) {
+        background-color: #f4f8ff;
+    }
+    .relatorio-table tbody tr:hover {
+        background-color: #e8f0fe;
+    }
+    .prof-nome {
+        font-weight: bold;
+        color: #003366;
+        font-size: 1.05em;
+        display: block;
+        text-align: center;
+    }
+    .disc-badge {
+        display: inline-block;
+        background: #eef2ff;
+        color: #003366;
+        border-radius: 3px;
+        padding: 3px 7px;
+        margin: 2px;
+        font-size: 0.92em;
+        font-style: italic;
+    }
+    .turma-badge {
+        display: inline-block;
+        background: #f0f4ff;
+        border: 1px solid #b0c4de;
+        color: #003366;
+        border-radius: 3px;
+        padding: 3px 7px;
+        margin: 2px;
+        font-weight: bold;
+        font-size: 0.92em;
+    }
+    .aula-card {
+        display: inline-block;
+        margin: 2px auto;
+        padding: 3px 6px;
+        border-radius: 4px;
+        background: #eef2ff;
+        border: 1px solid #c5d5ef;
+        text-align: center;
+        min-width: 90px;
+    }
+    .aula-hora {
+        font-weight: bold;
+        color: #003366;
+        display: block;
+        font-size: 0.88em;
+        white-space: nowrap;
+    }
+    .aula-turma {
+        font-weight: bold;
+        color: #0a3d7a;
+        display: block;
+        font-size: 0.88em;
+    }
+    .aula-disc {
+        font-style: italic;
+        color: #555;
+        display: block;
+        font-size: 0.78em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 120px;
+    }
+    .empty-cell {
+        color: #ccc;
+        font-size: 0.75em;
+    }
+    .dia-col {
+        padding: 4px !important;
+    }
+</style>
+
+<div class="relatorio-wrap">
+    <div class="relatorio-header">
+        <h2>Relatório de Alocação - Equipe Docente</h2>
+        <div>
+            <a href="{% url 'dashboard' %}" class="btn-sm btn-secondary-sm">⬅ Voltar</a>
+            <a href="{% url 'exportar_alocacao_pdf' %}" class="btn-export btn-pdf">📄 Exportar PDF</a>
+        </div>
+    </div>
+
+    <div class="card" style="padding: 12px;">
+        <table class="relatorio-table">
+            <thead>
+                <tr>
+                    <th class="col-prof">Professor</th>
+                    <th class="col-disc">Disciplinas</th>
+                    <th class="col-turma">Turmas</th>
+                    <th class="col-dia">Segunda</th>
+                    <th class="col-dia">Terça</th>
+                    <th class="col-dia">Quarta</th>
+                    <th class="col-dia">Quinta</th>
+                    <th class="col-dia">Sexta</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in professores %}
+                <tr>
+                    <td><span class="prof-nome">{{ p.nome }}</span></td>
+                    <td>
+                        {% for d in p.disciplinas.all %}
+                            <span class="disc-badge">{{ d.nome }}</span>
+                        {% empty %}
+                            <em class="empty-cell">—</em>
+                        {% endfor %}
+                    </td>
+                    <td>
+                        {% for t in p.turmas.all %}
+                            <span class="turma-badge">{{ t.codigo }}</span>
+                        {% empty %}
+                            <em class="empty-cell">—</em>
+                        {% endfor %}
+                    </td>
+                    {% for dia_num in "12345" %}
+                    <td class="dia-col">
+                        {% for gh in p.grade_horaria.all %}
+                            {% if gh.dia_semana == dia_num %}
+                            <div class="aula-card">
+                                <span class="aula-hora">{{ gh.hora_inicio|time:"H:i" }}–{{ gh.hora_fim|time:"H:i" }}</span>
+                                <span class="aula-turma">{{ gh.turma.codigo }}</span>
+                                <span class="aula-disc" title="{{ gh.disciplina.nome }}">{{ gh.disciplina.nome }}</span>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
