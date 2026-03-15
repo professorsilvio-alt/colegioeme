@@ -60,3 +60,6 @@ grade_horaria_completa.json
 
 # PDFs
 *.pdf
+
+# Database Fixtures
+!db_fixture.json
