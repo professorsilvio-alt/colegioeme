@@ -2,6 +2,10 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
+# Apply Python 3.14 compatibility patches
+from .patches import apply_patches
+apply_patches()
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Carrega variáveis de ambiente do arquivo .env
@@ -59,12 +63,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'eme_project.wsgi.application'
 
+# Banco de dados
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# (Opcional) Configuração para MySQL no futuro:
+# DB_NAME = os.getenv('DB_NAME')
+# if DB_NAME:
+#     DATABASES = {
+#         'default': {
+#             'ENGINE': 'django.db.backends.mysql',
+#             'NAME': DB_NAME,
+#             ...
+#         }
+#     }
 
 AUTH_PASSWORD_VALIDATORS = []
 
