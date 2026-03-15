@@ -53,8 +53,9 @@ verify_*.py
 consolidate_*.py
 extract_pdf.py
 
-# Generated text/json reports
+# Generated text/json reports (ignore most, but keep requirements)
 *.txt
+!requirements.txt
 grade_horaria_completa.json
 
 # PDFs
