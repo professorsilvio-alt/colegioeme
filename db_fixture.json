@@ -59,7 +59,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "594",
-        "object_repr": "Segunda-feira | 09:45:00 | Turma 81 | Português",
+        "object_repr": "Segunda-feira | 09:45:00 | Turma 81 | PortuguÃªs",
         "action_flag": 1,
         "change_message": "[{\"added\": {}}]"
     }
@@ -150,7 +150,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "597",
-        "object_repr": "Segunda-feira | 09:45:00 | Turma 92 | Física",
+        "object_repr": "Segunda-feira | 09:45:00 | Turma 92 | FÃ­sica",
         "action_flag": 1,
         "change_message": "[{\"added\": {}}]"
     }
@@ -163,7 +163,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "104",
-        "object_repr": "Segunda-feira | 10:15:00 | Turma 93 | Português",
+        "object_repr": "Segunda-feira | 10:15:00 | Turma 93 | PortuguÃªs",
         "action_flag": 3,
         "change_message": ""
     }
@@ -215,7 +215,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "105",
-        "object_repr": "Segunda-feira | 10:15:00 | Turma 11 | História II",
+        "object_repr": "Segunda-feira | 10:15:00 | Turma 11 | HistÃ³ria II",
         "action_flag": 3,
         "change_message": ""
     }
@@ -241,7 +241,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "90",
-        "object_repr": "Segunda-feira | 09:30:00 | Turma 12 | Português",
+        "object_repr": "Segunda-feira | 09:30:00 | Turma 12 | PortuguÃªs",
         "action_flag": 3,
         "change_message": ""
     }
@@ -267,7 +267,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "601",
-        "object_repr": "Segunda-feira | 09:00:00 | Turma 12 | Física II",
+        "object_repr": "Segunda-feira | 09:00:00 | Turma 12 | FÃ­sica II",
         "action_flag": 1,
         "change_message": "[{\"added\": {}}]"
     }
@@ -293,7 +293,7 @@
         "user": 2,
         "content_type": 9,
         "object_id": "37",
-        "object_repr": "História 2",
+        "object_repr": "HistÃ³ria 2",
         "action_flag": 3,
         "change_message": ""
     }
@@ -306,7 +306,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "609",
-        "object_repr": "Segunda-feira | 09:00:00 | Turma 13 | História II",
+        "object_repr": "Segunda-feira | 09:00:00 | Turma 13 | HistÃ³ria II",
         "action_flag": 1,
         "change_message": "[{\"added\": {}}]"
     }
@@ -319,7 +319,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "92",
-        "object_repr": "Segunda-feira | 09:30:00 | Turma 21 | Português I",
+        "object_repr": "Segunda-feira | 09:30:00 | Turma 21 | PortuguÃªs I",
         "action_flag": 3,
         "change_message": ""
     }
@@ -371,7 +371,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "612",
-        "object_repr": "Segunda-feira | 09:30:00 | Turma 22 | Português",
+        "object_repr": "Segunda-feira | 09:30:00 | Turma 22 | PortuguÃªs",
         "action_flag": 1,
         "change_message": "[{\"added\": {}}]"
     }
@@ -384,7 +384,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "613",
-        "object_repr": "Segunda-feira | 10:15:00 | Turma 22 | Português",
+        "object_repr": "Segunda-feira | 10:15:00 | Turma 22 | PortuguÃªs",
         "action_flag": 1,
         "change_message": "[{\"added\": {}}]"
     }
@@ -397,7 +397,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "2787",
-        "object_repr": "Terça-feira | 07:00:00 | Turma 73 | Artes",
+        "object_repr": "TerÃ§a-feira | 07:00:00 | Turma 73 | Artes",
         "action_flag": 3,
         "change_message": ""
     }
@@ -410,7 +410,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3236",
-        "object_repr": "Terça-feira | 09:00:00 | Turma 21 | Artes",
+        "object_repr": "TerÃ§a-feira | 09:00:00 | Turma 21 | Artes",
         "action_flag": 3,
         "change_message": ""
     }
@@ -423,7 +423,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3237",
-        "object_repr": "Terça-feira | 09:00:00 | Turma 22 | Artes",
+        "object_repr": "TerÃ§a-feira | 09:00:00 | Turma 22 | Artes",
         "action_flag": 3,
         "change_message": ""
     }
@@ -436,7 +436,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3238",
-        "object_repr": "Terça-feira | 09:00:00 | Turma 23 | Artes",
+        "object_repr": "TerÃ§a-feira | 09:00:00 | Turma 23 | Artes",
         "action_flag": 3,
         "change_message": ""
     }
@@ -449,7 +449,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "2798",
-        "object_repr": "Terça-feira | 09:00:00 | Turma 72 | Artes",
+        "object_repr": "TerÃ§a-feira | 09:00:00 | Turma 72 | Artes",
         "action_flag": 3,
         "change_message": ""
     }
@@ -462,7 +462,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3233",
-        "object_repr": "Terça-feira | 10:00:00 | Turma 11 | Artes",
+        "object_repr": "TerÃ§a-feira | 10:00:00 | Turma 11 | Artes",
         "action_flag": 3,
         "change_message": ""
     }
@@ -475,7 +475,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3234",
-        "object_repr": "Terça-feira | 10:00:00 | Turma 12 | Artes",
+        "object_repr": "TerÃ§a-feira | 10:00:00 | Turma 12 | Artes",
         "action_flag": 3,
         "change_message": ""
     }
@@ -488,7 +488,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3235",
-        "object_repr": "Terça-feira | 10:00:00 | Turma 13 | Artes",
+        "object_repr": "TerÃ§a-feira | 10:00:00 | Turma 13 | Artes",
         "action_flag": 3,
         "change_message": ""
     }
@@ -501,7 +501,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "2809",
-        "object_repr": "Terça-feira | 10:30:00 | Turma 71 | Artes",
+        "object_repr": "TerÃ§a-feira | 10:30:00 | Turma 71 | Artes",
         "action_flag": 3,
         "change_message": ""
     }
@@ -514,7 +514,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3274",
-        "object_repr": "Terça-feira | 07:00:00 | Turma 61 | Artes",
+        "object_repr": "TerÃ§a-feira | 07:00:00 | Turma 61 | Artes",
         "action_flag": 1,
         "change_message": "[{\"added\": {}}]"
     }
@@ -527,7 +527,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3275",
-        "object_repr": "Terça-feira | 07:45:00 | Turma 62 | Artes",
+        "object_repr": "TerÃ§a-feira | 07:45:00 | Turma 62 | Artes",
         "action_flag": 1,
         "change_message": "[{\"added\": {}}]"
     }
@@ -540,7 +540,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3276",
-        "object_repr": "Terça-feira | 09:00:00 | Turma 82 | Artes",
+        "object_repr": "TerÃ§a-feira | 09:00:00 | Turma 82 | Artes",
         "action_flag": 1,
         "change_message": "[{\"added\": {}}]"
     }
@@ -553,7 +553,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3277",
-        "object_repr": "Terça-feira | 09:45:00 | Turma 63 | Artes",
+        "object_repr": "TerÃ§a-feira | 09:45:00 | Turma 63 | Artes",
         "action_flag": 1,
         "change_message": "[{\"added\": {}}]"
     }
@@ -566,7 +566,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3278",
-        "object_repr": "Terça-feira | 11:00:00 | Turma 81 | Artes",
+        "object_repr": "TerÃ§a-feira | 11:00:00 | Turma 81 | Artes",
         "action_flag": 1,
         "change_message": "[{\"added\": {}}]"
     }
@@ -579,7 +579,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3274",
-        "object_repr": "Terça-feira | 07:00:00 | Turma 73 | Artes",
+        "object_repr": "TerÃ§a-feira | 07:00:00 | Turma 73 | Artes",
         "action_flag": 2,
         "change_message": "[{\"changed\": {\"fields\": [\"Turma\"]}}]"
     }
@@ -592,7 +592,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3275",
-        "object_repr": "Terça-feira | 07:45:00 | Turma 73 | Artes",
+        "object_repr": "TerÃ§a-feira | 07:45:00 | Turma 73 | Artes",
         "action_flag": 2,
         "change_message": "[{\"changed\": {\"fields\": [\"Turma\"]}}]"
     }
@@ -605,7 +605,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3276",
-        "object_repr": "Terça-feira | 09:00:00 | Turma 72 | Artes",
+        "object_repr": "TerÃ§a-feira | 09:00:00 | Turma 72 | Artes",
         "action_flag": 2,
         "change_message": "[{\"changed\": {\"fields\": [\"Turma\"]}}]"
     }
@@ -618,7 +618,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3277",
-        "object_repr": "Terça-feira | 09:45:00 | Turma 72 | Artes",
+        "object_repr": "TerÃ§a-feira | 09:45:00 | Turma 72 | Artes",
         "action_flag": 2,
         "change_message": "[{\"changed\": {\"fields\": [\"Turma\"]}}]"
     }
@@ -631,7 +631,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3278",
-        "object_repr": "Terça-feira | 11:00:00 | Turma 71 | Artes",
+        "object_repr": "TerÃ§a-feira | 11:00:00 | Turma 71 | Artes",
         "action_flag": 2,
         "change_message": "[{\"changed\": {\"fields\": [\"Turma\"]}}]"
     }
@@ -644,7 +644,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3279",
-        "object_repr": "Terça-feira | 11:15:00 | Turma 71 | Artes",
+        "object_repr": "TerÃ§a-feira | 11:15:00 | Turma 71 | Artes",
         "action_flag": 1,
         "change_message": "[{\"added\": {}}]"
     }
@@ -657,7 +657,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3278",
-        "object_repr": "Terça-feira | 10:30:00 | Turma 71 | Artes",
+        "object_repr": "TerÃ§a-feira | 10:30:00 | Turma 71 | Artes",
         "action_flag": 2,
         "change_message": "[{\"changed\": {\"fields\": [\"Hora inicio\", \"Hora fim\"]}}]"
     }
@@ -761,7 +761,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3253",
-        "object_repr": "Terça-feira | 09:30:00 | Turma 22 | Mat. II",
+        "object_repr": "TerÃ§a-feira | 09:30:00 | Turma 22 | Mat. II",
         "action_flag": 3,
         "change_message": ""
     }
@@ -774,7 +774,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3251",
-        "object_repr": "Terça-feira | 10:15:00 | Turma 21 | Mat. II",
+        "object_repr": "TerÃ§a-feira | 10:15:00 | Turma 21 | Mat. II",
         "action_flag": 3,
         "change_message": ""
     }
@@ -787,7 +787,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3252",
-        "object_repr": "Terça-feira | 12:00:00 | Turma 21 | Mat. II",
+        "object_repr": "TerÃ§a-feira | 12:00:00 | Turma 21 | Mat. II",
         "action_flag": 3,
         "change_message": ""
     }
@@ -800,7 +800,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3254",
-        "object_repr": "Terça-feira | 12:00:00 | Turma 22 | Mat. II",
+        "object_repr": "TerÃ§a-feira | 12:00:00 | Turma 22 | Mat. II",
         "action_flag": 3,
         "change_message": ""
     }
@@ -813,7 +813,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3255",
-        "object_repr": "Terça-feira | 12:00:00 | Turma 23 | Mat. II",
+        "object_repr": "TerÃ§a-feira | 12:00:00 | Turma 23 | Mat. II",
         "action_flag": 3,
         "change_message": ""
     }
@@ -839,7 +839,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3272",
-        "object_repr": "Quarta-feira | 12:00:00 | Turma 23 | Física I",
+        "object_repr": "Quarta-feira | 12:00:00 | Turma 23 | FÃ­sica I",
         "action_flag": 3,
         "change_message": ""
     }
@@ -852,7 +852,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "2998",
-        "object_repr": "Quarta-feira | 11:45:00 | Turma 23 | Física I",
+        "object_repr": "Quarta-feira | 11:45:00 | Turma 23 | FÃ­sica I",
         "action_flag": 2,
         "change_message": "[{\"changed\": {\"fields\": [\"Turma\"]}}]"
     }
@@ -865,7 +865,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3285",
-        "object_repr": "Sexta-feira | 10:15:00 | Turma 22 | Física I",
+        "object_repr": "Sexta-feira | 10:15:00 | Turma 22 | FÃ­sica I",
         "action_flag": 1,
         "change_message": "[{\"added\": {}}]"
     }
@@ -878,7 +878,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3265",
-        "object_repr": "Terça-feira | 09:30:00 | Turma 71 | Mat. I",
+        "object_repr": "TerÃ§a-feira | 09:30:00 | Turma 71 | Mat. I",
         "action_flag": 3,
         "change_message": ""
     }
@@ -904,7 +904,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3257",
-        "object_repr": "Terça-feira | 09:30:00 | Turma 81 | Ciências",
+        "object_repr": "TerÃ§a-feira | 09:30:00 | Turma 81 | CiÃªncias",
         "action_flag": 3,
         "change_message": ""
     }
@@ -917,7 +917,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3258",
-        "object_repr": "Terça-feira | 09:30:00 | Turma 93 | Ciências",
+        "object_repr": "TerÃ§a-feira | 09:30:00 | Turma 93 | CiÃªncias",
         "action_flag": 3,
         "change_message": ""
     }
@@ -995,7 +995,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3259",
-        "object_repr": "Terça-feira | 12:00:00 | Turma 32 | Biologia I",
+        "object_repr": "TerÃ§a-feira | 12:00:00 | Turma 32 | Biologia I",
         "action_flag": 3,
         "change_message": ""
     }
@@ -1112,7 +1112,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3295",
-        "object_repr": "Terça-feira | 09:30:00 | Turma 11 | Biologia I",
+        "object_repr": "TerÃ§a-feira | 09:30:00 | Turma 11 | Biologia I",
         "action_flag": 3,
         "change_message": ""
     }
@@ -1125,7 +1125,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3297",
-        "object_repr": "Terça-feira | 09:30:00 | Turma 12 | Biologia I",
+        "object_repr": "TerÃ§a-feira | 09:30:00 | Turma 12 | Biologia I",
         "action_flag": 3,
         "change_message": ""
     }
@@ -1138,7 +1138,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3296",
-        "object_repr": "Terça-feira | 12:00:00 | Turma 11 | Biologia I",
+        "object_repr": "TerÃ§a-feira | 12:00:00 | Turma 11 | Biologia I",
         "action_flag": 3,
         "change_message": ""
     }
@@ -1151,7 +1151,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3298",
-        "object_repr": "Terça-feira | 12:00:00 | Turma 12 | Biologia I",
+        "object_repr": "TerÃ§a-feira | 12:00:00 | Turma 12 | Biologia I",
         "action_flag": 3,
         "change_message": ""
     }
@@ -1164,7 +1164,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3299",
-        "object_repr": "Terça-feira | 12:00:00 | Turma 13 | Biologia I",
+        "object_repr": "TerÃ§a-feira | 12:00:00 | Turma 13 | Biologia I",
         "action_flag": 3,
         "change_message": ""
     }
@@ -1177,7 +1177,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3300",
-        "object_repr": "Terça-feira | 13:00:00 | Turma 13 | Biologia I",
+        "object_repr": "TerÃ§a-feira | 13:00:00 | Turma 13 | Biologia I",
         "action_flag": 3,
         "change_message": ""
     }
@@ -1190,7 +1190,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3514",
-        "object_repr": "6 | 07:00:00 | Turma 11 | Química II",
+        "object_repr": "6 | 07:00:00 | Turma 11 | QuÃ­mica II",
         "action_flag": 3,
         "change_message": ""
     }
@@ -1203,7 +1203,7 @@
         "user": 2,
         "content_type": 13,
         "object_id": "3515",
-        "object_repr": "6 | 07:45:00 | Turma 11 | Química II",
+        "object_repr": "6 | 07:45:00 | Turma 11 | QuÃ­mica II",
         "action_flag": 3,
         "change_message": ""
     }
@@ -1242,7 +1242,7 @@
         "user": 2,
         "content_type": 11,
         "object_id": "45",
-        "object_repr": "Vânia (Professor)",
+        "object_repr": "VÃ¢nia (Professor)",
         "action_flag": 2,
         "change_message": "[{\"changed\": {\"fields\": [\"Nome\"]}}]"
     }
@@ -1578,7 +1578,7 @@
         "password": "pbkdf2_sha256$1200000$wHnOsSh6U42jRWOJ73iEr6$oq12a2yqjiBvLxM2/8aI+/QhWT56u04ZbhymNX8Vuyo=",
         "last_login": null,
         "is_superuser": false,
-        "username": "otávio",
+        "username": "otÃ¡vio",
         "first_name": "",
         "last_name": "",
         "email": "",
@@ -1876,7 +1876,7 @@
         "password": "pbkdf2_sha256$1200000$XsQI8e0AU1eRoZLeALBUvF$zcMRKvLQbWLRIyP/8qVULJDpYfybruKHs0UdQ1vpYpM=",
         "last_login": null,
         "is_superuser": false,
-        "username": "taís",
+        "username": "taÃ­s",
         "first_name": "",
         "last_name": "",
         "email": "",
@@ -1916,7 +1916,7 @@
         "password": "pbkdf2_sha256$1200000$KSt0YHUVxB6hDS7ZF4IK7q$k4jG31Ee64TcyNpIVQRy7gCPhljLFch4QHSBBz9THH0=",
         "last_login": null,
         "is_superuser": false,
-        "username": "érica",
+        "username": "Ã©rica",
         "first_name": "",
         "last_name": "",
         "email": "",
@@ -2216,7 +2216,7 @@
         "password": "pbkdf2_sha256$1200000$lyOqyoBrVrw4SfGLJ9BkI9$yct68g5YiqwHcMGC/RtgS9/+yVa28VKP3AIkZXUSwHE=",
         "last_login": null,
         "is_superuser": false,
-        "username": "fábio",
+        "username": "fÃ¡bio",
         "first_name": "",
         "last_name": "",
         "email": "",
@@ -2465,7 +2465,7 @@
     "model": "core.disciplina",
     "pk": 1,
     "fields": {
-        "nome": "Inglês"
+        "nome": "InglÃªs"
     }
 },
 {
@@ -2479,14 +2479,14 @@
     "model": "core.disciplina",
     "pk": 3,
     "fields": {
-        "nome": "História"
+        "nome": "HistÃ³ria"
     }
 },
 {
     "model": "core.disciplina",
     "pk": 4,
     "fields": {
-        "nome": "Física"
+        "nome": "FÃ­sica"
     }
 },
 {
@@ -2507,14 +2507,14 @@
     "model": "core.disciplina",
     "pk": 7,
     "fields": {
-        "nome": "Matemática"
+        "nome": "MatemÃ¡tica"
     }
 },
 {
     "model": "core.disciplina",
     "pk": 8,
     "fields": {
-        "nome": "Química"
+        "nome": "QuÃ­mica"
     }
 },
 {
@@ -2528,7 +2528,7 @@
     "model": "core.disciplina",
     "pk": 10,
     "fields": {
-        "nome": "Ciências"
+        "nome": "CiÃªncias"
     }
 },
 {
@@ -2542,14 +2542,14 @@
     "model": "core.disciplina",
     "pk": 12,
     "fields": {
-        "nome": "Português"
+        "nome": "PortuguÃªs"
     }
 },
 {
     "model": "core.disciplina",
     "pk": 13,
     "fields": {
-        "nome": "Redação"
+        "nome": "RedaÃ§Ã£o"
     }
 },
 {
@@ -2598,21 +2598,21 @@
     "model": "core.disciplina",
     "pk": 22,
     "fields": {
-        "nome": "História II"
+        "nome": "HistÃ³ria II"
     }
 },
 {
     "model": "core.disciplina",
     "pk": 23,
     "fields": {
-        "nome": "Português I"
+        "nome": "PortuguÃªs I"
     }
 },
 {
     "model": "core.disciplina",
     "pk": 24,
     "fields": {
-        "nome": "Ed. Física"
+        "nome": "Ed. FÃ­sica"
     }
 },
 {
@@ -2626,7 +2626,7 @@
     "model": "core.disciplina",
     "pk": 26,
     "fields": {
-        "nome": "Química II"
+        "nome": "QuÃ­mica II"
     }
 },
 {
@@ -2640,7 +2640,7 @@
     "model": "core.disciplina",
     "pk": 28,
     "fields": {
-        "nome": "Química I"
+        "nome": "QuÃ­mica I"
     }
 },
 {
@@ -2654,7 +2654,7 @@
     "model": "core.disciplina",
     "pk": 30,
     "fields": {
-        "nome": "Química III"
+        "nome": "QuÃ­mica III"
     }
 },
 {
@@ -2675,28 +2675,28 @@
     "model": "core.disciplina",
     "pk": 33,
     "fields": {
-        "nome": "História I"
+        "nome": "HistÃ³ria I"
     }
 },
 {
     "model": "core.disciplina",
     "pk": 34,
     "fields": {
-        "nome": "Física I"
+        "nome": "FÃ­sica I"
     }
 },
 {
     "model": "core.disciplina",
     "pk": 35,
     "fields": {
-        "nome": "Física II"
+        "nome": "FÃ­sica II"
     }
 },
 {
     "model": "core.disciplina",
     "pk": 36,
     "fields": {
-        "nome": "Português II"
+        "nome": "PortuguÃªs II"
     }
 },
 {
@@ -2897,7 +2897,7 @@
     "pk": 11,
     "fields": {
         "user": 11,
-        "nome": "Cláudio",
+        "nome": "ClÃ¡udio",
         "cpf": null,
         "cargo": "INSPETOR",
         "todas_turmas": true,
@@ -2927,7 +2927,7 @@
     "pk": 13,
     "fields": {
         "user": 13,
-        "nome": "Araújo",
+        "nome": "AraÃºjo",
         "cpf": null,
         "cargo": "INSPETOR",
         "todas_turmas": true,
@@ -2975,7 +2975,7 @@
     "pk": 15,
     "fields": {
         "user": 15,
-        "nome": "Luiz Otávio",
+        "nome": "Luiz OtÃ¡vio",
         "cpf": null,
         "cargo": "PROFESSOR",
         "todas_turmas": false,
@@ -3410,7 +3410,7 @@
     "pk": 31,
     "fields": {
         "user": 31,
-        "nome": "Taís",
+        "nome": "TaÃ­s",
         "cpf": null,
         "cargo": "PROFESSOR",
         "todas_turmas": false,
@@ -3464,7 +3464,7 @@
     "pk": 33,
     "fields": {
         "user": 33,
-        "nome": "Érica",
+        "nome": "Ã‰rica",
         "cpf": null,
         "cargo": "PROFESSOR",
         "todas_turmas": false,
@@ -3718,7 +3718,7 @@
     "pk": 45,
     "fields": {
         "user": 45,
-        "nome": "Vânia",
+        "nome": "VÃ¢nia",
         "cpf": null,
         "cargo": "PROFESSOR",
         "todas_turmas": false,
@@ -3791,7 +3791,7 @@
     "pk": 49,
     "fields": {
         "user": 49,
-        "nome": "Vinícius",
+        "nome": "VinÃ­cius",
         "cpf": null,
         "cargo": "PROFESSOR",
         "todas_turmas": false,
@@ -3816,7 +3816,7 @@
     "pk": 50,
     "fields": {
         "user": 50,
-        "nome": "Fábio",
+        "nome": "FÃ¡bio",
         "cpf": null,
         "cargo": "PROFESSOR",
         "todas_turmas": false,
@@ -3865,7 +3865,7 @@
     "pk": 54,
     "fields": {
         "user": 54,
-        "nome": "Flávia",
+        "nome": "FlÃ¡via",
         "cpf": null,
         "cargo": "PROFESSOR",
         "todas_turmas": false,
@@ -3896,7 +3896,7 @@
     "model": "core.aluno",
     "pk": 2,
     "fields": {
-        "nome": "Ana Beatriz Ribeiro de França",
+        "nome": "Ana Beatriz Ribeiro de FranÃ§a",
         "turma": 1,
         "email_responsavel": null
     }
@@ -3905,7 +3905,7 @@
     "model": "core.aluno",
     "pk": 3,
     "fields": {
-        "nome": "Ana Vitória Francisco de Souza",
+        "nome": "Ana VitÃ³ria Francisco de Souza",
         "turma": 1,
         "email_responsavel": null
     }
@@ -3950,7 +3950,7 @@
     "model": "core.aluno",
     "pk": 8,
     "fields": {
-        "nome": "Gabriel Ribeiro de França",
+        "nome": "Gabriel Ribeiro de FranÃ§a",
         "turma": 1,
         "email_responsavel": null
     }
@@ -3959,7 +3959,7 @@
     "model": "core.aluno",
     "pk": 9,
     "fields": {
-        "nome": "Gabriela Frisoni do Amaral Guimarães",
+        "nome": "Gabriela Frisoni do Amaral GuimarÃ£es",
         "turma": 1,
         "email_responsavel": null
     }
@@ -3968,7 +3968,7 @@
     "model": "core.aluno",
     "pk": 10,
     "fields": {
-        "nome": "Guilherme Hermínio Lira",
+        "nome": "Guilherme HermÃ­nio Lira",
         "turma": 1,
         "email_responsavel": null
     }
@@ -3977,7 +3977,7 @@
     "model": "core.aluno",
     "pk": 11,
     "fields": {
-        "nome": "Guilherme Magalhães Gouvêa",
+        "nome": "Guilherme MagalhÃ£es GouvÃªa",
         "turma": 1,
         "email_responsavel": null
     }
@@ -4004,7 +4004,7 @@
     "model": "core.aluno",
     "pk": 14,
     "fields": {
-        "nome": "João Pedro Cristovão Ramos",
+        "nome": "JoÃ£o Pedro CristovÃ£o Ramos",
         "turma": 1,
         "email_responsavel": null
     }
@@ -4022,7 +4022,7 @@
     "model": "core.aluno",
     "pk": 16,
     "fields": {
-        "nome": "Lucas Assumpção Santos Lucena Costa",
+        "nome": "Lucas AssumpÃ§Ã£o Santos Lucena Costa",
         "turma": 1,
         "email_responsavel": null
     }
@@ -4031,7 +4031,7 @@
     "model": "core.aluno",
     "pk": 17,
     "fields": {
-        "nome": "Maitê Duarte Tavares",
+        "nome": "MaitÃª Duarte Tavares",
         "turma": 1,
         "email_responsavel": null
     }
@@ -4094,7 +4094,7 @@
     "model": "core.aluno",
     "pk": 24,
     "fields": {
-        "nome": "Júlia da Silva Bezerra Borges",
+        "nome": "JÃºlia da Silva Bezerra Borges",
         "turma": 1,
         "email_responsavel": null
     }
@@ -4121,7 +4121,7 @@
     "model": "core.aluno",
     "pk": 27,
     "fields": {
-        "nome": "Giulia Guimarães Meira",
+        "nome": "Giulia GuimarÃ£es Meira",
         "turma": 2,
         "email_responsavel": null
     }
@@ -4130,7 +4130,7 @@
     "model": "core.aluno",
     "pk": 28,
     "fields": {
-        "nome": "Gustavo Horta Simões",
+        "nome": "Gustavo Horta SimÃµes",
         "turma": 2,
         "email_responsavel": null
     }
@@ -4157,7 +4157,7 @@
     "model": "core.aluno",
     "pk": 31,
     "fields": {
-        "nome": "João Manoel da Silva dos Santos",
+        "nome": "JoÃ£o Manoel da Silva dos Santos",
         "turma": 2,
         "email_responsavel": null
     }
@@ -4229,7 +4229,7 @@
     "model": "core.aluno",
     "pk": 39,
     "fields": {
-        "nome": "Pedro Gonçalves Correa",
+        "nome": "Pedro GonÃ§alves Correa",
         "turma": 2,
         "email_responsavel": null
     }
@@ -4283,7 +4283,7 @@
     "model": "core.aluno",
     "pk": 45,
     "fields": {
-        "nome": "Thomás Paulo Amaro",
+        "nome": "ThomÃ¡s Paulo Amaro",
         "turma": 2,
         "email_responsavel": null
     }
@@ -4319,7 +4319,7 @@
     "model": "core.aluno",
     "pk": 49,
     "fields": {
-        "nome": "Ana Clara Vitória de Oliveira Silva",
+        "nome": "Ana Clara VitÃ³ria de Oliveira Silva",
         "turma": 3,
         "email_responsavel": null
     }
@@ -4373,7 +4373,7 @@
     "model": "core.aluno",
     "pk": 55,
     "fields": {
-        "nome": "Davi Gomes Simão",
+        "nome": "Davi Gomes SimÃ£o",
         "turma": 3,
         "email_responsavel": null
     }
@@ -4382,7 +4382,7 @@
     "model": "core.aluno",
     "pk": 56,
     "fields": {
-        "nome": "Davi Simões Dolher Baptista",
+        "nome": "Davi SimÃµes Dolher Baptista",
         "turma": 3,
         "email_responsavel": null
     }
@@ -4427,7 +4427,7 @@
     "model": "core.aluno",
     "pk": 61,
     "fields": {
-        "nome": "Júlia Seiberlich Berg",
+        "nome": "JÃºlia Seiberlich Berg",
         "turma": 3,
         "email_responsavel": null
     }
@@ -4472,7 +4472,7 @@
     "model": "core.aluno",
     "pk": 66,
     "fields": {
-        "nome": "Luís Felipe Martinez Torrentes",
+        "nome": "LuÃ­s Felipe Martinez Torrentes",
         "turma": 3,
         "email_responsavel": null
     }
@@ -4508,7 +4508,7 @@
     "model": "core.aluno",
     "pk": 70,
     "fields": {
-        "nome": "Mariana Bêtta Bastos",
+        "nome": "Mariana BÃªtta Bastos",
         "turma": 3,
         "email_responsavel": null
     }
@@ -4643,7 +4643,7 @@
     "model": "core.aluno",
     "pk": 85,
     "fields": {
-        "nome": "Júlia dos Santos Silva",
+        "nome": "JÃºlia dos Santos Silva",
         "turma": 4,
         "email_responsavel": null
     }
@@ -4661,7 +4661,7 @@
     "model": "core.aluno",
     "pk": 87,
     "fields": {
-        "nome": "Lívia Lopes dos Santos",
+        "nome": "LÃ­via Lopes dos Santos",
         "turma": 4,
         "email_responsavel": null
     }
@@ -4697,7 +4697,7 @@
     "model": "core.aluno",
     "pk": 91,
     "fields": {
-        "nome": "Manuella Vimercati Papaléo Dantas",
+        "nome": "Manuella Vimercati PapalÃ©o Dantas",
         "turma": 4,
         "email_responsavel": null
     }
@@ -4715,7 +4715,7 @@
     "model": "core.aluno",
     "pk": 93,
     "fields": {
-        "nome": "Maria Luíza de Souza Onofre Veras",
+        "nome": "Maria LuÃ­za de Souza Onofre Veras",
         "turma": 4,
         "email_responsavel": null
     }
@@ -4805,7 +4805,7 @@
     "model": "core.aluno",
     "pk": 103,
     "fields": {
-        "nome": "Valentina Cristóvão Ramos",
+        "nome": "Valentina CristÃ³vÃ£o Ramos",
         "turma": 4,
         "email_responsavel": null
     }
@@ -4850,7 +4850,7 @@
     "model": "core.aluno",
     "pk": 108,
     "fields": {
-        "nome": "Alícia de Leivas Pereira Teixeira",
+        "nome": "AlÃ­cia de Leivas Pereira Teixeira",
         "turma": 5,
         "email_responsavel": null
     }
@@ -4886,7 +4886,7 @@
     "model": "core.aluno",
     "pk": 112,
     "fields": {
-        "nome": "Davi Gonçalves e Silva",
+        "nome": "Davi GonÃ§alves e Silva",
         "turma": 5,
         "email_responsavel": null
     }
@@ -4949,7 +4949,7 @@
     "model": "core.aluno",
     "pk": 119,
     "fields": {
-        "nome": "João Pedro Paixão Mantilla",
+        "nome": "JoÃ£o Pedro PaixÃ£o Mantilla",
         "turma": 5,
         "email_responsavel": null
     }
@@ -4958,7 +4958,7 @@
     "model": "core.aluno",
     "pk": 120,
     "fields": {
-        "nome": "João Victor Rodrigues Souza",
+        "nome": "JoÃ£o Victor Rodrigues Souza",
         "turma": 5,
         "email_responsavel": null
     }
@@ -4967,7 +4967,7 @@
     "model": "core.aluno",
     "pk": 121,
     "fields": {
-        "nome": "Júlia Ignácio da Costa",
+        "nome": "JÃºlia IgnÃ¡cio da Costa",
         "turma": 5,
         "email_responsavel": null
     }
@@ -4994,7 +4994,7 @@
     "model": "core.aluno",
     "pk": 124,
     "fields": {
-        "nome": "Lizzie Gonçalves Ferreira Cruz",
+        "nome": "Lizzie GonÃ§alves Ferreira Cruz",
         "turma": 5,
         "email_responsavel": null
     }
@@ -5003,7 +5003,7 @@
     "model": "core.aluno",
     "pk": 125,
     "fields": {
-        "nome": "Luiza Mello Rosa Gonçalves",
+        "nome": "Luiza Mello Rosa GonÃ§alves",
         "turma": 5,
         "email_responsavel": null
     }
@@ -5039,7 +5039,7 @@
     "model": "core.aluno",
     "pk": 129,
     "fields": {
-        "nome": "Maria Eduarda Cristovão Ramos",
+        "nome": "Maria Eduarda CristovÃ£o Ramos",
         "turma": 5,
         "email_responsavel": null
     }
@@ -5048,7 +5048,7 @@
     "model": "core.aluno",
     "pk": 130,
     "fields": {
-        "nome": "Maria Luiza Tavares Serapião",
+        "nome": "Maria Luiza Tavares SerapiÃ£o",
         "turma": 5,
         "email_responsavel": null
     }
@@ -5129,7 +5129,7 @@
     "model": "core.aluno",
     "pk": 139,
     "fields": {
-        "nome": "Alícia Soares Dantas",
+        "nome": "AlÃ­cia Soares Dantas",
         "turma": 6,
         "email_responsavel": null
     }
@@ -5147,7 +5147,7 @@
     "model": "core.aluno",
     "pk": 141,
     "fields": {
-        "nome": "Arthur Corredeira Guimarães",
+        "nome": "Arthur Corredeira GuimarÃ£es",
         "turma": 6,
         "email_responsavel": null
     }
@@ -5165,7 +5165,7 @@
     "model": "core.aluno",
     "pk": 143,
     "fields": {
-        "nome": "Bethânia Truta Esteves",
+        "nome": "BethÃ¢nia Truta Esteves",
         "turma": 6,
         "email_responsavel": null
     }
@@ -5246,7 +5246,7 @@
     "model": "core.aluno",
     "pk": 152,
     "fields": {
-        "nome": "Isabella dos Santos Rachid Guimarães",
+        "nome": "Isabella dos Santos Rachid GuimarÃ£es",
         "turma": 6,
         "email_responsavel": null
     }
@@ -5327,7 +5327,7 @@
     "model": "core.aluno",
     "pk": 161,
     "fields": {
-        "nome": "Pedro de Barros Magalhães",
+        "nome": "Pedro de Barros MagalhÃ£es",
         "turma": 6,
         "email_responsavel": null
     }
@@ -5381,7 +5381,7 @@
     "model": "core.aluno",
     "pk": 167,
     "fields": {
-        "nome": "Sofia Sá Freire Martins Hungria",
+        "nome": "Sofia SÃ¡ Freire Martins Hungria",
         "turma": 6,
         "email_responsavel": null
     }
@@ -5390,7 +5390,7 @@
     "model": "core.aluno",
     "pk": 168,
     "fields": {
-        "nome": "Ana Clara Ramos Barbosa Gonçalves",
+        "nome": "Ana Clara Ramos Barbosa GonÃ§alves",
         "turma": 7,
         "email_responsavel": null
     }
@@ -5462,7 +5462,7 @@
     "model": "core.aluno",
     "pk": 176,
     "fields": {
-        "nome": "Gabriel Terra Guimarães Santiago",
+        "nome": "Gabriel Terra GuimarÃ£es Santiago",
         "turma": 7,
         "email_responsavel": null
     }
@@ -5480,7 +5480,7 @@
     "model": "core.aluno",
     "pk": 178,
     "fields": {
-        "nome": "Heitor Antunes de Sá Carvalho",
+        "nome": "Heitor Antunes de SÃ¡ Carvalho",
         "turma": 7,
         "email_responsavel": null
     }
@@ -5489,7 +5489,7 @@
     "model": "core.aluno",
     "pk": 179,
     "fields": {
-        "nome": "Isaque de Melo Simões",
+        "nome": "Isaque de Melo SimÃµes",
         "turma": 7,
         "email_responsavel": null
     }
@@ -5498,7 +5498,7 @@
     "model": "core.aluno",
     "pk": 180,
     "fields": {
-        "nome": "Júlia Queiroz da Rocha Ribeiro",
+        "nome": "JÃºlia Queiroz da Rocha Ribeiro",
         "turma": 7,
         "email_responsavel": null
     }
@@ -5507,7 +5507,7 @@
     "model": "core.aluno",
     "pk": 181,
     "fields": {
-        "nome": "Júlio Cesar Izidoro Brito",
+        "nome": "JÃºlio Cesar Izidoro Brito",
         "turma": 7,
         "email_responsavel": null
     }
@@ -5615,7 +5615,7 @@
     "model": "core.aluno",
     "pk": 193,
     "fields": {
-        "nome": "Thomás Mota Silvestre",
+        "nome": "ThomÃ¡s Mota Silvestre",
         "turma": 7,
         "email_responsavel": null
     }
@@ -5624,7 +5624,7 @@
     "model": "core.aluno",
     "pk": 194,
     "fields": {
-        "nome": "Nícolas Monteiro da Silva",
+        "nome": "NÃ­colas Monteiro da Silva",
         "turma": 7,
         "email_responsavel": null
     }
@@ -5660,7 +5660,7 @@
     "model": "core.aluno",
     "pk": 198,
     "fields": {
-        "nome": "Carlos Eduardo Calábria Gioseffi",
+        "nome": "Carlos Eduardo CalÃ¡bria Gioseffi",
         "turma": 8,
         "email_responsavel": null
     }
@@ -5678,7 +5678,7 @@
     "model": "core.aluno",
     "pk": 200,
     "fields": {
-        "nome": "Enzo Vinícius de Almeida Carvalho dos Santos",
+        "nome": "Enzo VinÃ­cius de Almeida Carvalho dos Santos",
         "turma": 8,
         "email_responsavel": null
     }
@@ -5696,7 +5696,7 @@
     "model": "core.aluno",
     "pk": 202,
     "fields": {
-        "nome": "Heitor Malvão Luciano Batista",
+        "nome": "Heitor MalvÃ£o Luciano Batista",
         "turma": 8,
         "email_responsavel": null
     }
@@ -5714,7 +5714,7 @@
     "model": "core.aluno",
     "pk": 204,
     "fields": {
-        "nome": "João Bernardo Mueller Dias Caumo",
+        "nome": "JoÃ£o Bernardo Mueller Dias Caumo",
         "turma": 8,
         "email_responsavel": null
     }
@@ -5723,7 +5723,7 @@
     "model": "core.aluno",
     "pk": 205,
     "fields": {
-        "nome": "Lara Figueiredo Rebouças dos Santos",
+        "nome": "Lara Figueiredo RebouÃ§as dos Santos",
         "turma": 8,
         "email_responsavel": null
     }
@@ -5732,7 +5732,7 @@
     "model": "core.aluno",
     "pk": 206,
     "fields": {
-        "nome": "Lídia Precce Gonzalez",
+        "nome": "LÃ­dia Precce Gonzalez",
         "turma": 8,
         "email_responsavel": null
     }
@@ -6011,7 +6011,7 @@
     "model": "core.aluno",
     "pk": 237,
     "fields": {
-        "nome": "Gabriel Abrahão de Aguiar",
+        "nome": "Gabriel AbrahÃ£o de Aguiar",
         "turma": 9,
         "email_responsavel": null
     }
@@ -6020,7 +6020,7 @@
     "model": "core.aluno",
     "pk": 238,
     "fields": {
-        "nome": "João Victor Nobre de Freitas",
+        "nome": "JoÃ£o Victor Nobre de Freitas",
         "turma": 9,
         "email_responsavel": null
     }
@@ -6029,7 +6029,7 @@
     "model": "core.aluno",
     "pk": 239,
     "fields": {
-        "nome": "Júlia Caraghiozof da Fonseca",
+        "nome": "JÃºlia Caraghiozof da Fonseca",
         "turma": 9,
         "email_responsavel": null
     }
@@ -6038,7 +6038,7 @@
     "model": "core.aluno",
     "pk": 240,
     "fields": {
-        "nome": "Júlia Carmo de Campos",
+        "nome": "JÃºlia Carmo de Campos",
         "turma": 9,
         "email_responsavel": null
     }
@@ -6056,7 +6056,7 @@
     "model": "core.aluno",
     "pk": 242,
     "fields": {
-        "nome": "Letícia Miranda Arydes",
+        "nome": "LetÃ­cia Miranda Arydes",
         "turma": 9,
         "email_responsavel": null
     }
@@ -6083,7 +6083,7 @@
     "model": "core.aluno",
     "pk": 245,
     "fields": {
-        "nome": "Maria Antônia de Oliveira Neves Nogueira",
+        "nome": "Maria AntÃ´nia de Oliveira Neves Nogueira",
         "turma": 9,
         "email_responsavel": null
     }
@@ -6110,7 +6110,7 @@
     "model": "core.aluno",
     "pk": 248,
     "fields": {
-        "nome": "Maria Eduarda Tavares L. da Matta Graniço",
+        "nome": "Maria Eduarda Tavares L. da Matta GraniÃ§o",
         "turma": 9,
         "email_responsavel": null
     }
@@ -6146,7 +6146,7 @@
     "model": "core.aluno",
     "pk": 252,
     "fields": {
-        "nome": "Nathália Gonçalves Matheus Jarjous",
+        "nome": "NathÃ¡lia GonÃ§alves Matheus Jarjous",
         "turma": 9,
         "email_responsavel": null
     }
@@ -6218,7 +6218,7 @@
     "model": "core.aluno",
     "pk": 260,
     "fields": {
-        "nome": "Beatriz de Oliveira Collaço Côrtes",
+        "nome": "Beatriz de Oliveira CollaÃ§o CÃ´rtes",
         "turma": 10,
         "email_responsavel": null
     }
@@ -6227,7 +6227,7 @@
     "model": "core.aluno",
     "pk": 261,
     "fields": {
-        "nome": "Benício Melo Mendes dos Santos",
+        "nome": "BenÃ­cio Melo Mendes dos Santos",
         "turma": 10,
         "email_responsavel": null
     }
@@ -6290,7 +6290,7 @@
     "model": "core.aluno",
     "pk": 268,
     "fields": {
-        "nome": "Gabriel Leitão Ribeiro",
+        "nome": "Gabriel LeitÃ£o Ribeiro",
         "turma": 10,
         "email_responsavel": null
     }
@@ -6308,7 +6308,7 @@
     "model": "core.aluno",
     "pk": 270,
     "fields": {
-        "nome": "Gustavo Sodré Valladão",
+        "nome": "Gustavo SodrÃ© ValladÃ£o",
         "turma": 10,
         "email_responsavel": null
     }
@@ -6317,7 +6317,7 @@
     "model": "core.aluno",
     "pk": 271,
     "fields": {
-        "nome": "João Pedro de Paula Perelli dos Santos",
+        "nome": "JoÃ£o Pedro de Paula Perelli dos Santos",
         "turma": 10,
         "email_responsavel": null
     }
@@ -6326,7 +6326,7 @@
     "model": "core.aluno",
     "pk": 272,
     "fields": {
-        "nome": "Julia Viana Lourenço de Morais",
+        "nome": "Julia Viana LourenÃ§o de Morais",
         "turma": 10,
         "email_responsavel": null
     }
@@ -6371,7 +6371,7 @@
     "model": "core.aluno",
     "pk": 277,
     "fields": {
-        "nome": "Manuela Leitão Campos",
+        "nome": "Manuela LeitÃ£o Campos",
         "turma": 10,
         "email_responsavel": null
     }
@@ -6407,7 +6407,7 @@
     "model": "core.aluno",
     "pk": 281,
     "fields": {
-        "nome": "Matheus Dâmaso Cavatti",
+        "nome": "Matheus DÃ¢maso Cavatti",
         "turma": 10,
         "email_responsavel": null
     }
@@ -6443,7 +6443,7 @@
     "model": "core.aluno",
     "pk": 285,
     "fields": {
-        "nome": "Murilo Batista Pessôa Cruz",
+        "nome": "Murilo Batista PessÃ´a Cruz",
         "turma": 10,
         "email_responsavel": null
     }
@@ -6452,7 +6452,7 @@
     "model": "core.aluno",
     "pk": 286,
     "fields": {
-        "nome": "Raíssa Vitória Simião Bartolo",
+        "nome": "RaÃ­ssa VitÃ³ria SimiÃ£o Bartolo",
         "turma": 10,
         "email_responsavel": null
     }
@@ -6524,7 +6524,7 @@
     "model": "core.aluno",
     "pk": 294,
     "fields": {
-        "nome": "Bárbara Mariana Machado Pereira",
+        "nome": "BÃ¡rbara Mariana Machado Pereira",
         "turma": 11,
         "email_responsavel": null
     }
@@ -6569,7 +6569,7 @@
     "model": "core.aluno",
     "pk": 299,
     "fields": {
-        "nome": "Fábio Araujo Dias",
+        "nome": "FÃ¡bio Araujo Dias",
         "turma": 11,
         "email_responsavel": null
     }
@@ -6605,7 +6605,7 @@
     "model": "core.aluno",
     "pk": 303,
     "fields": {
-        "nome": "Henrique Lacerda Simões",
+        "nome": "Henrique Lacerda SimÃµes",
         "turma": 11,
         "email_responsavel": null
     }
@@ -6632,7 +6632,7 @@
     "model": "core.aluno",
     "pk": 306,
     "fields": {
-        "nome": "João Felipe Fernandes Girão",
+        "nome": "JoÃ£o Felipe Fernandes GirÃ£o",
         "turma": 11,
         "email_responsavel": null
     }
@@ -6641,7 +6641,7 @@
     "model": "core.aluno",
     "pk": 307,
     "fields": {
-        "nome": "João Gabriel Silva da Cruz",
+        "nome": "JoÃ£o Gabriel Silva da Cruz",
         "turma": 11,
         "email_responsavel": null
     }
@@ -6650,7 +6650,7 @@
     "model": "core.aluno",
     "pk": 308,
     "fields": {
-        "nome": "João Hirt DAlmeida Provençano Leal",
+        "nome": "JoÃ£o Hirt DAlmeida ProvenÃ§ano Leal",
         "turma": 11,
         "email_responsavel": null
     }
@@ -6659,7 +6659,7 @@
     "model": "core.aluno",
     "pk": 309,
     "fields": {
-        "nome": "Júlia Moura da Silva Macedo",
+        "nome": "JÃºlia Moura da Silva Macedo",
         "turma": 11,
         "email_responsavel": null
     }
@@ -6677,7 +6677,7 @@
     "model": "core.aluno",
     "pk": 311,
     "fields": {
-        "nome": "Lavínia da Costa Alves",
+        "nome": "LavÃ­nia da Costa Alves",
         "turma": 11,
         "email_responsavel": null
     }
@@ -6686,7 +6686,7 @@
     "model": "core.aluno",
     "pk": 312,
     "fields": {
-        "nome": "Louise Canêdo dos Santos Gomes",
+        "nome": "Louise CanÃªdo dos Santos Gomes",
         "turma": 11,
         "email_responsavel": null
     }
@@ -6767,7 +6767,7 @@
     "model": "core.aluno",
     "pk": 321,
     "fields": {
-        "nome": "Sarah Boquimpani de Araújo Camara",
+        "nome": "Sarah Boquimpani de AraÃºjo Camara",
         "turma": 11,
         "email_responsavel": null
     }
@@ -6776,7 +6776,7 @@
     "model": "core.aluno",
     "pk": 322,
     "fields": {
-        "nome": "Valentino Sá Rêgo Fernandes",
+        "nome": "Valentino SÃ¡ RÃªgo Fernandes",
         "turma": 11,
         "email_responsavel": null
     }
@@ -6785,7 +6785,7 @@
     "model": "core.aluno",
     "pk": 323,
     "fields": {
-        "nome": "Vitória Mello Rosa Gonçalves",
+        "nome": "VitÃ³ria Mello Rosa GonÃ§alves",
         "turma": 11,
         "email_responsavel": null
     }
@@ -6803,7 +6803,7 @@
     "model": "core.aluno",
     "pk": 325,
     "fields": {
-        "nome": "Lavínia de Leivas Pereira Teixeira",
+        "nome": "LavÃ­nia de Leivas Pereira Teixeira",
         "turma": 11,
         "email_responsavel": null
     }
@@ -6920,7 +6920,7 @@
     "model": "core.aluno",
     "pk": 338,
     "fields": {
-        "nome": "Gabriela Camêlo Santana",
+        "nome": "Gabriela CamÃªlo Santana",
         "turma": 12,
         "email_responsavel": null
     }
@@ -6947,7 +6947,7 @@
     "model": "core.aluno",
     "pk": 341,
     "fields": {
-        "nome": "João Duarte da Silva Carvalho",
+        "nome": "JoÃ£o Duarte da Silva Carvalho",
         "turma": 12,
         "email_responsavel": null
     }
@@ -6956,7 +6956,7 @@
     "model": "core.aluno",
     "pk": 342,
     "fields": {
-        "nome": "João Gabriel Vieira Rodrigues",
+        "nome": "JoÃ£o Gabriel Vieira Rodrigues",
         "turma": 12,
         "email_responsavel": null
     }
@@ -6965,7 +6965,7 @@
     "model": "core.aluno",
     "pk": 343,
     "fields": {
-        "nome": "João Pedro Corrêa Machado",
+        "nome": "JoÃ£o Pedro CorrÃªa Machado",
         "turma": 12,
         "email_responsavel": null
     }
@@ -6974,7 +6974,7 @@
     "model": "core.aluno",
     "pk": 344,
     "fields": {
-        "nome": "Júlia Paranhos Loureiro",
+        "nome": "JÃºlia Paranhos Loureiro",
         "turma": 12,
         "email_responsavel": null
     }
@@ -6983,7 +6983,7 @@
     "model": "core.aluno",
     "pk": 345,
     "fields": {
-        "nome": "Juliana Gomes Lourenço",
+        "nome": "Juliana Gomes LourenÃ§o",
         "turma": 12,
         "email_responsavel": null
     }
@@ -6992,7 +6992,7 @@
     "model": "core.aluno",
     "pk": 346,
     "fields": {
-        "nome": "Juliana Urbinder Magalhães",
+        "nome": "Juliana Urbinder MagalhÃ£es",
         "turma": 12,
         "email_responsavel": null
     }
@@ -7019,7 +7019,7 @@
     "model": "core.aluno",
     "pk": 349,
     "fields": {
-        "nome": "Letícia Antunes Azevedo",
+        "nome": "LetÃ­cia Antunes Azevedo",
         "turma": 12,
         "email_responsavel": null
     }
@@ -7028,7 +7028,7 @@
     "model": "core.aluno",
     "pk": 350,
     "fields": {
-        "nome": "Letícia Gabrielle Martins França",
+        "nome": "LetÃ­cia Gabrielle Martins FranÃ§a",
         "turma": 12,
         "email_responsavel": null
     }
@@ -7037,7 +7037,7 @@
     "model": "core.aluno",
     "pk": 351,
     "fields": {
-        "nome": "Letícia Vieira Leão",
+        "nome": "LetÃ­cia Vieira LeÃ£o",
         "turma": 12,
         "email_responsavel": null
     }
@@ -7109,7 +7109,7 @@
     "model": "core.aluno",
     "pk": 359,
     "fields": {
-        "nome": "Paulo Luis de Almeida Júnior Transferido",
+        "nome": "Paulo Luis de Almeida JÃºnior Transferido",
         "turma": 12,
         "email_responsavel": null
     }
@@ -7190,7 +7190,7 @@
     "model": "core.aluno",
     "pk": 368,
     "fields": {
-        "nome": "Gabriel Magalhães de Jesus Silva",
+        "nome": "Gabriel MagalhÃ£es de Jesus Silva",
         "turma": 12,
         "email_responsavel": null
     }
@@ -7199,7 +7199,7 @@
     "model": "core.aluno",
     "pk": 369,
     "fields": {
-        "nome": "Luísa Gaidzinski Rodrigues",
+        "nome": "LuÃ­sa Gaidzinski Rodrigues",
         "turma": 12,
         "email_responsavel": null
     }
@@ -7262,7 +7262,7 @@
     "model": "core.aluno",
     "pk": 376,
     "fields": {
-        "nome": "Arthur Oliveira Gonçalves",
+        "nome": "Arthur Oliveira GonÃ§alves",
         "turma": 13,
         "email_responsavel": null
     }
@@ -7271,7 +7271,7 @@
     "model": "core.aluno",
     "pk": 377,
     "fields": {
-        "nome": "Bernardo Câmara Estevão",
+        "nome": "Bernardo CÃ¢mara EstevÃ£o",
         "turma": 13,
         "email_responsavel": null
     }
@@ -7280,7 +7280,7 @@
     "model": "core.aluno",
     "pk": 378,
     "fields": {
-        "nome": "Bernardo Ignácio da Costa",
+        "nome": "Bernardo IgnÃ¡cio da Costa",
         "turma": 13,
         "email_responsavel": null
     }
@@ -7352,7 +7352,7 @@
     "model": "core.aluno",
     "pk": 386,
     "fields": {
-        "nome": "Gustavo Antunes Góes",
+        "nome": "Gustavo Antunes GÃ³es",
         "turma": 13,
         "email_responsavel": null
     }
@@ -7370,7 +7370,7 @@
     "model": "core.aluno",
     "pk": 388,
     "fields": {
-        "nome": "João Pedro Brandão Jardim",
+        "nome": "JoÃ£o Pedro BrandÃ£o Jardim",
         "turma": 13,
         "email_responsavel": null
     }
@@ -7379,7 +7379,7 @@
     "model": "core.aluno",
     "pk": 389,
     "fields": {
-        "nome": "Laís Boldrim Costa",
+        "nome": "LaÃ­s Boldrim Costa",
         "turma": 13,
         "email_responsavel": null
     }
@@ -7388,7 +7388,7 @@
     "model": "core.aluno",
     "pk": 390,
     "fields": {
-        "nome": "Laura Viana Lourenço de Morais",
+        "nome": "Laura Viana LourenÃ§o de Morais",
         "turma": 13,
         "email_responsavel": null
     }
@@ -7397,7 +7397,7 @@
     "model": "core.aluno",
     "pk": 391,
     "fields": {
-        "nome": "Lívia Aparício Neiva Whitaker",
+        "nome": "LÃ­via AparÃ­cio Neiva Whitaker",
         "turma": 13,
         "email_responsavel": null
     }
@@ -7406,7 +7406,7 @@
     "model": "core.aluno",
     "pk": 392,
     "fields": {
-        "nome": "Lorena Sophi Alcântara Athanázio",
+        "nome": "Lorena Sophi AlcÃ¢ntara AthanÃ¡zio",
         "turma": 13,
         "email_responsavel": null
     }
@@ -7442,7 +7442,7 @@
     "model": "core.aluno",
     "pk": 396,
     "fields": {
-        "nome": "Lucas Varejão Teixeira",
+        "nome": "Lucas VarejÃ£o Teixeira",
         "turma": 13,
         "email_responsavel": null
     }
@@ -7451,7 +7451,7 @@
     "model": "core.aluno",
     "pk": 397,
     "fields": {
-        "nome": "Luíza Góes de Oliveira Siqueira",
+        "nome": "LuÃ­za GÃ³es de Oliveira Siqueira",
         "turma": 13,
         "email_responsavel": null
     }
@@ -7478,7 +7478,7 @@
     "model": "core.aluno",
     "pk": 400,
     "fields": {
-        "nome": "Maria Clara Amaral Nunes de França",
+        "nome": "Maria Clara Amaral Nunes de FranÃ§a",
         "turma": 13,
         "email_responsavel": null
     }
@@ -7496,7 +7496,7 @@
     "model": "core.aluno",
     "pk": 402,
     "fields": {
-        "nome": "Maria Clara Gonçalves Garcia",
+        "nome": "Maria Clara GonÃ§alves Garcia",
         "turma": 13,
         "email_responsavel": null
     }
@@ -7514,7 +7514,7 @@
     "model": "core.aluno",
     "pk": 404,
     "fields": {
-        "nome": "Maria Luiza Lourenço Pires",
+        "nome": "Maria Luiza LourenÃ§o Pires",
         "turma": 13,
         "email_responsavel": null
     }
@@ -7541,7 +7541,7 @@
     "model": "core.aluno",
     "pk": 407,
     "fields": {
-        "nome": "Raira Gabriela Fernandes de Sá Pinto",
+        "nome": "Raira Gabriela Fernandes de SÃ¡ Pinto",
         "turma": 13,
         "email_responsavel": null
     }
@@ -7559,7 +7559,7 @@
     "model": "core.aluno",
     "pk": 409,
     "fields": {
-        "nome": "Suellen Cristina Guimarães de Paulo Bazilio",
+        "nome": "Suellen Cristina GuimarÃ£es de Paulo Bazilio",
         "turma": 13,
         "email_responsavel": null
     }
@@ -7586,7 +7586,7 @@
     "model": "core.aluno",
     "pk": 412,
     "fields": {
-        "nome": "Isabela Guimarães da Silva",
+        "nome": "Isabela GuimarÃ£es da Silva",
         "turma": 13,
         "email_responsavel": null
     }
@@ -7613,7 +7613,7 @@
     "model": "core.aluno",
     "pk": 415,
     "fields": {
-        "nome": "Alícia Araujo Silva",
+        "nome": "AlÃ­cia Araujo Silva",
         "turma": 14,
         "email_responsavel": null
     }
@@ -7685,7 +7685,7 @@
     "model": "core.aluno",
     "pk": 423,
     "fields": {
-        "nome": "Davi Smarçaro Cruz",
+        "nome": "Davi SmarÃ§aro Cruz",
         "turma": 14,
         "email_responsavel": null
     }
@@ -7703,7 +7703,7 @@
     "model": "core.aluno",
     "pk": 425,
     "fields": {
-        "nome": "Dominique França Teixeira de Oliveira",
+        "nome": "Dominique FranÃ§a Teixeira de Oliveira",
         "turma": 14,
         "email_responsavel": null
     }
@@ -7748,7 +7748,7 @@
     "model": "core.aluno",
     "pk": 430,
     "fields": {
-        "nome": "Gabriela Vasconcelos Cândido Cabral",
+        "nome": "Gabriela Vasconcelos CÃ¢ndido Cabral",
         "turma": 14,
         "email_responsavel": null
     }
@@ -7793,7 +7793,7 @@
     "model": "core.aluno",
     "pk": 435,
     "fields": {
-        "nome": "João Pedro Barroso Pereira",
+        "nome": "JoÃ£o Pedro Barroso Pereira",
         "turma": 14,
         "email_responsavel": null
     }
@@ -7802,7 +7802,7 @@
     "model": "core.aluno",
     "pk": 436,
     "fields": {
-        "nome": "Júlia Mendes Cavalcante",
+        "nome": "JÃºlia Mendes Cavalcante",
         "turma": 14,
         "email_responsavel": null
     }
@@ -7829,7 +7829,7 @@
     "model": "core.aluno",
     "pk": 439,
     "fields": {
-        "nome": "Lívia Mel Moura A. dos Santos Nogueira",
+        "nome": "LÃ­via Mel Moura A. dos Santos Nogueira",
         "turma": 14,
         "email_responsavel": null
     }
@@ -7874,7 +7874,7 @@
     "model": "core.aluno",
     "pk": 444,
     "fields": {
-        "nome": "Matheus Araújo Padrão",
+        "nome": "Matheus AraÃºjo PadrÃ£o",
         "turma": 14,
         "email_responsavel": null
     }
@@ -7901,7 +7901,7 @@
     "model": "core.aluno",
     "pk": 447,
     "fields": {
-        "nome": "Nathália Monteiro Campos Guedes Lima",
+        "nome": "NathÃ¡lia Monteiro Campos Guedes Lima",
         "turma": 14,
         "email_responsavel": null
     }
@@ -7919,7 +7919,7 @@
     "model": "core.aluno",
     "pk": 449,
     "fields": {
-        "nome": "Pedro Candido Crisóstomo",
+        "nome": "Pedro Candido CrisÃ³stomo",
         "turma": 14,
         "email_responsavel": null
     }
@@ -7928,7 +7928,7 @@
     "model": "core.aluno",
     "pk": 450,
     "fields": {
-        "nome": "Rafael Kauã de Almeida Salgado",
+        "nome": "Rafael KauÃ£ de Almeida Salgado",
         "turma": 14,
         "email_responsavel": null
     }
@@ -7955,7 +7955,7 @@
     "model": "core.aluno",
     "pk": 453,
     "fields": {
-        "nome": "Victor Almeida Pessôa",
+        "nome": "Victor Almeida PessÃ´a",
         "turma": 14,
         "email_responsavel": null
     }
@@ -7982,7 +7982,7 @@
     "model": "core.aluno",
     "pk": 456,
     "fields": {
-        "nome": "Ana Júlia Mendes da Silveira",
+        "nome": "Ana JÃºlia Mendes da Silveira",
         "turma": 15,
         "email_responsavel": null
     }
@@ -7991,7 +7991,7 @@
     "model": "core.aluno",
     "pk": 457,
     "fields": {
-        "nome": "Anna Sophia Camara Conceição",
+        "nome": "Anna Sophia Camara ConceiÃ§Ã£o",
         "turma": 15,
         "email_responsavel": null
     }
@@ -8000,7 +8000,7 @@
     "model": "core.aluno",
     "pk": 458,
     "fields": {
-        "nome": "Bernardo Frazão",
+        "nome": "Bernardo FrazÃ£o",
         "turma": 15,
         "email_responsavel": null
     }
@@ -8081,7 +8081,7 @@
     "model": "core.aluno",
     "pk": 467,
     "fields": {
-        "nome": "Isabela Tricárico Coutinho Barbosa",
+        "nome": "Isabela TricÃ¡rico Coutinho Barbosa",
         "turma": 15,
         "email_responsavel": null
     }
@@ -8099,7 +8099,7 @@
     "model": "core.aluno",
     "pk": 469,
     "fields": {
-        "nome": "João Pedro de Almeida Salgado",
+        "nome": "JoÃ£o Pedro de Almeida Salgado",
         "turma": 15,
         "email_responsavel": null
     }
@@ -8108,7 +8108,7 @@
     "model": "core.aluno",
     "pk": 470,
     "fields": {
-        "nome": "Júlia Nogueira Matos",
+        "nome": "JÃºlia Nogueira Matos",
         "turma": 15,
         "email_responsavel": null
     }
@@ -8162,7 +8162,7 @@
     "model": "core.aluno",
     "pk": 476,
     "fields": {
-        "nome": "Maria Eduarda de Souza Corrêa",
+        "nome": "Maria Eduarda de Souza CorrÃªa",
         "turma": 15,
         "email_responsavel": null
     }
@@ -8243,7 +8243,7 @@
     "model": "core.aluno",
     "pk": 485,
     "fields": {
-        "nome": "Sofia de Almeida Timóteo",
+        "nome": "Sofia de Almeida TimÃ³teo",
         "turma": 15,
         "email_responsavel": null
     }
@@ -8333,7 +8333,7 @@
     "model": "core.aluno",
     "pk": 495,
     "fields": {
-        "nome": "Júlia Fernandes Benevides Serapião",
+        "nome": "JÃºlia Fernandes Benevides SerapiÃ£o",
         "turma": 15,
         "email_responsavel": null
     }
@@ -8351,7 +8351,7 @@
     "model": "core.aluno",
     "pk": 497,
     "fields": {
-        "nome": "Andressa Corredeira Guimarães",
+        "nome": "Andressa Corredeira GuimarÃ£es",
         "turma": 16,
         "email_responsavel": null
     }
@@ -8369,7 +8369,7 @@
     "model": "core.aluno",
     "pk": 499,
     "fields": {
-        "nome": "Arthur Ribeiro de França",
+        "nome": "Arthur Ribeiro de FranÃ§a",
         "turma": 16,
         "email_responsavel": null
     }
@@ -8378,7 +8378,7 @@
     "model": "core.aluno",
     "pk": 500,
     "fields": {
-        "nome": "Bernardo Frisoni do Amaral Guimarães",
+        "nome": "Bernardo Frisoni do Amaral GuimarÃ£es",
         "turma": 16,
         "email_responsavel": null
     }
@@ -8477,7 +8477,7 @@
     "model": "core.aluno",
     "pk": 511,
     "fields": {
-        "nome": "Isabelle Magalhães Pereira",
+        "nome": "Isabelle MagalhÃ£es Pereira",
         "turma": 16,
         "email_responsavel": null
     }
@@ -8558,7 +8558,7 @@
     "model": "core.aluno",
     "pk": 520,
     "fields": {
-        "nome": "Maria Júlia Galhardo da Silva",
+        "nome": "Maria JÃºlia Galhardo da Silva",
         "turma": 16,
         "email_responsavel": null
     }
@@ -8594,7 +8594,7 @@
     "model": "core.aluno",
     "pk": 524,
     "fields": {
-        "nome": "Miguel Gomes Simeão",
+        "nome": "Miguel Gomes SimeÃ£o",
         "turma": 16,
         "email_responsavel": null
     }
@@ -8621,7 +8621,7 @@
     "model": "core.aluno",
     "pk": 527,
     "fields": {
-        "nome": "Pedro Antônio Pereira Henriques",
+        "nome": "Pedro AntÃ´nio Pereira Henriques",
         "turma": 16,
         "email_responsavel": null
     }
@@ -8675,7 +8675,7 @@
     "model": "core.aluno",
     "pk": 533,
     "fields": {
-        "nome": "Sophia dos Santos Gonçalves Malheiros",
+        "nome": "Sophia dos Santos GonÃ§alves Malheiros",
         "turma": 16,
         "email_responsavel": null
     }
