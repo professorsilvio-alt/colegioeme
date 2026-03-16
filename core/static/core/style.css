@@ -311,6 +311,15 @@ button:hover,
     background: #96281b;
 }
 
+.btn-extra-class {
+    background: #16a085; /* Specific color for extra class */
+    color: #fff;
+}
+
+.btn-extra-class:hover {
+    background: #1abc9c;
+}
+
 /* Small buttons inside table */
 .btn-sm {
     padding: 5px 10px;

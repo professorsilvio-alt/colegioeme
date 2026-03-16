@@ -193,10 +193,13 @@
                 <td>{{ oc.disciplina.nome|default:"-" }}</td>
                 <td class="status-{{ oc.status|lower }}">{{ oc.status }}</td>
                 <td>
+                    <a href="{% url 'ocorrencia_ver' oc.pk %}" class="btn-sm" style="background: #16a085;">👁 Ver</a>
                     {% if prof.pode_editar_tudo or oc.professor == prof %}
                     <a href="{% url 'ocorrencia_editar' oc.pk %}" class="btn-sm">✏ Editar</a>
+                    {% with padded_id=oc.pk|stringformat:"04d" %}
                     <button type="submit" formaction="{% url 'ocorrencia_excluir' oc.pk %}" class="btn-sm btn-danger-sm"
-                        onclick="return confirm('Excluir OC-{{ oc.pk|stringformat:"04d" }}?')">🗑</button>
+                        onclick="return confirm('Excluir OC-{{ padded_id }}?')">🗑</button>
+                    {% endwith %}
                     {% else %}
                     -
                     {% endif %}
@@ -216,16 +219,22 @@
 <div id="tab-conteudos" class="tab-pane" style="display:none;">
 
     {% if prof.cargo == 'PROFESSOR' or prof.pode_editar_tudo %}
-    <button class="btn-primary" onclick="toggleSection('formConteudo')">+ Lançar Conteúdo Programático</button>
+    <button class="btn-primary" onclick="toggleSectionConteudo('normal')">+ Lançar Conteúdo Programático</button>
+    <button class="btn-extra-class" onclick="toggleSectionConteudo('extra')">⚡ + Aula Extra</button>
     {% endif %}
 
-    {% if prof.pode_ver_tudo %}
+    {% if prof.pode_ver_tudo or prof.cargo == 'PROFESSOR' %}
     <a href="{% url 'relatorio_pendencias' %}" class="btn-gray" style="text-decoration: none; padding: 10px 15px; display: inline-block;">📊 Relatório de Pendências</a>
+    {% endif %}
+
+    {% if prof.pode_gerar_relatorios %}
+    <a href="{% url 'exportar_conteudos_csv' %}" class="btn-export" style="background: #003366; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-size: 14px; margin-left: 5px;">📥 CSV (Completo)</a>
+    <a href="{% url 'exportar_conteudos_pdf' %}" class="btn-export" style="background: #003366; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-size: 14px; margin-left: 5px;">📄 PDF (Completo)</a>
     {% endif %}
 
     <!-- Formulário novo conteúdo -->
     <div id="formConteudo" class="collapsible" style="display:none;">
-        <h2>Lançamento de Conteúdo Programático</h2>
+        <h2 id="tituloFormConteudo">Lançamento de Conteúdo Programático</h2>
         <form method="post" action="{% url 'conteudo_criar' %}">
             {% csrf_token %}
 
@@ -248,12 +257,13 @@
             </select>
 
             <label>Data da Aula</label>
+            <input type="hidden" name="data" id="dataConteudo">
             <div id="dataContWrapper">
                 <em style="color:#999; font-size:13px;">Selecione turma, disciplina e professor primeiro.</em>
-                <input type="hidden" name="data" id="dataConteudo">
             </div>
-            <select id="dataSelectCont" style="display:none;" required onchange="document.getElementById('dataConteudo').value=this.value">
+            <select id="dataSelectCont" style="display:none;" onchange="document.getElementById('dataConteudo').value=this.value">
             </select>
+            <input type="date" id="dataInputExtra" style="display:none;" onchange="document.getElementById('dataConteudo').value=this.value">
 
             <label>Conteúdo Ministrado</label>
             <textarea name="descricao" required></textarea>
@@ -282,7 +292,7 @@
                     <label>Disciplina</label>
                     <select name="filtro_disc_c" onchange="this.form.submit()">
                         <option value="">Todas</option>
-                        {% for d in disciplinas %}
+                        {% for d in disciplinas_tab_c %}
                         <option value="{{ d.pk }}" {% if filtro_disc_c == d.pk|stringformat:"d" %}selected{% endif %}>{{ d.nome }}</option>
                         {% endfor %}
                     </select>
@@ -291,15 +301,13 @@
                     <label>Professor</label>
                     <select name="filtro_prof_c" onchange="this.form.submit()">
                         <option value="">Todos</option>
-                        {% for p in todos_professores %}
+                        {% for p in professores_tab_c %}
                         <option value="{{ p.pk }}" {% if filtro_prof_c == p.pk|stringformat:"d" %}selected{% endif %}>{{ p.nome }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="filter-btns">
                     <a href="?tab=conteudos" class="btn-gray">Limpar</a>
-                    <a href="{% url 'exportar_conteudos_csv' %}" class="btn-export">📥 CSV</a>
-                    <a href="{% url 'exportar_conteudos_pdf' %}" class="btn-export btn-pdf">📄 PDF</a>
                 </div>
             </div>
         </form>
@@ -314,9 +322,9 @@
                 onclick="return confirm('Excluir selecionados?')">🗑 Excluir Selecionados</button>
             {% endif %}
 
-            {% if prof.pode_gerar_relatorios %}
-            <a href="{% url 'exportar_conteudos_csv' %}?{{ request.GET.urlencode }}" class="btn-export">📥 CSV</a>
-            <a href="{% url 'exportar_conteudos_pdf' %}?{{ request.GET.urlencode }}" class="btn-export btn-pdf">📄 PDF</a>
+            {% if prof.pode_gerar_relatorios or prof.cargo == 'PROFESSOR' %}
+            <a href="{% url 'exportar_conteudos_csv' %}?{{ request.GET.urlencode }}" class="btn-export" style="background: #003366; color: white; {% if prof.cargo == 'PROFESSOR' %}display: none;{% endif %}">📥 CSV (Filtrado)</a>
+            <a href="{% url 'exportar_conteudos_pdf' %}?{{ request.GET.urlencode }}" class="btn-export" style="background: #003366; color: white;">📄 PDF (Filtrado)</a>
             {% endif %}
         </div>
         <table>
@@ -337,8 +345,12 @@
                 <td>{{ c.disciplina.nome|default:"-" }}</td>
                 <td>{{ c.descricao|truncatechars:80 }}</td>
                 <td>
+                    <a href="{% url 'conteudo_ver' c.pk %}" class="btn-sm" style="background: #16a085; text-decoration: none;">👁 Ver</a>
+                    {% if prof.pode_editar_tudo or c.professor == prof %}
+                    <a href="{% url 'conteudo_editar' c.pk %}" class="btn-sm" style="text-decoration: none;">✏ Editar</a>
                     <button type="submit" formaction="{% url 'conteudo_excluir' c.pk %}" class="btn-sm btn-danger-sm"
                         onclick="return confirm('Excluir conteúdo?')">🗑</button>
+                    {% endif %}
                 </td>
             </tr>
             {% empty %}
@@ -373,6 +385,42 @@ if (params.get('tab') === 'conteudos') {
 function toggleSection(id) {
     const el = document.getElementById(id);
     el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+let modoConteudo = 'normal'; // 'normal' ou 'extra'
+
+function toggleSectionConteudo(modo) {
+    const el = document.getElementById('formConteudo');
+    const titulo = document.getElementById('tituloFormConteudo');
+    
+    // Se clicar no mesmo botão com o form aberto, fecha
+    if (el.style.display === 'block' && modo === modoConteudo) {
+        el.style.display = 'none';
+        return;
+    }
+
+    modoConteudo = modo;
+    el.style.display = 'block';
+    titulo.innerText = modo === 'extra' ? '⚡ Lançamento de Aula Extra' : 'Lançamento de Conteúdo Programático';
+    
+    // Limpar seleções anteriores ao trocar de modo
+    document.getElementById('turmaSelectCont').value = '';
+    document.getElementById('discSelectCont').innerHTML = '<option value="">Selecione a turma primeiro...</option>';
+    document.getElementById('profSelectCont').innerHTML = '<option value="">Selecione a disciplina primeiro...</option>';
+    resetDataSelection();
+}
+
+function resetDataSelection() {
+    const wrapper = document.getElementById('dataContWrapper');
+    const dataSel = document.getElementById('dataSelectCont');
+    const dataInputExtra = document.getElementById('dataInputExtra');
+    const dataHidden = document.getElementById('dataConteudo');
+
+    dataSel.style.display = 'none';
+    dataInputExtra.style.display = 'none';
+    dataHidden.value = '';
+    wrapper.style.display = 'block';
+    wrapper.innerHTML = '<em style="color:#999; font-size:13px;">Selecione turma, disciplina e professor primeiro.</em>';
 }
 
 // ── SELECT ALL CHECKBOXES ──
@@ -452,13 +500,24 @@ function carregarDatasValidas() {
     const profId = document.getElementById('profSelectCont').value;
     const wrapper = document.getElementById('dataContWrapper');
     const dataSel = document.getElementById('dataSelectCont');
+    const dataInputExtra = document.getElementById('dataInputExtra');
     const dataHidden = document.getElementById('dataConteudo');
 
     dataSel.style.display = 'none';
+    dataInputExtra.style.display = 'none';
     dataHidden.value = '';
-    wrapper.innerHTML = '<em style="color:#999; font-size:13px;">Selecione turma, disciplina e professor primeiro.</em><input type="hidden" name="data" id="dataConteudo">';
+    wrapper.style.display = 'block';
+    wrapper.innerHTML = '<em style="color:#999; font-size:13px;">Selecione turma, disciplina e professor primeiro.</em>';
 
     if (!codigo || !profId) return;
+
+    if (modoConteudo === 'extra') {
+        wrapper.style.display = 'none';
+        dataInputExtra.style.display = 'block';
+        dataInputExtra.value = new Date().toISOString().split('T')[0];
+        dataHidden.value = dataInputExtra.value;
+        return;
+    }
 
     wrapper.innerHTML = '<em style="color:#999; font-size:13px;">Carregando datas...</em>';
     fetch('/api/turma/' + codigo + '/professor/' + profId + '/datas/')
@@ -476,17 +535,10 @@ function carregarDatasValidas() {
                 return `<option value="${d.data}"${style}>${d.label}${check}</option>`;
             }).join('');
             dataSel.value = primeiro.data;
-            // Replace hidden input in wrapper and show select
-            wrapper.innerHTML = '';
+            // Hide wrapper and show select
+            wrapper.style.display = 'none';
             dataSel.style.display = 'block';
-            // Keep the hidden input in sync
-            const hidden = document.createElement('input');
-            hidden.type = 'hidden';
-            hidden.name = 'data';
-            hidden.id = 'dataConteudo';
-            hidden.value = primeiro.data;
-            wrapper.appendChild(hidden);
-            dataSel.onchange = () => { document.getElementById('dataConteudo').value = dataSel.value; };
+            dataHidden.value = primeiro.data;
         });
 }
 

@@ -24,9 +24,9 @@
         </div>
 
         <!-- Lançamento Coletivo -->
-        {% if prof.cargo == 'ADMIN' %}
+        {% if prof.cargo == 'ADMIN' or prof.cargo == 'DIRETOR' %}
         <div style="background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 8px;">
-            <h3 style="margin-top: 0; color: #856404; font-size: 16px;">🚀 Lançamento Coletivo (Administrador)</h3>
+            <h3 style="margin-top: 0; color: #856404; font-size: 16px;">🚀 Lançamento Coletivo</h3>
             <p style="font-size: 11px; color: #856404; margin-bottom: 10px;">Lança conteúdo para as turmas selecionadas que têm aula na data escolhida.</p>
             <form method="post" action="{% url 'lancamento_coletivo' %}">
                 {% csrf_token %}
@@ -56,8 +56,8 @@
             </form>
         </div>
         {% else %}
-        <div style="background: #f8f9fa; border: 1px solid #eee; padding: 15px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #999; font-style: italic; font-size: 13px;">
-            Acesso ao Lançamento Coletivo restrito ao Administrador.
+        <div style="background: #f8f9fa; border: 1px solid #eee; padding: 15px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #999; font-style: italic; font-size: 14px;">
+            Acesso ao Lançamento Coletivo restrito ao Administrador e Diretor.
         </div>
         {% endif %}
     </div>

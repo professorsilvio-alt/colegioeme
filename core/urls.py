@@ -15,6 +15,7 @@ urlpatterns = [
 
     # Ocorrências
     path('ocorrencia/criar/', views.ocorrencia_criar, name='ocorrencia_criar'),
+    path('ocorrencia/<int:pk>/', views.ocorrencia_ver, name='ocorrencia_ver'),
     path('ocorrencia/<int:pk>/editar/', views.ocorrencia_editar, name='ocorrencia_editar'),
     path('ocorrencia/<int:pk>/excluir/', views.ocorrencia_excluir, name='ocorrencia_excluir'),
     path('ocorrencia/excluir-varios/', views.ocorrencia_excluir_varios, name='ocorrencia_excluir_varios'),
@@ -22,6 +23,8 @@ urlpatterns = [
 
     # Conteúdos
     path('conteudo/criar/', views.conteudo_criar, name='conteudo_criar'),
+    path('conteudo/<int:pk>/', views.conteudo_ver, name='conteudo_ver'),
+    path('conteudo/<int:pk>/editar/', views.conteudo_editar, name='conteudo_editar'),
     path('conteudo/<int:pk>/excluir/', views.conteudo_excluir, name='conteudo_excluir'),
     path('conteudo/excluir-varios/', views.conteudo_excluir_varios, name='conteudo_excluir_varios'),
 

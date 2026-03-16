@@ -58,7 +58,7 @@ class Professor(models.Model):
 
     @property
     def pode_editar_tudo(self):
-        return self.cargo in ['ADMIN', 'DIRETOR', 'COORDENADOR']
+        return self.cargo in ['ADMIN', 'DIRETOR']
 
     @property
     def pode_gerar_relatorios(self):

@@ -1,0 +1,66 @@
+{% extends 'core/base.html' %}
+{% block title %}Detalhes da Ocorrência - Sistema EME{% endblock %}
+
+{% block content %}
+<div class="tabs">
+    <a href="{% url 'dashboard' %}" class="tab-btn" style="text-decoration: none;">⬅ Voltar ao Dashboard</a>
+</div>
+
+<div class="tab-pane active" style="max-width: 800px; margin: 20px auto; padding: 30px; background: #fff; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #eee; margin-bottom: 20px; padding-bottom: 10px;">
+        <h2 style="margin: 0; color: #003366;">📋 Detalhes da Ocorrência</h2>
+        <span class="status-{{ oc.status|lower }}" style="padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 14px;">
+            {{ oc.status|upper }}
+        </span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+        <div class="info-block">
+            <label style="display: block; font-weight: bold; color: #666; font-size: 12px; text-transform: uppercase;">ID da Ocorrência</label>
+            <p style="margin: 5px 0 0; font-size: 16px; color: #333;">OC-{{ oc.pk|stringformat:"04d" }}</p>
+        </div>
+        <div class="info-block">
+            <label style="display: block; font-weight: bold; color: #666; font-size: 12px; text-transform: uppercase;">Data do Registro</label>
+            <p style="margin: 5px 0 0; font-size: 16px; color: #333;">{{ oc.data|date:"d/m/Y" }}</p>
+        </div>
+        <div class="info-block">
+            <label style="display: block; font-weight: bold; color: #666; font-size: 12px; text-transform: uppercase;">Turma</label>
+            <p style="margin: 5px 0 0; font-size: 16px; color: #333;">{{ oc.turma.codigo|default:"-" }}</p>
+        </div>
+        <div class="info-block">
+            <label style="display: block; font-weight: bold; color: #666; font-size: 12px; text-transform: uppercase;">Disciplina</label>
+            <p style="margin: 5px 0 0; font-size: 16px; color: #333;">{{ oc.disciplina.nome|default:"-" }}</p>
+        </div>
+        <div class="info-block">
+            <label style="display: block; font-weight: bold; color: #666; font-size: 12px; text-transform: uppercase;">Professor Responsável</label>
+            <p style="margin: 5px 0 0; font-size: 16px; color: #333;">{{ oc.professor.nome|default:"-" }}</p>
+        </div>
+        <div class="info-block">
+            <label style="display: block; font-weight: bold; color: #666; font-size: 12px; text-transform: uppercase;">Criado em</label>
+            <p style="margin: 5px 0 0; font-size: 16px; color: #333;">{{ oc.criado_em|date:"d/m/Y H:i" }}</p>
+        </div>
+    </div>
+
+    <div style="margin-bottom: 30px; padding: 20px; background: #f9f9f9; border-radius: 6px; border-left: 4px solid #003366;">
+        <label style="display: block; font-weight: bold; color: #666; font-size: 12px; text-transform: uppercase; margin-bottom: 10px;">Alunos Envolvidos</label>
+        <p style="margin: 0; font-size: 16px; color: #333; line-height: 1.5;">
+            {{ oc.alunos_str }}
+        </p>
+    </div>
+
+    <div style="margin-bottom: 30px;">
+        <label style="display: block; font-weight: bold; color: #666; font-size: 12px; text-transform: uppercase; margin-bottom: 10px;">Descrição da Ocorrência</label>
+        <div style="padding: 20px; background: #fff; border: 1px solid #ddd; border-radius: 6px; min-height: 100px; color: #333; line-height: 1.6; white-space: pre-wrap;">{{ oc.descricao }}</div>
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">
+        <a href="{% url 'ocorrencia_editar' oc.pk %}" class="btn-primary" style="text-decoration: none; background: #2980b9;">✏ Editar Ocorrência</a>
+        <a href="{% url 'dashboard' %}" class="btn-gray" style="text-decoration: none;">Voltar</a>
+    </div>
+</div>
+
+<style>
+    .status-aberta { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+    .status-resolvida { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+</style>
+{% endblock %}

@@ -137,10 +137,10 @@ def filtrar_ocorrencias(request, qs):
     return qs, " | ".join(resumo)
 
 
-def filtrar_conteudos(request, qs):
+def filtrar_conteudos(request, qs, override_prof=None):
     filtro_turma_c = request.GET.get('filtro_turma_c', '')
     filtro_disc_c = request.GET.get('filtro_disc_c', '')
-    filtro_prof_c = request.GET.get('filtro_prof_c', '')
+    filtro_prof_c = override_prof or request.GET.get('filtro_prof_c', '')
 
     resumo = []
     if filtro_turma_c:
@@ -174,13 +174,65 @@ def dashboard(request):
     resolvidas = ocorrencias.filter(status='Resolvida').count()
 
     oc_filtradas, _ = filtrar_ocorrencias(request, ocorrencias)
-    cont_filtrados, _ = filtrar_conteudos(request, conteudos_do_usuario(request.user))
+    cont_qs = conteudos_do_usuario(request.user)
+    
+    filtro_turma_c = request.GET.get('filtro_turma_c', '')
+    filtro_disc_c = request.GET.get('filtro_disc_c', '')
+    filtro_prof_c = request.GET.get('filtro_prof_c', '')
+    
+    override_prof = None
+    if filtro_turma_c and filtro_disc_c and not filtro_prof_c:
+        from .models import GradeHoraria
+        grade = GradeHoraria.objects.filter(turma__codigo=filtro_turma_c, disciplina_id=filtro_disc_c)
+        if grade.exists():
+            prof_auto = grade.first().professor
+            if prof_auto:
+                override_prof = str(prof_auto.pk)
+                filtro_prof_c = override_prof
+
+    cont_filtrados, _ = filtrar_conteudos(request, cont_qs, override_prof=override_prof)
+
+    # Lógica de Filtros Cascata para Conteúdo
+    disciplinas_tab_c = disciplinas_qs
+    professores_tab_c = Professor.objects.all()
+
+    if filtro_turma_c:
+        from .models import GradeHoraria
+        # Filtra disciplinas baseadas na grade horária daquela turma
+        disc_ids = GradeHoraria.objects.filter(
+            turma__codigo=filtro_turma_c
+        ).values_list('disciplina_id', flat=True).distinct()
+        
+        # Filtra professores baseados na grade horária daquela turma
+        prof_ids = GradeHoraria.objects.filter(
+            turma__codigo=filtro_turma_c
+        ).values_list('professor_id', flat=True).distinct()
+
+        if prof and not prof.pode_ver_tudo:
+            # Professor comum: vê apenas suas disciplinas naquela turma
+            disc_ids_prof = GradeHoraria.objects.filter(
+                turma__codigo=filtro_turma_c,
+                professor=prof
+            ).values_list('disciplina_id', flat=True).distinct()
+            disciplinas_tab_c = Disciplina.objects.filter(pk__in=disc_ids_prof)
+            professores_tab_c = Professor.objects.filter(pk=prof.pk)
+        else:
+            # Admin/Gestão: vê todas as disciplinas e professores daquela turma
+            disciplinas_tab_c = Disciplina.objects.filter(pk__in=disc_ids)
+            professores_tab_c = Professor.objects.filter(pk__in=prof_ids)
+    else:
+        # Se nenhuma turma selecionada, mas for professor, limita aos dele
+        if prof and not prof.pode_ver_tudo:
+            disciplinas_tab_c = prof.get_disciplinas()
+            professores_tab_c = Professor.objects.filter(pk=prof.pk)
 
     context = {
         'prof': prof,
         'turmas': turmas_qs,
-        'disciplinas': disciplinas_qs,
-        'todos_professores': Professor.objects.all(),
+        'disciplinas': disciplinas_qs,  # usado em modais/outros forms
+        'disciplinas_tab_c': disciplinas_tab_c,  # usado no filtro da aba conteúdos
+        'todos_professores': Professor.objects.all(), # usado em filtros de ocorrencias
+        'professores_tab_c': professores_tab_c, # usado no filtro da aba conteúdos
         'total': total,
         'abertas': abertas,
         'resolvidas': resolvidas,
@@ -191,9 +243,9 @@ def dashboard(request):
         'filtro_professor': request.GET.get('filtro_professor', ''),
         'filtro_data_ini': request.GET.get('data_ini', ''),
         'filtro_data_fim': request.GET.get('data_fim', ''),
-        'filtro_turma_c': request.GET.get('filtro_turma_c', ''),
-        'filtro_disc_c': request.GET.get('filtro_disc_c', ''),
-        'filtro_prof_c': request.GET.get('filtro_prof_c', ''),
+        'filtro_turma_c': filtro_turma_c,
+        'filtro_disc_c': filtro_disc_c,
+        'filtro_prof_c': filtro_prof_c,
         'today': date.today().isoformat(),
     }
     # Merge content stats without overwriting ocorrência totals
@@ -377,6 +429,9 @@ def calcular_stats_conteudo(prof):
 def relatorio_pendencias(request):
     """Summarizes missing content launches for all professors."""
     prof_user = get_professor(request.user)
+    if prof_user and prof_user.cargo == 'PROFESSOR':
+        return redirect('detalhe_pendencias_professor', prof_id=prof_user.pk)
+
     if prof_user and not prof_user.pode_ver_tudo:
         return redirect('dashboard')
 
@@ -413,7 +468,10 @@ def relatorio_pendencias(request):
 def detalhe_pendencias_professor(request, prof_id):
     """Lists every specific date/turma that is missing content for a professor."""
     prof_user = get_professor(request.user)
-    if prof_user and not prof_user.pode_ver_tudo:
+    
+    # Allow if user is admin/director/etc OR if the professor is viewing their own page
+    is_own_page = (prof_user and prof_user.pk == prof_id)
+    if not is_own_page and (prof_user and not prof_user.pode_ver_tudo):
         return redirect('dashboard')
 
     professor = get_object_or_404(Professor, pk=prof_id)
@@ -465,6 +523,7 @@ def detalhe_pendencias_professor(request, prof_id):
             })
 
     context = {
+        'prof': prof_user,
         'professor': professor,
         'pendencias': pendencias,
     }
@@ -475,8 +534,9 @@ def detalhe_pendencias_professor(request, prof_id):
 def lancamento_coletivo(request):
     """Bulks create content for all classes on a specific date (Admin only, selected turmas)."""
     prof_user = get_professor(request.user)
-    if not prof_user or prof_user.cargo != 'ADMIN':
-        messages.error(request, "Apenas administradores podem realizar lançamentos coletivos.")
+    # Allows ADMIN and DIRETOR
+    if not prof_user or prof_user.cargo not in ['ADMIN', 'DIRETOR']:
+        messages.error(request, "Apenas administradores e diretores podem realizar lançamentos coletivos.")
         return redirect('dashboard')
 
     if request.method == 'POST':
@@ -573,6 +633,25 @@ def ocorrencia_criar(request):
         oc.alunos.set(Aluno.objects.filter(pk__in=alunos_ids))
     messages.success(request, f'Ocorrência OC-{oc.pk:04d} criada com sucesso!')
     return redirect('dashboard')
+
+
+@login_required
+def ocorrencia_ver(request, pk):
+    oc = get_object_or_404(Ocorrencia, pk=pk)
+    prof = get_professor(request.user)
+    
+    # Check permissions
+    if prof:
+        if prof.cargo == 'INSPETOR':
+            if oc.turma not in prof.turmas_inspetor.all():
+                messages.error(request, 'Você não tem permissão para visualizar esta ocorrência.')
+                return redirect('dashboard')
+        elif not prof.pode_ver_tudo:
+            if oc.professor != prof:
+                messages.error(request, 'Você não tem permissão para visualizar esta ocorrência.')
+                return redirect('dashboard')
+
+    return render(request, 'core/ocorrencia_ver.html', {'oc': oc})
 
 
 @login_required
@@ -684,9 +763,75 @@ def conteudo_criar(request):
 
 
 @login_required
+def conteudo_ver(request, pk):
+    cont = get_object_or_404(ConteudoProgramatico, pk=pk)
+    prof = get_professor(request.user)
+    
+    # Simple check: if not admin, can only see if related to them or has pode_ver_tudo
+    if prof and not prof.pode_ver_tudo and cont.professor != prof:
+        messages.error(request, 'Você não tem permissão para visualizar este conteúdo.')
+        return redirect('dashboard')
+        
+    return render(request, 'core/conteudo_ver.html', {
+        'cont': cont,
+        'prof': prof,
+    })
+
+
+@login_required
+def conteudo_editar(request, pk):
+    cont = get_object_or_404(ConteudoProgramatico, pk=pk)
+    prof = get_professor(request.user)
+    
+    # Check permissions
+    if prof and not prof.pode_editar_tudo and cont.professor != prof:
+        messages.error(request, 'Você não tem permissão para editar este conteúdo.')
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        data = request.POST.get('data')
+        turmas_cods = request.POST.getlist('turmas')
+        disc_id = request.POST.get('disciplina')
+        prof_id = request.POST.get('professor')
+        descricao = request.POST.get('descricao', '')
+
+        cont.data = data
+        cont.disciplina = get_object_or_404(Disciplina, pk=disc_id) if disc_id else None
+        cont.professor = get_object_or_404(Professor, pk=prof_id) if prof_id else prof
+        cont.descricao = descricao
+        cont.save()
+        
+        turmas = Turma.objects.filter(codigo__in=turmas_cods)
+        cont.turmas.set(turmas)
+        
+        messages.success(request, 'Conteúdo atualizado com sucesso!')
+        return redirect('dashboard')
+
+    # Data needed for the form
+    turmas_qs = prof.get_turmas() if prof else Turma.objects.all()
+    disciplinas_qs = prof.get_disciplinas() if prof else Disciplina.objects.all()
+    
+    context = {
+        'cont': cont,
+        'turmas': turmas_qs,
+        'disciplinas': disciplinas_qs,
+        'todos_professores': Professor.objects.all(),
+        'cont_turmas_pks': cont.turmas.values_list('pk', flat=True),
+    }
+    return render(request, 'core/conteudo_editar.html', context)
+
+
+@login_required
 @require_POST
 def conteudo_excluir(request, pk):
     cont = get_object_or_404(ConteudoProgramatico, pk=pk)
+    prof = get_professor(request.user)
+    
+    # Check permissions
+    if prof and not prof.pode_editar_tudo and cont.professor != prof:
+        messages.error(request, 'Você não tem permissão para excluir este conteúdo.')
+        return redirect('dashboard')
+        
     cont.delete()
     messages.success(request, 'Conteúdo excluído.')
     return redirect('dashboard')
@@ -696,6 +841,13 @@ def conteudo_excluir(request, pk):
 @require_POST
 def conteudo_excluir_varios(request):
     ids = request.POST.getlist('ids')
+    prof = get_professor(request.user)
+    
+    # Restrict mass delete to those with global edit permissions
+    if prof and not prof.pode_editar_tudo:
+        messages.error(request, 'Você não tem permissão para realizar exclusão em massa.')
+        return redirect('dashboard')
+
     ConteudoProgramatico.objects.filter(pk__in=ids).delete()
     messages.success(request, f'{len(ids)} conteúdo(s) excluído(s).')
     return redirect('dashboard')
@@ -756,6 +908,52 @@ def _pdf_response(filename):
     return response
 
 
+class EllipticalImage(Image):
+    """Custom Image class to apply elliptical clipping and border (matches web logo)."""
+    def draw(self):
+        # Save state to apply clipping
+        self.canv.saveState()
+        w, h = self.drawWidth, self.drawHeight
+
+        # Create elliptical clip path
+        path = self.canv.beginPath()
+        # center_x, center_y, width, height (actually it's x1, y1, x2, y2)
+        # But reportlab's path.ellipse(x1, y1, width, height)
+        path.ellipse(0, 0, w, h)
+        self.canv.clipPath(path, stroke=0)
+
+        # Draw background color (matching the web dashboard)
+        self.canv.setFillColor(colors.HexColor('#003366'))
+        self.canv.rect(0, 0, w, h, fill=1, stroke=0)
+
+        # Draw the image (it will be clipped)
+        super().draw()
+        
+        # Restore to remove clipping
+        self.canv.restoreState()
+
+        # Draw the white elliptical border
+        self.canv.saveState()
+        self.canv.setStrokeColor(colors.white)
+        self.canv.setLineWidth(2)
+        self.canv.ellipse(0, 0, w, h)
+        self.canv.restoreState()
+
+
+def _get_logo_element():
+    """Helper to return the standardized elliptical logo for PDFs."""
+    logo_path = os.path.join(settings.BASE_DIR, 'core', 'static', 'core', 'logo.png')
+    if not os.path.exists(logo_path):
+        logo_path = os.path.join(settings.BASE_DIR, 'core', 'static', 'core', 'logo.jpg')
+
+    if os.path.exists(logo_path):
+        # 4cm x 2cm maintains the 2:1 ratio used in the web dashboard (200x100px)
+        logo = EllipticalImage(logo_path, width=4*cm, height=2*cm)
+        logo.hAlign = 'LEFT'
+        return logo
+    return None
+
+
 @login_required
 def exportar_ocorrencias_pdf(request):
     response = _pdf_response('ocorrencias.pdf')
@@ -766,15 +964,9 @@ def exportar_ocorrencias_pdf(request):
     small = ParagraphStyle('small', fontSize=7, leading=9)
     filter_style = ParagraphStyle('filters', fontSize=9, italic=True)
     
-    # Logo fallback
-    logo_path = os.path.join(settings.BASE_DIR, 'core', 'static', 'core', 'logo.png')
-    if not os.path.exists(logo_path):
-        logo_path = os.path.join(settings.BASE_DIR, 'core', 'static', 'core', 'logo.jpg')
-
     elems = []
-    if os.path.exists(logo_path):
-        logo = Image(logo_path, width=3.5*cm, height=2*cm)
-        logo.hAlign = 'LEFT'
+    logo = _get_logo_element()
+    if logo:
         elems.append(logo)
         elems.append(Spacer(1, 0.2*cm))
 
@@ -821,15 +1013,9 @@ def exportar_conteudos_pdf(request):
     small = ParagraphStyle('small', fontSize=7, leading=9)
     filter_style = ParagraphStyle('filters', fontSize=9, italic=True)
 
-    # Logo fallback
-    logo_path = os.path.join(settings.BASE_DIR, 'core', 'static', 'core', 'logo.png')
-    if not os.path.exists(logo_path):
-        logo_path = os.path.join(settings.BASE_DIR, 'core', 'static', 'core', 'logo.jpg')
-
     elems = []
-    if os.path.exists(logo_path):
-        logo = Image(logo_path, width=3.5*cm, height=2*cm)
-        logo.hAlign = 'LEFT'
+    logo = _get_logo_element()
+    if logo:
         elems.append(logo)
         elems.append(Spacer(1, 0.2*cm))
 
@@ -891,15 +1077,9 @@ def exportar_alocacao_pdf(request):
     styles = getSampleStyleSheet()
     small_style = ParagraphStyle('Small', parent=styles['Normal'], fontSize=7, leading=8)
     
-    # Logo fallback
-    logo_path = os.path.join(settings.BASE_DIR, 'core', 'static', 'core', 'logo.png')
-    if not os.path.exists(logo_path):
-        logo_path = os.path.join(settings.BASE_DIR, 'core', 'static', 'core', 'logo.jpg')
-
     elems = []
-    if os.path.exists(logo_path):
-        logo = Image(logo_path, width=3.5*cm, height=2*cm)
-        logo.hAlign = 'LEFT'
+    logo = _get_logo_element()
+    if logo:
         elems.append(logo)
         elems.append(Spacer(1, 0.2*cm))
 

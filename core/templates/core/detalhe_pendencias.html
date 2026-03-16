@@ -9,7 +9,11 @@
             <h1 style="color: #003366; margin: 0;">Pendências: {{ professor.nome }}</h1>
             <p style="color: #666; margin-top: 5px;">Listagem de aulas sem conteúdo lançado até hoje.</p>
         </div>
+        {% if prof.cargo == 'PROFESSOR' %}
+        <a href="{% url 'dashboard' %}" class="btn-gray">Voltar ao Dashboard</a>
+        {% else %}
         <a href="{% url 'relatorio_pendencias' %}" class="btn-gray">Voltar ao Resumo</a>
+        {% endif %}
     </div>
 
     {% for item in pendencias %}

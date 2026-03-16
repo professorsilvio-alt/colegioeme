@@ -1,0 +1,82 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Ver Conteúdo - Sistema EME{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1 style="color: #003366; margin: 0;">Detalhes do Conteúdo</h1>
+        <a href="{% url 'dashboard' %}" class="btn-gray">Voltar ao Dashboard</a>
+    </div>
+
+    <div class="card" style="padding: 25px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+        <div style="margin-bottom: 20px;">
+            <label style="color: #666; font-size: 13px; font-weight: bold; text-transform: uppercase;">Data</label>
+            <p style="font-size: 18px; margin: 5px 0; color: #333;">{{ cont.data|date:"d/m/Y" }}</p>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="color: #666; font-size: 13px; font-weight: bold; text-transform: uppercase;">Turmas</label>
+            <p style="font-size: 18px; margin: 5px 0; color: #333;">{{ cont.turmas_str }}</p>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="color: #666; font-size: 13px; font-weight: bold; text-transform: uppercase;">Professor</label>
+            <p style="font-size: 18px; margin: 5px 0; color: #333;">{{ cont.professor.nome }}</p>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="color: #666; font-size: 13px; font-weight: bold; text-transform: uppercase;">Disciplina</label>
+            <p style="font-size: 18px; margin: 5px 0; color: #333;">{{ cont.disciplina.nome }}</p>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="color: #666; font-size: 13px; font-weight: bold; text-transform: uppercase;">Conteúdo Ministrado</label>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin-top: 5px; line-height: 1.6; color: #444; border-left: 4px solid #003366;">
+                {{ cont.descricao|linebreaks }}
+            </div>
+        </div>
+
+        {% if prof.pode_editar_tudo or cont.professor == prof %}
+        <div style="margin-top: 30px; display: flex; gap: 10px;">
+            <a href="{% url 'conteudo_editar' cont.pk %}" class="btn-primary" style="text-decoration: none; padding: 10px 25px;">✏ Editar Lançamento</a>
+            <form method="post" action="{% url 'conteudo_excluir' cont.pk %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-danger" style="padding: 10px 25px;" onclick="return confirm('Tem certeza que deseja excluir este conteúdo?')">🗑 Excluir</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .btn-gray {
+        background: #6c757d;
+        color: white;
+        text-decoration: none;
+        padding: 8px 20px;
+        border-radius: 4px;
+        font-size: 14px;
+        transition: 0.3s;
+    }
+    .btn-gray:hover { background: #5a6268; }
+    .btn-primary {
+        background: #003366;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-weight: 500;
+        transition: 0.3s;
+    }
+    .btn-primary:hover { background: #0055aa; }
+    .btn-danger {
+        background: #e74c3c;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    .btn-danger:hover { background: #c0392b; }
+</style>
+{% endblock %}
