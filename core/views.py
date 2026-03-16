@@ -91,11 +91,10 @@ def ocorrencias_do_usuario(user):
     qs = Ocorrencia.objects.select_related('turma', 'professor', 'disciplina').prefetch_related('alunos')
     if not prof:
         return qs  # superuser/admin sem perfil: vê tudo
-    if prof.cargo == 'INSPETOR':
-        # Inspetor vê apenas ocorrências das suas turmas
-        turmas_ids = prof.turmas_inspetor.values_list('pk', flat=True)
-        qs = qs.filter(turma__pk__in=turmas_ids)
-    elif not prof.pode_ver_tudo:
+    if prof and prof.cargo == 'INSPETOR':
+        # Inspetor vê agora todas as ocorrências (regra atualizada)
+        pass
+    elif prof and not prof.pode_ver_tudo:
         # Professor comum vê apenas suas próprias ocorrências
         qs = qs.filter(professor=prof)
     return qs
@@ -643,9 +642,8 @@ def ocorrencia_ver(request, pk):
     # Check permissions
     if prof:
         if prof.cargo == 'INSPETOR':
-            if oc.turma not in prof.turmas_inspetor.all():
-                messages.error(request, 'Você não tem permissão para visualizar esta ocorrência.')
-                return redirect('dashboard')
+            # Inspetor vê todas as ocorrências sem bloqueio
+            pass
         elif not prof.pode_ver_tudo:
             if oc.professor != prof:
                 messages.error(request, 'Você não tem permissão para visualizar esta ocorrência.')
@@ -660,6 +658,11 @@ def ocorrencia_editar(request, pk):
     prof = get_professor(request.user)
     
     # Check permissions
+    # Check permissions: Inspectors cannot edit ANY occurrence
+    if prof and prof.cargo == 'INSPETOR':
+        messages.error(request, 'Inspetores não podem editar ocorrências, apenas alterar o status.')
+        return redirect('dashboard')
+    
     if prof and not prof.pode_editar_tudo and oc.professor != prof:
         messages.error(request, 'Você não tem permissão para editar esta ocorrência.')
         return redirect('dashboard')
@@ -708,6 +711,11 @@ def ocorrencia_excluir(request, pk):
     prof = get_professor(request.user)
     
     # Check permissions
+    # Check permissions: Inspectors cannot delete
+    if prof and prof.cargo == 'INSPETOR':
+        messages.error(request, 'Inspetores não podem excluir ocorrências.')
+        return redirect('dashboard')
+
     if prof and not prof.pode_editar_tudo and oc.professor != prof:
         messages.error(request, 'Você não tem permissão para excluir esta ocorrência.')
         return redirect('dashboard')
@@ -727,13 +735,23 @@ def ocorrencia_excluir_varios(request):
 
 
 @login_required
-@require_POST
-def ocorrencia_mudar_status(request):
-    ids = request.POST.getlist('ids')
-    novo_status = request.POST.get('status', 'Resolvida')
-    Ocorrencia.objects.filter(pk__in=ids).update(status=novo_status)
-    messages.success(request, f'Status alterado para "{novo_status}".')
-    return redirect('dashboard')
+def ocorrencia_mudar_status_direto(request, pk):
+    oc = get_object_or_404(Ocorrencia, pk=pk)
+    prof = get_professor(request.user)
+    
+    # Check permissions
+    if prof:
+        if prof.cargo == 'INSPETOR':
+            pass # Inspetores podem mudar
+        elif not prof.pode_ver_tudo:
+            if oc.professor != prof:
+                messages.error(request, 'Sem permissão.')
+                return redirect('dashboard')
+
+    oc.status = 'Resolvida' if oc.status == 'Aberta' else 'Aberta'
+    oc.save()
+    messages.success(request, f'Status da OC-{oc.pk:04d} alterado para {oc.status}.')
+    return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
 
 
 # ──────────────────────────────────────────────

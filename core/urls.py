@@ -20,6 +20,7 @@ urlpatterns = [
     path('ocorrencia/<int:pk>/excluir/', views.ocorrencia_excluir, name='ocorrencia_excluir'),
     path('ocorrencia/excluir-varios/', views.ocorrencia_excluir_varios, name='ocorrencia_excluir_varios'),
     path('ocorrencia/mudar-status/', views.ocorrencia_mudar_status, name='ocorrencia_mudar_status'),
+    path('ocorrencia/<int:pk>/status/', views.ocorrencia_mudar_status_direto, name='ocorrencia_mudar_status_direto'),
 
     # Conteúdos
     path('conteudo/criar/', views.conteudo_criar, name='conteudo_criar'),

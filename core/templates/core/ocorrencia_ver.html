@@ -54,7 +54,18 @@
     </div>
 
     <div style="display: flex; gap: 10px; margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">
-        <a href="{% url 'ocorrencia_editar' oc.pk %}" class="btn-primary" style="text-decoration: none; background: #2980b9;">✏ Editar Ocorrência</a>
+        {% if prof.cargo != 'INSPETOR' %}
+            {% if prof.pode_editar_tudo or oc.professor == prof %}
+            <a href="{% url 'ocorrencia_editar' oc.pk %}" class="btn-primary" style="text-decoration: none; background: #2980b9;">✏ Editar Ocorrência</a>
+            {% endif %}
+        {% endif %}
+        
+        {% if oc.status == 'Aberta' %}
+        <a href="{% url 'ocorrencia_mudar_status_direto' oc.pk %}" class="btn-success" style="text-decoration: none; background: #27ae60;">✔ Marcar como Resolvida</a>
+        {% else %}
+        <a href="{% url 'ocorrencia_mudar_status_direto' oc.pk %}" class="btn-warning" style="text-decoration: none; background: #f39c12;">↩ Reabrir Ocorrência</a>
+        {% endif %}
+        
         <a href="{% url 'dashboard' %}" class="btn-gray" style="text-decoration: none;">Voltar</a>
     </div>
 </div>

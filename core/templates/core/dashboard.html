@@ -194,14 +194,14 @@
                 <td class="status-{{ oc.status|lower }}">{{ oc.status }}</td>
                 <td>
                     <a href="{% url 'ocorrencia_ver' oc.pk %}" class="btn-sm" style="background: #16a085;">👁 Ver</a>
-                    {% if prof.pode_editar_tudo or oc.professor == prof %}
-                    <a href="{% url 'ocorrencia_editar' oc.pk %}" class="btn-sm">✏ Editar</a>
-                    {% with padded_id=oc.pk|stringformat:"04d" %}
-                    <button type="submit" formaction="{% url 'ocorrencia_excluir' oc.pk %}" class="btn-sm btn-danger-sm"
-                        onclick="return confirm('Excluir OC-{{ padded_id }}?')">🗑</button>
-                    {% endwith %}
-                    {% else %}
-                    -
+                    {% if prof.cargo != 'INSPETOR' %}
+                        {% if prof.pode_editar_tudo or oc.professor == prof %}
+                        <a href="{% url 'ocorrencia_editar' oc.pk %}" class="btn-sm">✏ Editar</a>
+                        {% with padded_id=oc.pk|stringformat:"04d" %}
+                        <button type="submit" formaction="{% url 'ocorrencia_excluir' oc.pk %}" class="btn-sm btn-danger-sm"
+                            onclick="return confirm('Excluir OC-{{ padded_id }}?')">🗑</button>
+                        {% endwith %}
+                        {% endif %}
                     {% endif %}
                 </td>
             </tr>
