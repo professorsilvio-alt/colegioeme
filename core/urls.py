@@ -12,6 +12,7 @@ urlpatterns = [
     path('api/turma/<str:codigo>/disciplinas/', views.api_disciplinas_turma, name='api_disciplinas_turma'),
     path('api/turma/<str:codigo>/disciplina/<int:disc_id>/professores/', views.api_professores_turma_disc, name='api_professores_turma_disc'),
     path('api/turma/<str:codigo>/professor/<int:prof_id>/datas/', views.api_datas_validas, name='api_datas_validas'),
+    path('api/sugestoes/', views.api_sugestoes_conteudo, name='api_sugestoes_conteudo'),
 
     # Ocorrências
     path('ocorrencia/criar/', views.ocorrencia_criar, name='ocorrencia_criar'),

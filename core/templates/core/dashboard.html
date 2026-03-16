@@ -266,7 +266,8 @@
             <input type="date" id="dataInputExtra" style="display:none;" onchange="document.getElementById('dataConteudo').value=this.value">
 
             <label>Conteúdo Ministrado</label>
-            <textarea name="descricao" required></textarea>
+            <div id="sugestoesContainer" style="margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 5px;"></div>
+            <textarea name="descricao" id="descConteudo" required></textarea>
 
             <button type="submit" id="btnSalvarCont" onclick="return validarFormCont()">Salvar Conteúdo</button>
             <button type="button" class="btn-cancel" onclick="toggleSection('formConteudo')">Cancelar</button>
@@ -536,10 +537,41 @@ function carregarDatasValidas() {
             }).join('');
             dataSel.value = primeiro.data;
             // Hide wrapper and show select
-            wrapper.style.display = 'none';
             dataSel.style.display = 'block';
             dataHidden.value = primeiro.data;
+
+            // Carregar sugestões de conteúdo
+            carregarSugestoes(codigo, profId); // Aqui passamos o que for preciso, ou pegamos da disc
         });
+}
+
+function carregarSugestoes(turmaCod, profId) {
+    const discId = document.getElementById('discSelectCont').value;
+    const container = document.getElementById('sugestoesContainer');
+    container.innerHTML = '';
+
+    if (!discId) return;
+
+    fetch(`/api/sugestoes/?turma=${turmaCod}&disciplina=${discId}`)
+        .then(r => r.json())
+        .then(sugestoes => {
+            if (!sugestoes.length) return;
+            
+            container.innerHTML = '<div style="width:100%; font-size:12px; color:#666; margin-bottom:5px;">Sugestões (clique para adicionar):</div>';
+            sugestoes.forEach(s => {
+                const badge = document.createElement('span');
+                badge.className = 'badge-suggestion';
+                badge.innerText = '+ ' + s.texto;
+                badge.onclick = () => adicionarSugestao(s.texto);
+                container.appendChild(badge);
+            });
+        });
+}
+
+function adicionarSugestao(texto) {
+    const txt = document.getElementById('descConteudo');
+    if (txt.value && !txt.value.endsWith('\n')) txt.value += '\n';
+    txt.value += texto;
 }
 
 // ── VALIDAÇÃO FORM CONTEÚDO ──
@@ -552,4 +584,22 @@ function validarFormCont() {
     return true;
 }
 </script>
+
+<style>
+    .badge-suggestion {
+        background: #e1f5fe;
+        color: #01579b;
+        border: 1px solid #b3e5fc;
+        padding: 4px 10px;
+        border-radius: 15px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s;
+        user-select: none;
+    }
+    .badge-suggestion:hover {
+        background: #b3e5fc;
+        transform: translateY(-1px);
+    }
+</style>
 {% endblock %}

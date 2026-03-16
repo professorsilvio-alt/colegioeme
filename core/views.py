@@ -735,6 +735,16 @@ def ocorrencia_excluir_varios(request):
 
 
 @login_required
+@require_POST
+def ocorrencia_mudar_status(request):
+    ids = request.POST.getlist('ids')
+    novo_status = request.POST.get('status', 'Resolvida')
+    Ocorrencia.objects.filter(pk__in=ids).update(status=novo_status)
+    messages.success(request, f'Status alterado para "{novo_status}".')
+    return redirect('dashboard')
+
+
+@login_required
 def ocorrencia_mudar_status_direto(request, pk):
     oc = get_object_or_404(Ocorrencia, pk=pk)
     prof = get_professor(request.user)
@@ -752,6 +762,20 @@ def ocorrencia_mudar_status_direto(request, pk):
     oc.save()
     messages.success(request, f'Status da OC-{oc.pk:04d} alterado para {oc.status}.')
     return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
+
+
+@login_required
+def api_sugestoes_conteudo(request):
+    turma_cod = request.GET.get('turma')
+    disciplina_id = request.GET.get('disciplina')
+    
+    from django.db.models import Q
+    qs = SugestaoConteudo.objects.filter(disciplina_id=disciplina_id)
+    if turma_cod:
+        qs = qs.filter(Q(turmas__codigo=turma_cod) | Q(turmas__isnull=True))
+    
+    sugestoes = list(qs.values('id', 'texto'))
+    return JsonResponse(sugestoes, safe=False)
 
 
 # ──────────────────────────────────────────────

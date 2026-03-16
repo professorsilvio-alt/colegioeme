@@ -177,3 +177,18 @@ class ProfessorDocente(Professor):
     def save(self, *args, **kwargs):
         self.cargo = 'PROFESSOR'
         super().save(*args, **kwargs)
+
+
+class SugestaoConteudo(models.Model):
+    disciplina = models.ForeignKey(Disciplina, on_delete=models.CASCADE, related_name='sugestoes')
+    turmas = models.ManyToManyField(Turma, blank=True, related_name='sugestoes_conteudo')
+    texto = models.TextField()
+    ordem = models.IntegerField(default=0)
+
+    class Meta:
+        verbose_name = 'Sugestão de Conteúdo'
+        verbose_name_plural = 'Sugestões de Conteúdo'
+        ordering = ['disciplina', 'ordem', 'texto']
+
+    def __str__(self):
+        return f'{self.disciplina} | {self.texto[:50]}'
