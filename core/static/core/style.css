@@ -130,43 +130,68 @@ header {
 .dashboard {
     display: flex;
     flex-wrap: wrap;
-    gap: 18px;
-    margin-bottom: 28px;
+    gap: 10px;
+    margin-bottom: 15px;
     align-items: center;
 }
 
+/* ──────────────────────────── LOGO ──────────────────────────── */
 .logo-escola {
-    width: 200px;
-    height: 100px; 
+    width: 140px;
+    height: 70px;
     border-radius: 50% / 50%;
     object-fit: cover;
     border: 2px solid #fff;
-    background: #003366; 
+    background: #003366;
     box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     padding: 0;
 }
 
+.header-logo {
+    width: 70px;
+    height: 35px;
+    border-radius: 50% / 50%;
+    object-fit: cover;
+    border: 1px solid #fff;
+    background: #003366;
+    margin-right: 12px;
+    vertical-align: middle;
+}
+
+.login-logo {
+    width: 160px;
+    height: 80px;
+    border-radius: 50% / 50%;
+    object-fit: cover;
+    border: 2px solid #fff;
+    background: #003366;
+    margin-bottom: 20px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 .card {
     flex: 1;
-    min-width: 180px;
+    min-width: 120px;
     background: #003366;
-    padding: 22px;
-    border-radius: 12px;
+    padding: 6px 10px;
+    border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, .15);
     text-align: center;
-    border-left: 5px solid #0055aa;
+    border-left: 3px solid #0055aa;
     color: #fff;
 }
 
 .card h3 {
     margin: 0;
-    font-size: 16px;
+    font-size: 11px;
     color: #b3d1ff;
 }
 
 .card p {
-    font-size: 30px;
-    margin: 10px 0 0;
+    font-size: 18px;
+    margin: 2px 0 0;
     font-weight: 700;
 }
 

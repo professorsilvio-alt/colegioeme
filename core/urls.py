@@ -12,6 +12,7 @@ urlpatterns = [
     path('api/turma/<str:codigo>/disciplinas/', views.api_disciplinas_turma, name='api_disciplinas_turma'),
     path('api/turma/<str:codigo>/disciplina/<int:disc_id>/professores/', views.api_professores_turma_disc, name='api_professores_turma_disc'),
     path('api/turma/<str:codigo>/professor/<int:prof_id>/datas/', views.api_datas_validas, name='api_datas_validas'),
+    path('api/professor/<int:prof_id>/grades/', views.api_professor_grades, name='api_professor_grades'),
     path('api/sugestoes/', views.api_sugestoes_conteudo, name='api_sugestoes_conteudo'),
 
     # Ocorrências
@@ -42,6 +43,8 @@ urlpatterns = [
 
     # Relatórios de Lançamentos Faltantes
     path('relatorios/pendencias/', views.relatorio_pendencias, name='relatorio_pendencias'),
+    path('relatorios/pendencias/pdf/', views.exportar_pendencias_pdf, name='relatorio_pendencias_pdf'),
     path('relatorios/pendencias/professor/<int:prof_id>/', views.detalhe_pendencias_professor, name='detalhe_pendencias_professor'),
     path('relatorios/lancamento-coletivo/', views.lancamento_coletivo, name='lancamento_coletivo'),
+    path('sugestao/criar-massa/', views.sugestao_criar_massa, name='sugestao_criar_massa'),
 ]

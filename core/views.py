@@ -37,7 +37,7 @@ FERIADOS_2026 = {
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, JsonResponse
+from django.http import FileResponse, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 from reportlab.lib import colors
@@ -48,7 +48,7 @@ from reportlab.platypus import (Image, Paragraph, SimpleDocTemplate, Spacer, Tab
                                 TableStyle)
 
 from .models import (Aluno, ConteudoProgramatico, Disciplina, Ocorrencia,
-                     Professor, Turma)
+                     Professor, SugestaoConteudo, Turma)
 
 
 # ──────────────────────────────────────────────
@@ -140,6 +140,8 @@ def filtrar_conteudos(request, qs, override_prof=None):
     filtro_turma_c = request.GET.get('filtro_turma_c', '')
     filtro_disc_c = request.GET.get('filtro_disc_c', '')
     filtro_prof_c = override_prof or request.GET.get('filtro_prof_c', '')
+    filtro_data_ini = request.GET.get('data_ini', '')
+    filtro_data_fim = request.GET.get('data_fim', '')
 
     resumo = []
     if filtro_turma_c:
@@ -153,6 +155,12 @@ def filtrar_conteudos(request, qs, override_prof=None):
         p = get_object_or_404(Professor, pk=filtro_prof_c)
         qs = qs.filter(professor=p)
         resumo.append(f"Prof: {p.nome}")
+    if filtro_data_ini:
+        qs = qs.filter(data__gte=filtro_data_ini)
+        resumo.append(f"Início: {filtro_data_ini}")
+    if filtro_data_fim:
+        qs = qs.filter(data__lte=filtro_data_fim)
+        resumo.append(f"Fim: {filtro_data_fim}")
 
     return qs, " | ".join(resumo)
 
@@ -245,10 +253,14 @@ def dashboard(request):
         'filtro_turma_c': filtro_turma_c,
         'filtro_disc_c': filtro_disc_c,
         'filtro_prof_c': filtro_prof_c,
+        'filtro_data_ini_c': request.GET.get('data_ini', ''),
+        'filtro_data_fim_c': request.GET.get('data_fim', ''),
         'today': date.today().isoformat(),
     }
     # Merge content stats without overwriting ocorrência totals
-    context.update(calcular_stats_conteudo(prof))
+    context.update(calcular_stats_conteudo(prof, 
+                                           data_ini=request.GET.get('data_ini', ''), 
+                                           data_fim=request.GET.get('data_fim', '')))
     return render(request, 'core/dashboard.html', context)
 
 
@@ -358,13 +370,27 @@ def api_datas_validas(request, codigo, prof_id):
     return JsonResponse(result, safe=False)
 
 
-def calcular_stats_conteudo(prof):
+@login_required
+def api_professor_grades(request, prof_id):
+    """Return all turmas and their weekdays for a given professor."""
+    from .models import GradeHoraria
+    grades = GradeHoraria.objects.filter(professor_id=prof_id).values('turma__codigo', 'dia_semana').distinct()
+    
+    mapping = defaultdict(list)
+    for g in grades:
+        mapping[g['turma__codigo']].append(g['dia_semana'])
+    
+    return JsonResponse(dict(mapping), safe=False)
+
+
+def calcular_stats_conteudo(prof, data_ini=None, data_fim=None):
     """Return total/preenchidos/faltam content stats.
     - Admin/Diretor/Secretaria: global totals across ALL professors.
     - Professor: totals for their own turmas only.
     - Others (inspetor, etc.): zeros.
     """
     from .models import GradeHoraria, ConteudoProgramatico
+    import datetime
 
     CARGOS_GLOBAIS = ['ADMIN', 'DIRETOR', 'SECRETARIA', 'COORDENADOR', 'AUX_COORD', 'ORIENTADOR']
 
@@ -372,12 +398,31 @@ def calcular_stats_conteudo(prof):
         # Superuser sem perfil – mostra global
         pass
     elif prof.cargo == 'INSPETOR':
-        return {'total_conteudo': 0, 'preenchidos': 0, 'faltam': 0}
+        return {
+            'total_conteudo': 0, 'preenchidos': 0, 'faltam': 0,
+            'total_ate_hoje': 0, 'preenchidos_ate_hoje': 0, 'faltam_ate_hoje': 0
+        }
 
     DIA_TO_WEEKDAY = {'1': 0, '2': 1, '3': 2, '4': 3, '5': 4}
-    ano = date.today().year
-    inicio = datetime.date(ano, 2, 3)
-    fim = datetime.date(ano, 12, 18)
+    hoje = date.today()
+    ano = hoje.year
+    
+    # Use provided dates or defaults
+    if data_ini:
+        if isinstance(data_ini, str):
+            inicio = datetime.datetime.strptime(data_ini, '%Y-%m-%d').date()
+        else:
+            inicio = data_ini
+    else:
+        inicio = datetime.date(ano, 2, 3)
+
+    if data_fim:
+        if isinstance(data_fim, str):
+            fim = datetime.datetime.strptime(data_fim, '%Y-%m-%d').date()
+        else:
+            fim = data_fim
+    else:
+        fim = datetime.date(ano, 12, 18)
 
     # Determine scope: global or per-professor
     global_view = (not prof) or (prof.cargo in CARGOS_GLOBAIS)
@@ -390,7 +435,9 @@ def calcular_stats_conteudo(prof):
         pares = GradeHoraria.objects.filter(professor=prof).values('professor_id', 'turma__codigo').distinct()
 
     total = 0
+    total_ate_hoje = 0
     preenchidos = 0
+    preenchidos_ate_hoje = 0
 
     # Cache per (prof_id, turma_codigo) → valid weekdays
     weekdays_por_par = defaultdict(set)
@@ -410,17 +457,27 @@ def calcular_stats_conteudo(prof):
         while cur <= fim:
             if cur.weekday() in weekdays and cur not in FERIADOS_2026:
                 total += 1
+                if cur <= hoje:
+                    total_ate_hoje += 1
             cur += datetime.timedelta(days=1)
-        lancados = ConteudoProgramatico.objects.filter(
+        
+        qs_lancados = ConteudoProgramatico.objects.filter(
             professor_id=prof_id,
-            turmas__codigo=turma_codigo
-        ).values('data').distinct().count()
-        preenchidos += lancados
+            turmas__codigo=turma_codigo,
+            data__gte=inicio,
+            data__lte=fim
+        ).values('data').distinct()
+        
+        preenchidos += qs_lancados.count()
+        preenchidos_ate_hoje += qs_lancados.filter(data__lte=hoje).count()
 
     return {
         'total_conteudo': total,
         'preenchidos': preenchidos,
-        'faltam': max(0, total - preenchidos)
+        'faltam': max(0, total - preenchidos),
+        'total_ate_hoje': total_ate_hoje,
+        'preenchidos_ate_hoje': preenchidos_ate_hoje,
+        'faltam_ate_hoje': max(0, total_ate_hoje - preenchidos_ate_hoje)
     }
 
 
@@ -442,6 +499,9 @@ def relatorio_pendencias(request):
 
     # Filtering
     nome_filtro = request.GET.get('nome', '')
+    data_ini = request.GET.get('data_ini', '')
+    data_fim = request.GET.get('data_fim', '')
+
     if nome_filtro:
         professores = professores.filter(nome__icontains=nome_filtro)
 
@@ -449,7 +509,7 @@ def relatorio_pendencias(request):
     # Optimized loop:
     relatorio = []
     for p in professores:
-        stats = calcular_stats_conteudo(p)
+        stats = calcular_stats_conteudo(p, data_ini=data_ini, data_fim=data_fim)
         if stats['total_conteudo'] > 0:
             p.stats = stats
             relatorio.append(p)
@@ -458,6 +518,8 @@ def relatorio_pendencias(request):
         'prof': prof_user,
         'relatorio': relatorio,
         'nome_filtro': nome_filtro,
+        'data_ini': data_ini,
+        'data_fim': data_fim,
         'todas_turmas': Turma.objects.all(),
     }
     return render(request, 'core/relatorio_pendencias.html', context)
@@ -622,7 +684,12 @@ def ocorrencia_criar(request):
 
     turma = get_object_or_404(Turma, codigo=turma_cod)
     disciplina = get_object_or_404(Disciplina, pk=disc_id) if disc_id else None
-    professor = get_object_or_404(Professor, pk=prof_id) if prof_id else prof
+    
+    # Security: Ensure only admins can set a specific professor
+    if prof_id and prof and prof.pode_editar_tudo:
+        professor = get_object_or_404(Professor, pk=prof_id)
+    else:
+        professor = prof
 
     oc = Ocorrencia.objects.create(
         data=data, turma=turma, professor=professor,
@@ -793,14 +860,22 @@ def conteudo_criar(request):
     descricao = request.POST.get('descricao', '')
 
     disciplina = get_object_or_404(Disciplina, pk=disc_id) if disc_id else None
-    professor = get_object_or_404(Professor, pk=prof_id) if prof_id else prof_logado
+    
+    # Security: Ensure only admins can set a specific professor
+    if prof_id and prof_logado and prof_logado.pode_editar_tudo:
+        professor = get_object_or_404(Professor, pk=prof_id)
+    else:
+        professor = prof_logado
 
-    cont = ConteudoProgramatico.objects.create(
-        data=data, professor=professor, disciplina=disciplina, descricao=descricao
-    )
     turmas = Turma.objects.filter(codigo__in=turmas_cods)
-    cont.turmas.set(turmas)
-    messages.success(request, 'Conteúdo lançado com sucesso!')
+    
+    for turma in turmas:
+        cont = ConteudoProgramatico.objects.create(
+            data=data, professor=professor, disciplina=disciplina, descricao=descricao
+        )
+        cont.turmas.add(turma)
+
+    messages.success(request, 'Conteúdo(s) lançado(s) com sucesso!')
     return redirect('dashboard')
 
 
@@ -839,7 +914,13 @@ def conteudo_editar(request, pk):
 
         cont.data = data
         cont.disciplina = get_object_or_404(Disciplina, pk=disc_id) if disc_id else None
-        cont.professor = get_object_or_404(Professor, pk=prof_id) if prof_id else prof
+        
+        # Security: Ensure only admins can change the professor
+        if prof_id and prof and prof.pode_editar_tudo:
+            cont.professor = get_object_or_404(Professor, pk=prof_id)
+        elif not prof_id:
+            cont.professor = prof
+
         cont.descricao = descricao
         cont.save()
         
@@ -944,10 +1025,9 @@ def exportar_conteudos_csv(request):
 # EXPORTAR PDF
 # ──────────────────────────────────────────────
 
-def _pdf_response(filename):
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
-    return response
+def _pdf_response(buf, filename):
+    buf.seek(0)
+    return FileResponse(buf, as_attachment=True, filename=filename)
 
 
 class EllipticalImage(Image):
@@ -984,11 +1064,20 @@ class EllipticalImage(Image):
 
 def _get_logo_element():
     """Helper to return the standardized elliptical logo for PDFs."""
-    logo_path = os.path.join(settings.BASE_DIR, 'core', 'static', 'core', 'logo.png')
-    if not os.path.exists(logo_path):
-        logo_path = os.path.join(settings.BASE_DIR, 'core', 'static', 'core', 'logo.jpg')
+    # Try different possible paths for the logo
+    possible_paths = [
+        os.path.join(settings.BASE_DIR, 'core', 'static', 'core', 'logo.jpg'),
+        os.path.join(settings.BASE_DIR, 'core', 'static', 'core', 'logo.png'),
+        os.path.join(settings.BASE_DIR, 'static', 'core', 'img', 'logo.png'),
+    ]
+    
+    logo_path = None
+    for p in possible_paths:
+        if os.path.exists(p):
+            logo_path = p
+            break
 
-    if os.path.exists(logo_path):
+    if logo_path and os.path.exists(logo_path):
         # 4cm x 2cm maintains the 2:1 ratio used in the web dashboard (200x100px)
         logo = EllipticalImage(logo_path, width=4*cm, height=2*cm)
         logo.hAlign = 'LEFT'
@@ -998,9 +1087,8 @@ def _get_logo_element():
 
 @login_required
 def exportar_ocorrencias_pdf(request):
-    response = _pdf_response('ocorrencias.pdf')
     buf = io.BytesIO()
-    doc = SimpleDocTemplate(buf, pagesize=landscape(A4), leftMargin=1*cm, rightMargin=1*cm,
+    doc = SimpleDocTemplate(buf, pagesize=A4, leftMargin=1*cm, rightMargin=1*cm,
                             topMargin=1.5*cm, bottomMargin=1.5*cm)
     styles = getSampleStyleSheet()
     small = ParagraphStyle('small', fontSize=7, leading=9)
@@ -1030,7 +1118,9 @@ def exportar_ocorrencias_pdf(request):
             oc.disciplina.nome if oc.disciplina else '',
             oc.status,
         ])
-    t = Table(data, repeatRows=1)
+    # Total width with 1.0cm margins on A4 (21cm) is 19cm.
+    # 1.8+2.0+1.4+5.4+4.0+2.4+2.0 = 19.0cm (Perfect Fill)
+    t = Table(data, colWidths=[1.8*cm, 2.0*cm, 1.4*cm, 5.4*cm, 4.0*cm, 2.4*cm, 2.0*cm], repeatRows=1)
     t.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#003366')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
@@ -1040,16 +1130,47 @@ def exportar_ocorrencias_pdf(request):
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
     ]))
     elems.append(t)
-    doc.build(elems)
-    response.write(buf.getvalue())
-    return response
+    doc.build(elems, onFirstPage=_add_signature_footer, onLaterPages=_add_signature_footer)
+    return _pdf_response(buf, 'ocorrencias.pdf')
+
+
+def _add_signature_footer(canvas, doc):
+    """Adds signature lines for Professor and Secretary at the bottom of the page."""
+    canvas.saveState()
+    canvas.setFont('Helvetica', 9)
+    
+    # Configuration
+    page_width, page_height = doc.pagesize
+    margin = 1.5 * cm
+    line_width = 7 * cm
+    line_y = 2.5 * cm
+    text_y = 2.1 * cm
+    
+    # Professor Signature (Left)
+    canvas.line(margin, line_y, margin + line_width, line_y)
+    canvas.drawCentredString(margin + (line_width / 2), text_y, "Assinatura do Professor")
+    
+    # Electronic signature info
+    from datetime import datetime as dt
+    now_str = dt.now().strftime('%d/%m/%Y %H:%M')
+    sig_info = f"Assinado eletronicamente na data de sua geração: {now_str}"
+    canvas.setFont('Helvetica-Oblique', 7)
+    canvas.drawCentredString(margin + (line_width / 2), text_y - 0.4*cm, sig_info)
+    
+    # Secretary Signature (Right)
+    canvas.setFont('Helvetica', 9)
+    canvas.line(page_width - margin - line_width, line_y, page_width - margin, line_y)
+    canvas.drawCentredString(page_width - margin - (line_width / 2), text_y, "Assinatura da Secretaria")
+    canvas.setFont('Helvetica-Oblique', 7)
+    canvas.drawCentredString(page_width - margin - (line_width / 2), text_y - 0.4*cm, sig_info)
+    
+    canvas.restoreState()
 
 
 @login_required
 def exportar_conteudos_pdf(request):
-    response = _pdf_response('conteudos.pdf')
     buf = io.BytesIO()
-    doc = SimpleDocTemplate(buf, pagesize=landscape(A4), leftMargin=1*cm, rightMargin=1*cm,
+    doc = SimpleDocTemplate(buf, pagesize=A4, leftMargin=1*cm, rightMargin=1*cm,
                             topMargin=1.5*cm, bottomMargin=1.5*cm)
     styles = getSampleStyleSheet()
     small = ParagraphStyle('small', fontSize=7, leading=9)
@@ -1077,7 +1198,9 @@ def exportar_conteudos_pdf(request):
             c.disciplina.nome if c.disciplina else '',
             Paragraph(c.descricao, small),
         ])
-    t = Table(data, colWidths=[2*cm, 2*cm, 4*cm, 3*cm, None], repeatRows=1)
+    # Total width with 1.0cm margins on A4 (21cm) is 19cm.
+    # 1.8+1.6+2.8+2.6+10.2 = 19.0cm (Perfect Fill)
+    t = Table(data, colWidths=[1.8*cm, 1.6*cm, 2.8*cm, 2.6*cm, 10.2*cm], repeatRows=1)
     t.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#003366')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
@@ -1087,9 +1210,8 @@ def exportar_conteudos_pdf(request):
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
     ]))
     elems.append(t)
-    doc.build(elems)
-    response.write(buf.getvalue())
-    return response
+    doc.build(elems, onFirstPage=_add_signature_footer, onLaterPages=_add_signature_footer)
+    return _pdf_response(buf, 'conteudos.pdf')
 
 
 @login_required
@@ -1112,10 +1234,9 @@ def exportar_alocacao_pdf(request):
     if prof and not prof.pode_gerar_relatorios:
         return HttpResponse('Acesso negado', status=403)
 
-    response = _pdf_response('alocacao_professores.pdf')
     buf = io.BytesIO()
-    doc = SimpleDocTemplate(buf, pagesize=landscape(A4), leftMargin=1*cm, rightMargin=1*cm,
-                            topMargin=1.5*cm, bottomMargin=1.5*cm)
+    doc = SimpleDocTemplate(buf, pagesize=A4, leftMargin=0.5*cm, rightMargin=0.5*cm,
+                            topMargin=1*cm, bottomMargin=1*cm)
     styles = getSampleStyleSheet()
     small_style = ParagraphStyle('Small', parent=styles['Normal'], fontSize=7, leading=8)
     
@@ -1159,8 +1280,9 @@ def exportar_alocacao_pdf(request):
             Paragraph("<br/>".join(qui), small_style),
             Paragraph("<br/>".join(sex), small_style)
         ])
-    
-    t = Table(data, colWidths=[2.5*cm, 3.5*cm, 3*cm, 3.7*cm, 3.7*cm, 3.7*cm, 3.7*cm, 3.7*cm], repeatRows=1)
+    # Total width with 0.5cm margins on A4 (21cm) is 20cm.
+    # 2.0 + 2.5 + 1.5 + 5 * 2.5 = 6.0 + 12.5 = 18.5cm (Safe)
+    t = Table(data, colWidths=[2.0*cm, 2.5*cm, 1.5*cm, 2.5*cm, 2.5*cm, 2.5*cm, 2.5*cm, 2.5*cm], repeatRows=1)
     t.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#003366')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
@@ -1170,6 +1292,121 @@ def exportar_alocacao_pdf(request):
         ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f2f2f2')]),
     ]))
     elems.append(t)
-    doc.build(elems)
-    response.write(buf.getvalue())
-    return response
+    doc.build(elems, onFirstPage=_add_signature_footer, onLaterPages=_add_signature_footer)
+    return _pdf_response(buf, 'alocacao_professores.pdf')
+
+
+@login_required
+def sugestao_criar_massa(request):
+    prof = get_professor(request.user)
+    if not prof or not prof.pode_editar_tudo:
+        messages.error(request, 'Acesso negado.')
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        disc_id = request.POST.get('disciplina')
+        turmas_ids = request.POST.getlist('turmas')
+        file_obj = request.FILES.get('arquivo_excel')
+
+        if not disc_id or not turmas_ids or not file_obj:
+            messages.error(request, 'Selecione a disciplina, turmas e o arquivo Excel.')
+            return redirect('dashboard')
+
+        import openpyxl
+        try:
+            workbook = openpyxl.load_workbook(file_obj, data_only=True)
+            sheet = workbook.active  # Primeira aba
+            
+            textos = []
+            for row in sheet.iter_rows(min_row=1, max_col=1, values_only=True):
+                # Considera apenas a primeira coluna (index 0)
+                val = row[0]
+                if val and str(val).strip():
+                    textos.append(str(val).strip())
+            
+            if not textos:
+                messages.warning(request, 'Nenhum conteúdo encontrado na primeira coluna da planilha.')
+                return redirect('dashboard')
+
+            disciplina = get_object_or_404(Disciplina, pk=disc_id)
+            turmas = Turma.objects.filter(pk__in=turmas_ids)
+            
+            from django.db import transaction
+            with transaction.atomic():
+                for txt in textos:
+                    sug = SugestaoConteudo.objects.create(disciplina=disciplina, texto=txt)
+                    sug.turmas.set(turmas)
+
+            messages.success(request, f'{len(textos)} sugestões cadastradas com sucesso!')
+        except Exception as e:
+            messages.error(request, f'Erro ao processar Excel: {str(e)}')
+            
+        return redirect('dashboard')
+
+    return redirect('dashboard')
+
+
+@login_required
+def exportar_pendencias_pdf(request):
+    """Exports the pendency report table to PDF."""
+    prof_user = get_professor(request.user)
+    if prof_user and not prof_user.pode_gerar_relatorios:
+        return HttpResponse('Acesso negado', status=403)
+
+    professores = Professor.objects.filter(cargo='PROFESSOR').order_by('nome')
+    nome_filtro = request.GET.get('nome', '')
+    data_ini = request.GET.get('data_ini', '')
+    data_fim = request.GET.get('data_fim', '')
+
+    if nome_filtro:
+        professores = professores.filter(nome__icontains=nome_filtro)
+
+    relatorio = []
+    for p in professores:
+        stats = calcular_stats_conteudo(p, data_ini=data_ini, data_fim=data_fim)
+        if stats['total_conteudo'] > 0:
+            p.stats = stats
+            relatorio.append(p)
+
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=A4, leftMargin=1*cm, rightMargin=1*cm,
+                            topMargin=1.5*cm, bottomMargin=1.5*cm)
+    styles = getSampleStyleSheet()
+    
+    elems = []
+    logo = _get_logo_element()
+    if logo:
+        elems.append(logo)
+        elems.append(Spacer(1, 0.2*cm))
+
+    title = 'Pendências de Conteúdo'
+    if data_ini and data_fim:
+        title += f' ({data_ini} a {data_fim})'
+    elif data_ini:
+        title += f' (desde {data_ini})'
+        
+    elems.append(Paragraph(title, styles['Title']))
+    elems.append(Spacer(1, 0.5*cm))
+
+    data = [['Professor', 'Total Esperado', 'Preenchidos', 'Faltam (Hoje)', 'Faltam (Total)']]
+    for p in relatorio:
+        data.append([
+            p.nome,
+            str(p.stats['total_conteudo']),
+            str(p.stats['preenchidos']),
+            str(p.stats['faltam_ate_hoje']),
+            str(p.stats['faltam']),
+        ])
+    
+    t = Table(data, colWidths=[8*cm, 2.5*cm, 2.5*cm, 3*cm, 3*cm], repeatRows=1)
+    t.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#003366')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f2f2f2')]),
+    ]))
+    elems.append(t)
+    doc.build(elems, onFirstPage=_add_signature_footer, onLaterPages=_add_signature_footer)
+    return _pdf_response(buf, 'pendencias.pdf')

@@ -5,14 +5,16 @@
     <meta charset="UTF-8">
     <title>{% block title %}Sistema EME{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{% static 'core/style.css' %}">
+    <link rel="stylesheet" href="{% static 'core/style.css' %}?v=2">
     {% block extra_head %}{% endblock %}
 </head>
 <body>
 {% block body %}
 <header>
     <div class="header-inner">
-        <span>Sistema de Ocorrências Escolares</span>
+        <div style="display: flex; align-items: center;">
+            <span>Sistema de Ocorrências Escolares</span>
+        </div>
         {% if user.is_authenticated %}
         <div class="header-right">
             <span class="header-user">👤 {{ user.get_full_name|default:user.username }}</span>

@@ -3,7 +3,7 @@ from django.urls import path
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.html import format_html
 from django.contrib import messages
-from .models import Turma, Disciplina, Professor, Aluno, Ocorrencia, ConteudoProgramatico, GradeHoraria, InspetorProxy, ProfessorDocente
+from .models import Turma, Disciplina, Professor, Aluno, Ocorrencia, ConteudoProgramatico, GradeHoraria, InspetorProxy, ProfessorDocente, SugestaoConteudo
 import datetime
 
 
@@ -277,10 +277,27 @@ class TurmaAdmin(admin.ModelAdmin):
         return render(request, "admin/core/turma/grade_semanal.html", context)
 
 
+class SugestaoConteudoInline(admin.TabularInline):
+    model = SugestaoConteudo
+    extra = 1
+
 @admin.register(Disciplina)
 class DisciplinaAdmin(admin.ModelAdmin):
     list_display = ['nome']
     search_fields = ['nome']
+    inlines = [SugestaoConteudoInline]
+
+
+@admin.register(SugestaoConteudo)
+class SugestaoConteudoAdmin(admin.ModelAdmin):
+    list_display = ['disciplina', 'texto_curto', 'ordem']
+    list_filter = ['disciplina', 'turmas']
+    filter_horizontal = ['turmas']
+    search_fields = ['texto']
+
+    def texto_curto(self, obj):
+        return obj.texto[:100]
+    texto_curto.short_description = 'Conteúdo'
 
 
 @admin.register(Professor)

@@ -29,10 +29,14 @@
         <div style="padding: 15px;">
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;">
                 {% for d in item.datas %}
-                <div style="background: #fff5f5; border: 1px solid #ffdada; padding: 8px; border-radius: 4px; text-align: center; color: #c0392b; font-size: 13px;">
-                    <strong>{{ d|date:"d/m/Y" }}</strong><br>
-                    <span style="font-size: 11px;">({{ d|date:"l"|slice:":3" }})</span>
-                </div>
+                <a href="{% url 'dashboard' %}?tab=conteudos&auto_lancar=1&turma={{ item.turma.codigo }}&disciplina={{ item.disciplina.id }}&professor={{ professor.id }}&data={{ d|date:'Y-m-d' }}" 
+                   style="text-decoration: none; display: block;" 
+                   title="Clique para lançar este conteúdo">
+                    <div class="date-box">
+                        <strong>{{ d|date:"d/m/Y" }}</strong><br>
+                        <span style="font-size: 11px;">({{ d|date:"l"|slice:":3" }})</span>
+                    </div>
+                </a>
                 {% endfor %}
             </div>
         </div>
@@ -57,6 +61,23 @@
     }
     .btn-gray:hover {
         background: #5a6268;
+    }
+    .date-box {
+        background: #fff5f5; 
+        border: 1px solid #ffdada; 
+        padding: 8px; 
+        border-radius: 4px; 
+        text-align: center; 
+        color: #c0392b; 
+        font-size: 13px;
+        transition: 0.2s;
+        cursor: pointer;
+    }
+    .date-box:hover {
+        background: #feb2b2;
+        border-color: #f56565;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
 </style>
 {% endblock %}
