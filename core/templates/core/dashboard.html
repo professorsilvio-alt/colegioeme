@@ -40,16 +40,10 @@
 </div>
 {% endif %}
 
-<!-- TABS -->
-<div class="tabs">
-    <button class="tab-btn {% if request.GET.tab != 'conteudos' %}active{% endif %}" onclick="window.location.href='?tab=ocorrencias'">📋 Ocorrências</button>
-    {% if prof.cargo != 'INSPETOR' %}
-    <button class="tab-btn {% if request.GET.tab == 'conteudos' %}active{% endif %}" onclick="window.location.href='?tab=conteudos'">📚 Diário de Conteúdo</button>
-    {% endif %}
-</div>
+
 
 <!-- ═══════════════ ABA OCORRÊNCIAS ═══════════════ -->
-<div id="tab-ocorrencias" class="tab-pane active">
+<div id="tab-ocorrencias" class="tab-pane {% if request.GET.tab != 'conteudos' %}active{% endif %}" style="{% if request.GET.tab == 'conteudos' %}display:none;{% endif %}">
 
     {% if prof.cargo != 'INSPETOR' and prof.cargo != 'AUX_COORD' and prof.cargo != 'ORIENTADOR' and prof.cargo != 'SECRETARIA' %}
     <button class="btn-primary" onclick="toggleSection('formOcorrencia')">+ Registrar Nova Ocorrência</button>
@@ -164,10 +158,6 @@
             <input type="hidden" name="status" id="statusMassa" value="Resolvida">
             {% endif %}
             
-            {% if prof.pode_ver_tudo %}
-            <a href="{% url 'relatorio_alocacao' %}" class="btn-primary" style="background:#003366">👥 Alocação de Professores</a>
-            {% endif %}
-
             {% if prof.pode_gerar_relatorios %}
             <a href="{% url 'exportar_ocorrencias_csv' %}?{{ request.GET.urlencode }}" class="btn-export">📥 CSV (Filtrado)</a>
             <a href="{% url 'exportar_ocorrencias_pdf' %}?{{ request.GET.urlencode }}" class="btn-export btn-pdf" style="background: #003366; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-size: 14px; margin-left: 5px;" download="ocorrencias_filtrado.pdf">📄 PDF (Filtrado)</a>
@@ -217,7 +207,7 @@
 
 <!-- ═══════════════ ABA CONTEÚDOS ═══════════════ -->
 {% if prof.cargo != 'INSPETOR' %}
-<div id="tab-conteudos" class="tab-pane" style="display:none;">
+<div id="tab-conteudos" class="tab-pane {% if request.GET.tab == 'conteudos' %}active{% endif %}" style="{% if request.GET.tab != 'conteudos' %}display:none;{% else %}display:block;{% endif %}">
 
     {% if prof.cargo == 'PROFESSOR' or prof.pode_editar_tudo %}
     <button class="btn-primary" onclick="toggleSectionConteudo('normal')">+ Lançar Conteúdo Programático</button>
@@ -232,55 +222,6 @@
     <a href="{% url 'exportar_conteudos_csv' %}" class="btn-export" style="background: #003366; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-size: 14px; margin-left: 5px;">📥 CSV (Completo)</a>
     <a href="{% url 'exportar_conteudos_pdf' %}" class="btn-export" style="background: #003366; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-size: 14px; margin-left: 5px;" download="conteudos_completo.pdf">📄 PDF (Completo)</a>
     {% endif %}
-
-    {% if prof.pode_editar_tudo %}
-    <button class="btn-gray" onclick="toggleSection('formSugestoesMassa')" style="margin-left: 5px;">⚙ Gerenciar Sugestões</button>
-    {% endif %}
-
-    <!-- Formulário Sugestões em Massa -->
-    <div id="formSugestoesMassa" class="collapsible" style="display:none; border: 2px solid #003366; background: #f9f9f9;">
-        <h2>Incluir Conteúdo Pré-Programado (Via Excel)</h2>
-        <form method="post" action="{% url 'sugestao_criar_massa' %}" enctype="multipart/form-data">
-            {% csrf_token %}
-            
-            <div style="display: flex; gap: 20px; margin-bottom: 15px;">
-                <div style="flex: 1;">
-                    <label>Disciplina</label>
-                    <select name="disciplina" required>
-                        <option value="">Selecione...</option>
-                        {% for d in disciplinas %}
-                        <option value="{{ d.pk }}">{{ d.nome }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div style="flex: 2;">
-                    <label>Turmas (Selecione uma ou mais)</label>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 5px; border: 1px solid #ccc; padding: 10px; border-radius: 4px; background: white;">
-                        {% for t in turmas %}
-                        <label style="font-size: 13px; cursor: pointer;">
-                            <input type="checkbox" name="turmas" value="{{ t.pk }}"> {{ t.codigo }}
-                        </label>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-
-            <div style="background: #eef2ff; border: 1px dashed #003366; padding: 15px; border-radius: 4px; margin-bottom: 15px;">
-                <label>Arquivo Excel (.xlsx)</label>
-                <input type="file" name="arquivo_excel" accept=".xlsx" required style="margin-bottom: 10px;">
-                <p style="font-size: 12px; color: #555; margin: 0;">
-                    <strong>Como formatar seu arquivo:</strong><br>
-                    • O sistema lerá apenas a <strong>primeira coluna</strong> da <strong>primeira aba</strong>.<br>
-                    • Cada linha deve conter um texto de conteúdo programático diferente.
-                </p>
-            </div>
-
-            <div style="display: flex; gap: 10px;">
-                <button type="submit" class="btn-primary">📤 Importar Sugestões</button>
-                <button type="button" class="btn-cancel" onclick="toggleSection('formSugestoesMassa')">Cancelar</button>
-            </div>
-        </form>
-    </div>
 
     <!-- Formulário novo conteúdo -->
     <div id="formConteudo" class="collapsible" style="display:none;">

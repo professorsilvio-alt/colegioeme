@@ -12,10 +12,29 @@
 {% block body %}
 <header>
     <div class="header-inner">
-        <div style="display: flex; align-items: center;">
-            <span>Sistema de Ocorrências Escolares</span>
+        <div class="header-left">
+            <a href="{% url 'dashboard' %}" style="color: white; text-decoration: none; display: flex; align-items: center; gap: 10px;">
+                <img src="{% static 'core/logo.jpg' %}" alt="Logo" class="header-logo">
+                <span class="header-title">Sistema EME</span>
+            </a>
         </div>
+
         {% if user.is_authenticated %}
+        <nav class="header-nav">
+            <a href="{% url 'dashboard' %}" class="nav-item">🏠 Dashboard</a>
+            <a href="{% url 'dashboard' %}?tab=ocorrencias" class="nav-item">📋 Ocorrências</a>
+            {% if not prof or prof.cargo != 'INSPETOR' %}
+            <a href="{% url 'dashboard' %}?tab=conteudos" class="nav-item">📚 Diário</a>
+            {% endif %}
+            {% if prof.pode_ver_tudo or user.is_superuser %}
+            <a href="{% url 'relatorio_alocacao' %}" class="nav-item">👥 Alocação</a>
+            <a href="{% url 'relatorio_pendencias' %}" class="nav-item">📊 Pendências</a>
+            {% endif %}
+            {% if prof.pode_editar_tudo or user.is_superuser %}
+            <a href="{% url 'gerenciar_sugestoes' %}" class="nav-item">⚙ Sugestões</a>
+            {% endif %}
+        </nav>
+
         <div class="header-right">
             <span class="header-user">👤 {{ user.get_full_name|default:user.username }}</span>
             <form method="post" action="{% url 'logout' %}" style="display:inline">

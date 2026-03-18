@@ -1,0 +1,88 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Gerenciar Sugestões - Sistema EME{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1 style="color: #003366; margin: 0;">⚙ Gerenciar Sugestões de Conteúdo</h1>
+        <a href="{% url 'dashboard' %}" class="btn-gray">Voltar ao Dashboard</a>
+    </div>
+
+    <!-- Formulário Sugestões em Massa -->
+    <div class="collapsible" style="border: 2px solid #003366; background: #f9f9f9; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+        <h2>📤 Importar Sugestões via Excel</h2>
+        <form method="post" action="{% url 'sugestao_criar_massa' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; margin-bottom: 20px;">
+                <div>
+                    <label>Disciplina</label>
+                    <select name="disciplina" required style="width: 100%; padding: 10px; border-radius: 6px;">
+                        <option value="">Selecione...</option>
+                        {% for d in disciplinas %}
+                        <option value="{{ d.pk }}">{{ d.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label>Turmas (Selecione uma ou mais)</label>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 5px; border: 1px solid #ccc; padding: 12px; border-radius: 6px; background: white; max-height: 120px; overflow-y: auto;">
+                        {% for t in turmas %}
+                        <label style="font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                            <input type="checkbox" name="turmas" value="{{ t.pk }}"> {{ t.codigo }}
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: #eef2ff; border: 1px dashed #003366; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
+                <label>Arquivo Excel (.xlsx)</label>
+                <input type="file" name="arquivo_excel" accept=".xlsx" required style="margin: 10px 0;">
+                <p style="font-size: 12px; color: #555; line-height: 1.4;">
+                    <strong>Regras de Formatação:</strong><br>
+                    • O sistema lerá apenas a <strong>primeira coluna</strong> da <strong>primeira aba</strong>.<br>
+                    • Cada linha deve conter um texto de conteúdo programático único.<br>
+                    • Não utilize cabeçalhos ou colunas extras.
+                </p>
+            </div>
+
+            <button type="submit" class="btn-primary" style="padding: 12px 25px; font-size: 15px;">📤 Realizar Importação</button>
+        </form>
+    </div>
+
+    <!-- Lista de Sugestões Existentes (Opcional, mas útil) -->
+    <div class="card-table" style="background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead style="background: #003366; color: white;">
+                <tr>
+                    <th style="padding: 12px; text-align: left;">Disciplina</th>
+                    <th style="padding: 12px; text-align: left;">Turmas</th>
+                    <th style="padding: 12px; text-align: left;">Texto da Sugestão</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in sugestoes %}
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 12px;"><strong>{{ s.disciplina.nome }}</strong></td>
+                    <td style="padding: 12px;">
+                        {% for t in s.turmas.all %}
+                        <span style="background: #eef2ff; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-right: 3px;">{{ t.codigo }}</span>
+                        {% empty %}
+                        <span style="color: #999; font-size: 11px;">Todas</span>
+                        {% endfor %}
+                    </td>
+                    <td style="padding: 12px; font-size: 13px;">{{ s.texto }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" style="padding: 30px; text-align: center; color: #999;">Nenhuma sugestão cadastrada ainda. Use o formulário acima para importar.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

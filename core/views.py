@@ -671,6 +671,23 @@ def lancamento_coletivo(request):
 
 
 @login_required
+def gerenciar_sugestoes(request):
+    """Standalone page for administrators to manage content suggestions."""
+    prof = get_professor(request.user)
+    if not prof or not prof.pode_editar_tudo:
+        messages.error(request, "Acesso restrito.")
+        return redirect('dashboard')
+    
+    context = {
+        'prof': prof,
+        'sugestoes': SugestaoConteudo.objects.all().select_related('disciplina').prefetch_related('turmas').order_by('disciplina__nome', 'texto'),
+        'disciplinas': Disciplina.objects.all(),
+        'turmas': Turma.objects.all(),
+    }
+    return render(request, 'core/gerenciar_sugestoes.html', context)
+
+
+@login_required
 @require_POST
 def ocorrencia_criar(request):
     prof = get_professor(request.user)
