@@ -15,7 +15,8 @@
         width: 100%;
         border-collapse: collapse;
         font-size: 0.82em;
-        table-layout: fixed;
+        table-layout: auto;
+        min-width: 1000px;
     }
     .relatorio-table thead tr {
         background-color: #003366;
@@ -28,10 +29,19 @@
         font-size: 0.9em;
         white-space: nowrap;
     }
-    .relatorio-table th.col-prof { width: 10%; }
-    .relatorio-table th.col-disc { width: 12%; }
-    .relatorio-table th.col-turma { width: 8%; }
-    .relatorio-table th.col-dia { width: 14%; }
+    .relatorio-table th.col-prof { width: 140px; }
+    .relatorio-table th.col-disc { width: 160px; }
+    .relatorio-table th.col-turma { width: 100px; }
+    .relatorio-table th.col-dia { min-width: 120px; }
+
+    .relatorio-card {
+        background: #fff;
+        padding: 16px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        overflow-x: auto;
+    }
 
     .relatorio-table td {
         padding: 6px;
@@ -124,7 +134,7 @@
         </div>
     </div>
 
-    <div class="card" style="padding: 12px;">
+    <div class="relatorio-card">
         <table class="relatorio-table">
             <thead>
                 <tr>
