@@ -14,7 +14,7 @@ body {
 header {
     background: #003366;
     color: #fff;
-    padding: 16px 24px;
+    padding: 8px 16px; /* Thinner header */
     position: sticky;
     top: 0;
     z-index: 100;
@@ -22,13 +22,13 @@ header {
 
 .header-inner {
     display: flex;
-    flex-wrap: wrap; /* Permite quebrar linha em telas pequenas */
+    flex-wrap: nowrap; /* Avoid wrapping in the main inner container */
     align-items: center;
     justify-content: space-between;
-    max-width: 1400px;
+    max-width: 1300px; /* Match container width */
     margin: auto;
-    font-size: 16px;
-    gap: 15px;
+    font-size: 14px;
+    gap: 10px;
 }
 
 .header-left {
@@ -44,24 +44,24 @@ header {
 
 .header-nav {
     display: flex;
-    gap: 12px;
-    margin: 10px 0;
+    gap: 6px; /* Tighten gap */
+    margin: 0;
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: flex-start;
 }
 
 .nav-item, .nav-item:link, .nav-item:visited {
-    color: #ffffff !important; /* Força cor branca mesmo se visitado */
+    color: #ffffff !important;
     text-decoration: none;
-    font-size: 13.5px;
+    font-size: 13px; /* Slightly smaller */
     font-weight: 600;
-    padding: 6px 10px;
-    border-radius: 6px;
+    padding: 4px 8px; /* Compact padding */
+    border-radius: 4px;
     transition: 0.2s;
     white-space: nowrap;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
 }
 
 .nav-item:hover {
@@ -188,13 +188,13 @@ header {
 }
 
 .header-logo {
-    width: 70px;
-    height: 35px;
+    width: 60px; /* Smaller logo */
+    height: 30px;
     border-radius: 50% / 50%;
-    object-fit: cover;
-    border: 1px solid #fff;
-    background: #003366;
-    margin-right: 12px;
+    object-fit: contain; /* Don't stretch */
+    border: 1px solid rgba(255,255,255,0.3);
+    background: transparent;
+    margin-right: 8px;
     vertical-align: middle;
 }
 
@@ -212,11 +212,10 @@ header {
 }
 
 .card {
-    flex: 1 1 300px;
-    min-width: 150px;
-    max-width: 400px;
+    flex: 0 0 calc(33.333% - 10px); /* Exactly 3 per row if space allows */
+    min-width: 180px;
     background: #003366;
-    padding: 10px 15px;
+    padding: 10px 12px;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, .15);
     text-align: center;
@@ -231,8 +230,8 @@ header {
 }
 
 .card p {
-    font-size: 22px;
-    margin: 4px 0 0;
+    font-size: 20px;
+    margin: 2px 0 0;
     font-weight: 700;
 }
 
