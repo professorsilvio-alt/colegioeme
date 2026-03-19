@@ -1332,7 +1332,12 @@ def sugestao_criar_massa(request):
             messages.error(request, 'Selecione a disciplina, turmas e o arquivo Excel.')
             return redirect('dashboard')
 
-        import openpyxl
+        try:
+            import openpyxl
+        except ImportError:
+            messages.error(request, 'O servidor não possui a biblioteca "openpyxl" instalada. Entre em contato com o suporte.')
+            return redirect('dashboard')
+
         try:
             workbook = openpyxl.load_workbook(file_obj, data_only=True)
             sheet = workbook.active  # Primeira aba
@@ -1353,6 +1358,8 @@ def sugestao_criar_massa(request):
             
             from django.db import transaction
             with transaction.atomic():
+                # Opcional: Evitar duplicidade exata na mesma disc/turma?
+                # Por agora, cria direto seguindo o pedido anterior.
                 for txt in textos:
                     sug = SugestaoConteudo.objects.create(disciplina=disciplina, texto=txt)
                     sug.turmas.set(turmas)
