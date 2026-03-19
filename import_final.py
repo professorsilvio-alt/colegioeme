@@ -6,65 +6,12 @@ try:
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'eme_project.settings')
     django.setup()
     from core.models import SugestaoConteudo, Disciplina, Turma
-    print("Django inicializado com sucesso.")
+    print('Django inicializado com sucesso.')
 except Exception as e:
-    print(f"Erro na inicialização do Django: {e}")
+    print(f'Erro na inicializa\u00e7\u00e3o do Django: {e}')
     sys.exit(1)
 
 DATA = [
-    # ... (Data is already here, keeping it)
-]
-
-def run_import():
-    print(f"Iniciando importação de {len(DATA)} sugestões...")
-    
-    # Verificar se as tabelas bases têm dados
-    if not Disciplina.objects.exists():
-        print("ERRO: Não existem disciplinas cadastradas no banco! Importe as disciplinas primeiro.")
-        return
-    if not Turma.objects.exists():
-        print("ERRO: Não existem turmas cadastradas no banco!")
-        return
-
-    created_count = 0
-    updated_count = 0
-    
-    for item in DATA:
-        disc_nome = item['disc']
-        texto = item['texto']
-        turmas_cods = item['turmas']
-        
-        try:
-            # 1. Obter ou criar a disciplina (com tratamento de erro)
-            disciplina, _ = Disciplina.objects.get_or_create(nome=disc_nome)
-            
-            # 2. Criar a sugestão
-            sugestao, created = SugestaoConteudo.objects.get_or_create(
-                disciplina=disciplina,
-                texto=texto
-            )
-            
-            # 3. Vincular as turmas
-            if turmas_cods:
-                turmas = Turma.objects.filter(codigo__in=turmas_cods)
-                if not turmas.exists():
-                    print(f"Aviso: Turmas {turmas_cods} não encontradas para '{texto[:30]}'")
-                sugestao.turmas.set(turmas)
-            
-            if created:
-                created_count += 1
-            else:
-                updated_count += 1
-                
-        except Exception as ex:
-            print(f"Erro ao importar item '{texto[:20]}': {ex}")
-
-    print(f"Processo finalizado!")
-    print(f"- Criadas: {created_count}")
-    print(f"- Atualizadas: {updated_count}")
-
-if __name__ == "__main__":
-    run_import()
   {
     "disc": "Mat. I",
     "texto": "1. Divis\u00e3o Euclidiana",
@@ -697,36 +644,51 @@ if __name__ == "__main__":
     ]
   }
 ]
-    # Full data will be injected here or provided to the user
-]
 
 def run_import():
-    print(f"Iniciando importação de {len(DATA)} sugestões...")
+    print(f'Iniciando importa\u00e7\u00e3o de {len(DATA)} sugest\u00f5es...')
+    
+    if not Disciplina.objects.exists():
+        print('ERRO: N\u00e3o existem disciplinas cadastradas no banco!')
+        return
+    if not Turma.objects.exists():
+        print('ERRO: N\u00e3o existem turmas cadastradas no banco!')
+        return
+
     created_count = 0
+    updated_count = 0
     
     for item in DATA:
-        disc_nome = item['disc']
-        texto = item['texto']
-        turmas_cods = item['turmas']
+        disc_nome = item.get('disc')
+        texto = item.get('texto')
+        turmas_cods = item.get('turmas')
         
-        # 1. Obter ou criar a disciplina
-        disciplina, _ = Disciplina.objects.get_or_create(nome=disc_nome)
-        
-        # 2. Criar a sugestão (usando get_or_create para evitar duplicidade)
-        sugestao, created = SugestaoConteudo.objects.get_or_create(
-            disciplina=disciplina,
-            texto=texto
-        )
-        
-        # 3. Vincular as turmas
-        if turmas_cods:
-            turmas = Turma.objects.filter(codigo__in=turmas_cods)
-            sugestao.turmas.set(turmas)
+        try:
+            # 1. Obter ou criar a disciplina
+            disciplina, _ = Disciplina.objects.get_or_create(nome=disc_nome)
             
-        if created:
-            created_count += 1
+            # 2. Criar a sugest\u00e3o
+            sugestao, created = SugestaoConteudo.objects.get_or_create(
+                disciplina=disciplina,
+                texto=texto
+            )
+            
+            # 3. Vincular as turmas
+            if turmas_cods:
+                turmas = Turma.objects.filter(codigo__in=turmas_cods)
+                sugestao.turmas.set(turmas)
+            
+            if created:
+                created_count += 1
+            else:
+                updated_count += 1
+                
+        except Exception as ex:
+            print(f'Erro ao importar item: {ex}')
 
-    print(f"Importação concluída! {created_count} novas sugestões criadas.")
+    print(f'Processo finalizado!')
+    print(f'- Criadas: {created_count}')
+    print(f'- Atualizadas: {updated_count}')
 
 if __name__ == "__main__":
     run_import()
