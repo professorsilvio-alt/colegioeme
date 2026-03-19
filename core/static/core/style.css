@@ -22,10 +22,10 @@ header {
 
 .header-inner {
     display: flex;
-    flex-wrap: nowrap; /* Avoid wrapping in the main inner container */
+    flex-wrap: wrap; /* Permitir quebra se necessário em 750px */
     align-items: center;
     justify-content: space-between;
-    max-width: 1300px; /* Match container width */
+    max-width: 1300px;
     margin: auto;
     font-size: 14px;
     gap: 10px;
@@ -236,11 +236,10 @@ header {
 }
 
 /* ──────────────────────────── RESPONSIVENESS ──────────────────────────── */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .header-inner {
         justify-content: center;
-        text-align: center;
-        padding-bottom: 10px;
+        gap: 5px;
     }
     .header-left {
         width: 100%;
@@ -248,15 +247,19 @@ header {
         margin-bottom: 5px;
     }
     .header-nav {
-        margin: 10px 0;
+        justify-content: center;
         width: 100%;
+    }
+}
+
+@media (max-width: 600px) {
+    .card {
+        flex: 1 1 100%; /* Uma coluna apenas em telas bem pequenas */
     }
     .header-right {
         width: 100%;
         justify-content: center;
-    }
-    .card {
-        flex: 1 1 100%; /* Uma coluna em telas muito pequenas */
+        margin-top: 10px;
     }
 }
 
