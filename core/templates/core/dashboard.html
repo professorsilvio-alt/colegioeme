@@ -421,8 +421,13 @@
 function showTab(name, btn) {
     document.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab-' + name).style.display = 'block';
-    btn.classList.add('active');
+    
+    const panel = document.getElementById('tab-' + name);
+    if (panel) panel.style.display = 'block';
+    
+    if (btn && btn.classList) {
+        btn.classList.add('active');
+    }
 }
 
 // Restaurar aba ativa via query param
@@ -769,12 +774,9 @@ async function handleAutoLancar() {
     const p = new URLSearchParams(location.search);
     if (p.get('auto_lancar') !== '1') return;
 
-    // 1. Mudar para aba conteúdos
+    // 1. Mudar para aba conteúdos (com verificação do botão)
     const btnConteudos = document.querySelectorAll('.tab-btn')[1];
     showTab('conteudos', btnConteudos);
-
-    // 2. Abrir form
-    toggleSectionConteudo('normal');
 
     const turma = p.get('turma');
     const disciplina = p.get('disciplina');
@@ -783,19 +785,24 @@ async function handleAutoLancar() {
 
     if (!turma || !disciplina || !professor || !data) return;
 
-    // 3. Preencher Turma e carregar Disciplinas
+    // 2. Abrir form (Isso limpa os campos, então fazemos ANTES de preencher)
+    toggleSectionConteudo('normal');
+
+    // 3. Preencher Turma 
     document.getElementById('turmaSelectCont').value = turma;
-    carregarTurmasMesmaSerie(turma);
     
-    // Precisamos esperar as disciplinas carregarem
+    // 4. Carregar e Preencher Disciplinas
     await carregarDisciplinasDaTurmaAsync(turma);
     document.getElementById('discSelectCont').value = disciplina;
 
-    // 4. Carregar Professores
+    // 5. Carregar e Preencher Professores
     await carregarProfessoresDaTurmaDiscAsync();
     document.getElementById('profSelectCont').value = professor;
 
-    // 5. Carregar Datas e selecionar a correta
+    // 6. Agora que temos o professor, carregamos as turmas da mesma série
+    carregarTurmasMesmaSerie(turma);
+
+    // 7. Carregar Datas e selecionar a correta
     await carregarDatasValidasAsync();
     
     const dataSel = document.getElementById('dataSelectCont');
@@ -805,7 +812,9 @@ async function handleAutoLancar() {
     }
 
     // Scroll até o formulário
-    document.getElementById('formConteudo').scrollIntoView({ behavior: 'smooth' });
+    setTimeout(() => {
+        document.getElementById('formConteudo').scrollIntoView({ behavior: 'smooth' });
+    }, 500);
 }
 
 // Versões Async dos carregamentos para facilitar o fluxo sequencial
