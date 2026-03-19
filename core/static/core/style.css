@@ -207,6 +207,7 @@ header {
 .card {
     flex: 1;
     min-width: 120px;
+    max-width: 350px;
     background: #003366;
     padding: 6px 10px;
     border-radius: 8px;
@@ -615,4 +616,4 @@ tr:hover td {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
+}
