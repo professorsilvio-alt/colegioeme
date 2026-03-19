@@ -1,6 +1,7 @@
 import csv
 import datetime
 import io
+import sys
 import os
 from datetime import date
 from collections import defaultdict
@@ -1335,19 +1336,44 @@ def sugestao_criar_massa(request):
         try:
             import openpyxl
         except ImportError:
-            messages.error(request, 'O servidor não possui a biblioteca "openpyxl" instalada. Entre em contato com o suporte.')
-            return redirect('dashboard')
+            # Check if it's a CSV file, which doesn't need openpyxl
+            if file_obj.name.lower().endswith('.csv'):
+                pass # Will handle below
+            else:
+                debug_info = f" (Python: {sys.version.split()[0]}, Path: {sys.path[:3]})"
+                messages.error(request, f'O servidor não possui "openpyxl" para arquivos Excel. Use um arquivo .CSV ou peça suporte. {debug_info}')
+                return redirect('dashboard')
 
         try:
-            workbook = openpyxl.load_workbook(file_obj, data_only=True)
-            sheet = workbook.active  # Primeira aba
-            
             textos = []
-            for row in sheet.iter_rows(min_row=1, max_col=1, values_only=True):
-                # Considera apenas a primeira coluna (index 0)
-                val = row[0]
-                if val and str(val).strip():
-                    textos.append(str(val).strip())
+            
+            if file_obj.name.lower().endswith('.csv'):
+                # Handle CSV
+                content = file_obj.read().decode('utf-8-sig')
+                io_string = io.StringIO(content)
+                reader = csv.reader(io_string, delimiter=';') # Try semicolon first (common in Excel CSV)
+                
+                # Check if it looks like comma delimited instead
+                first_row = next(reader, None)
+                if first_row and len(first_row) == 1 and ',' in first_row[0]:
+                    io_string.seek(0)
+                    reader = csv.reader(io_string, delimiter=',')
+                else:
+                    # Reset if semicolon worked
+                    io_string.seek(0)
+                    reader = csv.reader(io_string, delimiter=';')
+
+                for row in reader:
+                    if row and str(row[0]).strip():
+                        textos.append(str(row[0]).strip())
+            else:
+                # Handle Excel
+                workbook = openpyxl.load_workbook(file_obj, data_only=True)
+                sheet = workbook.active
+                for row in sheet.iter_rows(min_row=1, max_col=1, values_only=True):
+                    val = row[0]
+                    if val and str(val).strip():
+                        textos.append(str(val).strip())
             
             if not textos:
                 messages.warning(request, 'Nenhum conteúdo encontrado na primeira coluna da planilha.')

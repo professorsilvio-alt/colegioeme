@@ -39,11 +39,12 @@
             </div>
 
             <div style="background: #eef2ff; border: 1px dashed #003366; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
-                <label>Arquivo Excel (.xlsx)</label>
-                <input type="file" name="arquivo_excel" accept=".xlsx" required style="margin: 10px 0;">
+                <label>Arquivo Excel (.xlsx) ou CSV (.csv)</label>
+                <input type="file" name="arquivo_excel" accept=".xlsx,.csv" required style="margin: 10px 0;">
                 <p style="font-size: 12px; color: #555; line-height: 1.4;">
                     <strong>Regras de Formatação:</strong><br>
-                    • O sistema lerá apenas a <strong>primeira coluna</strong> da <strong>primeira aba</strong>.<br>
+                    • <strong>Excel:</strong> Lemos a primeira coluna da primeira aba.<br>
+                    • <strong>CSV:</strong> Lemos a primeira coluna (separador ";" ou ",").<br>
                     • Cada linha deve conter um texto de conteúdo programático único.<br>
                     • Não utilize cabeçalhos ou colunas extras.
                 </p>
