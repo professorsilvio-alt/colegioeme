@@ -188,14 +188,18 @@ header {
 }
 
 .header-logo {
-    width: 60px; /* Smaller logo */
-    height: 30px;
+    width: 70px;
+    height: 35px;
     border-radius: 50% / 50%;
-    object-fit: contain; /* Don't stretch */
-    border: 1px solid rgba(255,255,255,0.3);
-    background: transparent;
-    margin-right: 8px;
+    object-fit: cover; /* Fill the oval frame */
+    background: #003366; /* Match header color exactly */
+    margin-right: 5px;
     vertical-align: middle;
+    transition: transform 0.2s;
+}
+
+.header-logo:hover {
+    transform: scale(1.05);
 }
 
 .login-logo {
