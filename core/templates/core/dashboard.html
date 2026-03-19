@@ -6,7 +6,6 @@
 
 <!-- DASHBOARD CARDS -->
 <div class="dashboard">
-    <img src="{% static 'core/logo.jpg' %}" alt="Logo EME" class="logo-escola">
     <div class="card">
         <h3>Ocorrências Totais</h3>
         <p>{{ total }}</p>
@@ -24,7 +23,6 @@
 <!-- CARDS DIÁRIO DE CONTEÚDO — apenas para não-inspetores -->
 {% if prof.cargo != 'INSPETOR' %}
 <div class="dashboard" style="margin-top: -10px;">
-    <div style="width: 150px; flex-shrink: 0;"></div>
     <div class="card" style="border-left-color: #4a90d9;">
         <h3>Lançamentos Totais</h3>
         <p>{{ total_conteudo }}</p>
@@ -42,8 +40,52 @@
 
 
 
+<!-- ═══════════════ ABA DASHBOARD (INÍCIO) ═══════════════ -->
+<div id="tab-dashboard" class="tab-pane {% if not request.GET.tab or request.GET.tab == 'dashboard' %}active{% endif %}" {% if request.GET.tab and request.GET.tab != 'dashboard' %}style="display:none;"{% endif %}>
+    
+    {% if prof.cargo == 'PROFESSOR' %}
+        <h2 style="color: #003366; margin-top: 5px;">📅 Meu Horário</h2>
+        <table class="schedule-table">
+            <thead>
+                <tr>
+                    <th>Segunda</th>
+                    <th>Terça</th>
+                    <th>Quarta</th>
+                    <th>Quinta</th>
+                    <th>Sexta</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    {% for dia_num in "12345" %}
+                    <td>
+                        {% for gh in prof.grade_horaria.all %}
+                            {% if gh.dia_semana == dia_num %}
+                            <div class="aula-card">
+                                <span class="aula-hora">{{ gh.hora_inicio|time:"H:i" }} — {{ gh.hora_fim|time:"H:i" }}</span>
+                                <span class="aula-turma">Turma {{ gh.turma.codigo }}</span>
+                                <span class="aula-disc" title="{{ gh.disciplina.nome }}">{{ gh.disciplina.nome }}</span>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                    {% endfor %}
+                </tr>
+            </tbody>
+        </table>
+    {% else %}
+        <div style="text-align: center; padding: 40px 0;">
+            <img src="{% static 'core/logo.jpg' %}" alt="Logo EME" class="logo-escola">
+            <h1 style="color: #003366; font-size: 2.5em; margin-top: 10px;">Sistema EME</h1>
+            <p style="color: #666; font-size: 1.2em;">Bem-vindo ao sistema de gestão escolar.</p>
+        </div>
+    {% endif %}
+
+</div><!-- /tab-dashboard -->
+
+
 <!-- ═══════════════ ABA OCORRÊNCIAS ═══════════════ -->
-<div id="tab-ocorrencias" class="tab-pane {% if request.GET.tab != 'conteudos' %}active{% endif %}" style="{% if request.GET.tab == 'conteudos' %}display:none;{% endif %}">
+<div id="tab-ocorrencias" class="tab-pane {% if request.GET.tab == 'ocorrencias' %}active{% endif %}" {% if request.GET.tab != 'ocorrencias' %}style="display:none;"{% endif %}>
 
     {% if prof.cargo != 'INSPETOR' and prof.cargo != 'AUX_COORD' and prof.cargo != 'ORIENTADOR' and prof.cargo != 'SECRETARIA' %}
     <button class="btn-primary" onclick="toggleSection('formOcorrencia')">+ Registrar Nova Ocorrência</button>
@@ -207,7 +249,7 @@
 
 <!-- ═══════════════ ABA CONTEÚDOS ═══════════════ -->
 {% if prof.cargo != 'INSPETOR' %}
-<div id="tab-conteudos" class="tab-pane {% if request.GET.tab == 'conteudos' %}active{% endif %}" style="{% if request.GET.tab != 'conteudos' %}display:none;{% else %}display:block;{% endif %}">
+<div id="tab-conteudos" class="tab-pane {% if request.GET.tab == 'conteudos' %}active{% endif %}" {% if request.GET.tab != 'conteudos' %}style="display:none;"{% else %}style="display:block;"{% endif %}>
 
     {% if prof.cargo == 'PROFESSOR' or prof.pode_editar_tudo %}
     <button class="btn-primary" onclick="toggleSectionConteudo('normal')">+ Lançar Conteúdo Programático</button>
