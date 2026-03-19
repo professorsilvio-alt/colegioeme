@@ -193,7 +193,7 @@ header {
     border-radius: 50% / 50%;
     object-fit: cover; /* Fill the oval frame */
     background: #003366; /* Match header color exactly */
-    margin-right: 5px;
+    margin-right: 0;
     vertical-align: middle;
     transition: transform 0.2s;
 }
