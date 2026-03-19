@@ -674,17 +674,29 @@ def lancamento_coletivo(request):
 def gerenciar_sugestoes(request):
     """Standalone page for administrators to manage content suggestions."""
     prof = get_professor(request.user)
-    if not prof or not prof.pode_editar_tudo:
+    
+    # Se superuser sem perfil de professor, cria um perfil temporário ou permite acesso
+    if request.user.is_superuser and not prof:
+        # Apenas para evitar o erro de 'not prof' se for superuser
+        # Mas o melhor é garantir que o admin tenha um perfil
+        pass
+    elif not prof or not prof.pode_editar_tudo:
         messages.error(request, "Acesso restrito.")
         return redirect('dashboard')
     
-    context = {
-        'prof': prof,
-        'sugestoes': SugestaoConteudo.objects.all().select_related('disciplina').prefetch_related('turmas').order_by('disciplina__nome', 'texto'),
-        'disciplinas': Disciplina.objects.all(),
-        'turmas': Turma.objects.all(),
-    }
-    return render(request, 'core/gerenciar_sugestoes.html', context)
+    try:
+        sugestoes = SugestaoConteudo.objects.all().select_related('disciplina').order_by('disciplina__nome', 'texto')
+        context = {
+            'prof': prof,
+            'sugestoes': sugestoes,
+            'disciplinas': Disciplina.objects.all().order_by('nome'),
+            'turmas': Turma.objects.all().order_by('ordem_exibicao', 'codigo'),
+        }
+        return render(request, 'core/gerenciar_sugestoes.html', context)
+    except Exception as e:
+        # Em caso de erro de banco de dados ou outro, mostra a mensagem (útil para debug se permitido)
+        messages.error(request, f"Erro interno: {str(e)}")
+        return redirect('dashboard')
 
 
 @login_required
