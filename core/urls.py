@@ -48,4 +48,6 @@ urlpatterns = [
     path('relatorios/lancamento-coletivo/', views.lancamento_coletivo, name='lancamento_coletivo'),
     path('sugestao/criar-massa/', views.sugestao_criar_massa, name='sugestao_criar_massa'),
     path('gerenciar-sugestoes/', views.gerenciar_sugestoes, name='gerenciar_sugestoes'),
+    path('sugestao/<int:pk>/editar/', views.sugestao_editar, name='sugestao_editar'),
+    path('sugestao/<int:pk>/excluir/', views.sugestao_excluir, name='sugestao_excluir'),
 ]

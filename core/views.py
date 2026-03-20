@@ -692,6 +692,56 @@ def gerenciar_sugestoes(request):
 
 
 @login_required
+def sugestao_editar(request, pk):
+    sug = get_object_or_404(SugestaoConteudo, pk=pk)
+    prof = get_professor(request.user)
+    
+    # Permission check
+    if not request.user.is_superuser:
+        if not prof or not prof.pode_editar_tudo:
+            messages.error(request, "Acesso restrito.")
+            return redirect('dashboard')
+            
+    if request.method == 'POST':
+        texto = request.POST.get('texto')
+        disc_id = request.POST.get('disciplina')
+        turmas_ids = request.POST.getlist('turmas')
+        
+        if texto and disc_id:
+            sug.texto = texto
+            sug.disciplina = get_object_or_404(Disciplina, pk=disc_id)
+            sug.save()
+            
+            if turmas_ids:
+                sug.turmas.set(turmas_ids)
+            else:
+                sug.turmas.clear()
+                
+            messages.success(request, "Sugestão atualizada com sucesso.")
+        else:
+            messages.error(request, "Texto e disciplina são obrigatórios.")
+            
+    return redirect('gerenciar_sugestoes')
+
+
+@login_required
+@require_POST
+def sugestao_excluir(request, pk):
+    sug = get_object_or_404(SugestaoConteudo, pk=pk)
+    prof = get_professor(request.user)
+    
+    # Permission check
+    if not request.user.is_superuser:
+        if not prof or not prof.pode_editar_tudo:
+            messages.error(request, "Acesso restrito.")
+            return redirect('dashboard')
+            
+    sug.delete()
+    messages.success(request, "Sugestão excluída com sucesso.")
+    return redirect('gerenciar_sugestoes')
+
+
+@login_required
 @require_POST
 def ocorrencia_criar(request):
     prof = get_professor(request.user)
