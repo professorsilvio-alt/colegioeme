@@ -42,6 +42,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Força troca de senha no primeiro acesso
+    'core.middleware.ForcarTrocaSenhaMiddleware',
 ]
 
 ROOT_URLCONF = 'eme_project.urls'

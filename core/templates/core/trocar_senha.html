@@ -1,0 +1,206 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Criar Nova Senha — Sistema EME</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'core/style.css' %}?v=5">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #001f4d 0%, #003366 60%, #00509e 100%);
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .senha-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+            padding: 48px 44px;
+            width: 100%;
+            max-width: 460px;
+            animation: fadeInUp 0.4s ease;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .senha-icon {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .senha-titulo {
+            font-size: 22px;
+            font-weight: 700;
+            color: #003366;
+            text-align: center;
+            margin-bottom: 6px;
+        }
+
+        .senha-subtitulo {
+            font-size: 14px;
+            color: #555;
+            text-align: center;
+            margin-bottom: 28px;
+            line-height: 1.5;
+        }
+
+        .senha-aviso {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: #856404;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .senha-campo {
+            margin-bottom: 18px;
+        }
+
+        .senha-campo label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            display: block;
+            margin-bottom: 6px;
+            margin-top: 0;
+        }
+
+        .senha-campo input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+
+        .senha-campo input:focus {
+            outline: none;
+            border-color: #003366;
+            box-shadow: 0 0 0 3px rgba(0,51,102,0.1);
+        }
+
+        .regras {
+            background: #f0f4ff;
+            border-radius: 7px;
+            padding: 10px 14px;
+            font-size: 12px;
+            color: #444;
+            margin-bottom: 22px;
+            line-height: 1.7;
+        }
+
+        .regras strong {
+            color: #003366;
+        }
+
+        .erros-lista {
+            background: #fde8e8;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+        }
+
+        .erros-lista p {
+            color: #721c24;
+            font-size: 13px;
+            margin: 3px 0;
+        }
+
+        .btn-trocar {
+            width: 100%;
+            padding: 14px;
+            background: #003366;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            margin-top: 4px;
+        }
+
+        .btn-trocar:hover {
+            background: #0055aa;
+            transform: translateY(-1px);
+        }
+
+        .btn-trocar:active {
+            transform: translateY(0);
+        }
+
+        .senha-rodape {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <div class="senha-card">
+        <div class="senha-icon">🔐</div>
+        <h1 class="senha-titulo">Crie sua nova senha</h1>
+        <p class="senha-subtitulo">
+            Olá, <strong>{{ prof.nome }}</strong>!<br>
+            Por segurança, é necessário definir uma senha pessoal antes de continuar.
+        </p>
+
+        <div class="senha-aviso">
+            ⚠️ <strong>Atenção:</strong> Sua senha atual é temporária e conhecida pelo sistema.
+            Defina uma senha forte e <strong>não compartilhe com ninguém</strong>.
+        </div>
+
+        {% if erros %}
+        <div class="erros-lista">
+            {% for erro in erros %}
+            <p>❌ {{ erro }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="senha-campo">
+                <label for="nova_senha">Nova senha</label>
+                <input type="password" id="nova_senha" name="nova_senha"
+                       placeholder="Digite sua nova senha" required autofocus>
+            </div>
+
+            <div class="senha-campo">
+                <label for="confirmar_senha">Confirmar nova senha</label>
+                <input type="password" id="confirmar_senha" name="confirmar_senha"
+                       placeholder="Repita a nova senha" required>
+            </div>
+
+            <div class="regras">
+                <strong>Requisitos da senha:</strong><br>
+                • Mínimo de 6 caracteres<br>
+                • Não pode ser igual ao seu nome de usuário<br>
+                • Não pode ser uma senha muito comum (ex: 123456)<br>
+                • Não pode ser a senha padrão do sistema
+            </div>
+
+            <button type="submit" class="btn-trocar">✅ Salvar minha nova senha</button>
+        </form>
+
+        <p class="senha-rodape">Sistema EME — Escola Municipal de Ensino</p>
+    </div>
+</body>
+</html>

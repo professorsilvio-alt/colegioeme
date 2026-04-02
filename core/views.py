@@ -1581,3 +1581,60 @@ def exportar_pendencias_pdf(request):
     elems.append(t)
     doc.build(elems, onFirstPage=_add_signature_footer, onLaterPages=_add_signature_footer)
     return _pdf_response(buf, 'pendencias.pdf')
+
+
+# ──────────────────────────────────────────────
+# TROCA DE SENHA FORÇADA
+# ──────────────────────────────────────────────
+
+@login_required
+def forcar_troca_senha(request):
+    """Exibido quando deve_trocar_senha=True. Força o usuário a definir uma nova senha."""
+    from django.contrib.auth import update_session_auth_hash
+    from django.contrib.auth.password_validation import validate_password
+    from django.core.exceptions import ValidationError
+
+    # Busca o professor com segurança
+    prof = getattr(request.user, 'professor', None)
+
+    # Se não for professor ou não precisar trocar, manda pro dashboard
+    if not prof or not prof.deve_trocar_senha:
+        return redirect('dashboard')
+
+    erros = []
+
+    if request.method == 'POST':
+        nova = request.POST.get('nova_senha', '').strip()
+        confirma = request.POST.get('confirmar_senha', '').strip()
+
+        # Não pode ser a senha padrão (primeiras 3 letras do username + @123)
+        username = request.user.username
+        prefixo = username[:3].lower() if len(username) >= 3 else username.lower()
+        senha_padrao = f"{prefixo}@123"
+
+        if not nova:
+            erros.append('A senha não pode ser vazia.')
+        elif nova != confirma:
+            erros.append('As senhas não conferem.')
+        elif nova.lower() == senha_padrao:
+            erros.append('Por segurança, você não pode usar a senha padrão. Crie uma senha exclusiva.')
+        else:
+            try:
+                validate_password(nova, request.user)
+            except ValidationError as e:
+                erros.extend(e.messages)
+
+        if not erros:
+            request.user.set_password(nova)
+            request.user.save()
+            prof.deve_trocar_senha = False
+            prof.save()
+            # Atualiza hash da sessão para não deslogar
+            update_session_auth_hash(request, request.user)
+            messages.success(request, '✅ Senha atualizada! Seu acesso foi liberado.')
+            return redirect('dashboard')
+
+    return render(request, 'core/trocar_senha.html', {
+        'erros': erros,
+        'prof': prof,
+    })

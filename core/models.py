@@ -49,6 +49,11 @@ class Professor(models.Model):
     disciplinas = models.ManyToManyField(Disciplina, blank=True)
     todas_turmas = models.BooleanField(default=False)
     todas_disciplinas = models.BooleanField(default=False)
+    deve_trocar_senha = models.BooleanField(
+        default=False,
+        verbose_name='Deve trocar senha',
+        help_text='Força o usuário a criar uma nova senha no próximo acesso.',
+    )
 
     def __str__(self):
         return f'{self.nome} ({self.get_cargo_display()})'
