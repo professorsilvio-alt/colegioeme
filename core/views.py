@@ -919,6 +919,13 @@ def ocorrencia_excluir(request, pk):
 @require_POST
 def ocorrencia_excluir_varios(request):
     ids = request.POST.getlist('ids')
+    prof = get_professor(request.user)
+
+    # Apenas quem pode editar tudo (ADMIN, DIRETOR) realiza exclusão em massa
+    if prof and not prof.pode_editar_tudo:
+        messages.error(request, 'Você não tem permissão para realizar exclusão em massa.')
+        return redirect('dashboard')
+
     Ocorrencia.objects.filter(pk__in=ids).delete()
     messages.success(request, f'{len(ids)} ocorrência(s) excluída(s).')
     return redirect('dashboard')
