@@ -202,7 +202,7 @@
             
             {% if prof.pode_gerar_relatorios %}
             <a href="{% url 'exportar_ocorrencias_csv' %}?{{ request.GET.urlencode }}" class="btn-export">📥 CSV (Filtrado)</a>
-            <a href="{% url 'exportar_ocorrencias_pdf' %}?{{ request.GET.urlencode }}" class="btn-export btn-pdf" style="background: #003366; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-size: 14px; margin-left: 5px;" download="ocorrencias_filtrado.pdf">📄 PDF (Filtrado)</a>
+            <a href="{% url 'exportar_ocorrencias_pdf' %}?{{ request.GET.urlencode }}" class="btn-export btn-pdf" style="margin-left: 5px;" download="ocorrencias_filtrado.pdf">📄 PDF (Filtrado)</a>
             {% endif %}
         </div>
 
@@ -261,8 +261,16 @@
     {% endif %}
 
     {% if prof.pode_gerar_relatorios %}
-    <a href="{% url 'exportar_conteudos_csv' %}" class="btn-export" style="background: #003366; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-size: 14px; margin-left: 5px;">📥 CSV (Completo)</a>
-    <a href="{% url 'exportar_conteudos_pdf' %}" class="btn-export" style="background: #003366; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-size: 14px; margin-left: 5px;" download="conteudos_completo.pdf">📄 PDF (Completo)</a>
+    <a href="{% url 'exportar_conteudos_csv' %}" class="btn-export">📥 CSV (Completo)</a>
+    <a href="{% url 'exportar_conteudos_pdf' %}" class="btn-export btn-pdf" style="margin-left: 5px;" download="conteudos_completo.pdf">📄 PDF (Completo)</a>
+    {% endif %}
+
+    {% if prof.cargo == 'ADMIN' or user.is_superuser %}
+    {% if config_pk %}
+    <a href="{% url 'admin:core_configuracao_change' config_pk %}" class="btn-extra-class" style="background: #8e44ad; text-decoration: none; padding: 10px 15px; display: inline-block; margin-left: 5px;">⚙️ Configurar Período Letivo</a>
+    {% else %}
+    <a href="{% url 'admin:core_configuracao_add' %}" class="btn-extra-class" style="background: #8e44ad; text-decoration: none; padding: 10px 15px; display: inline-block; margin-left: 5px;">⚙️ Criar Configuração</a>
+    {% endif %}
     {% endif %}
 
     <!-- Formulário novo conteúdo -->
@@ -372,9 +380,9 @@
 
             {% if prof.pode_gerar_relatorios or prof.cargo == 'PROFESSOR' %}
                 {% if prof.cargo != 'PROFESSOR' %}
-                <a href="{% url 'exportar_conteudos_csv' %}?{{ request.GET.urlencode }}" class="btn-export" style="background: #003366; color: white;">📥 CSV (Filtrado)</a>
+                <a href="{% url 'exportar_conteudos_csv' %}?{{ request.GET.urlencode }}" class="btn-export">📥 CSV (Filtrado)</a>
                 {% endif %}
-                <a href="{% url 'exportar_conteudos_pdf' %}?{{ request.GET.urlencode }}" class="btn-export btn-pdf" style="background: #003366; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block; font-size: 14px; margin-left: 5px;" download="conteudos_filtrado.pdf">📄 PDF (Filtrado)</a>
+                <a href="{% url 'exportar_conteudos_pdf' %}?{{ request.GET.urlencode }}" class="btn-export btn-pdf" style="margin-left: 5px;" download="conteudos_filtrado.pdf">📄 PDF (Filtrado)</a>
             {% endif %}
         </div>
         <table>

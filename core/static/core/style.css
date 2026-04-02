@@ -171,11 +171,11 @@ header {
 .logo-escola {
     width: 240px;
     height: 120px;
-    border-radius: 50% / 50%;
+    border-radius: 50%;
     object-fit: cover;
     border: 3px solid #fff;
     background: #003366;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
     display: block;
     margin: 40px auto;
 }
@@ -183,7 +183,7 @@ header {
 .header-logo {
     width: 70px;
     height: 35px;
-    border-radius: 50% / 50%;
+    border-radius: 50%;
     object-fit: cover;
     border: 1px solid #fff;
     background: #003366;
@@ -192,16 +192,17 @@ header {
 }
 
 .login-logo {
-    width: 160px;
-    height: 80px;
-    border-radius: 50% / 50%;
+    width: 260px;
+    height: 130px;
+    border-radius: 50%;
     object-fit: cover;
-    border: 2px solid #fff;
+    border: 3px solid #fff;
     background: #003366;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
     display: block;
     margin-left: auto;
     margin-right: auto;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
 
 .card {

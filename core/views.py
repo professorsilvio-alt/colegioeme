@@ -34,6 +34,23 @@ FERIADOS_2026 = {
     datetime.date(2026, 4, 25),  # Dia de São Marcos (padroeiro)
 }
 
+
+def get_feriados():
+    """Retorna o conjunto de datas de feriados a partir da Configuracao.
+    Faz fallback para FERIADOS_2026 se o campo estiver vazio ou a tabela inexistir.
+    """
+    try:
+        from .models import Configuracao
+        config = Configuracao.objects.first()
+        if config:
+            feriados = config.get_feriados()
+            if feriados:
+                return feriados
+    except Exception:
+        pass
+    return FERIADOS_2026  # fallback
+
+
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -48,7 +65,7 @@ from reportlab.platypus import (Image, Paragraph, SimpleDocTemplate, Spacer, Tab
                                 TableStyle)
 
 from .models import (Aluno, ConteudoProgramatico, Disciplina, Ocorrencia,
-                     Professor, SugestaoConteudo, Turma)
+                     Professor, SugestaoConteudo, Turma, Configuracao)
 
 
 # ──────────────────────────────────────────────
@@ -256,10 +273,11 @@ def dashboard(request):
         'filtro_data_ini_c': request.GET.get('data_ini', ''),
         'filtro_data_fim_c': request.GET.get('data_fim', ''),
         'today': date.today().isoformat(),
+        'config_pk': Configuracao.objects.values_list('pk', flat=True).first(),
     }
     # Merge content stats without overwriting ocorrência totals
-    context.update(calcular_stats_conteudo(prof, 
-                                           data_ini=request.GET.get('data_ini', ''), 
+    context.update(calcular_stats_conteudo(prof,
+                                           data_ini=request.GET.get('data_ini', ''),
                                            data_fim=request.GET.get('data_fim', '')))
     return render(request, 'core/dashboard.html', context)
 
@@ -336,16 +354,22 @@ def api_datas_validas(request, codigo, prof_id):
 
     weekdays = {DIA_TO_WEEKDAY[d] for d in dias if d in DIA_TO_WEEKDAY}
 
-    # School year boundaries (current year)
-    ano = date.today().year
-    inicio = datetime.date(ano, 2, 3)   # Feb 3
-    fim = datetime.date(ano, 12, 18)    # Dec 18
+    # School year boundaries from configuration or defaults
+    config = Configuracao.objects.first()
+    if config:
+        inicio = config.inicio_periodo_letivo
+        fim = config.fim_periodo_letivo
+    else:
+        ano = date.today().year
+        inicio = datetime.date(ano, 2, 3)
+        fim = datetime.date(ano, 12, 18)
 
     # Generate all valid school dates (excluding holidays)
+    feriados = get_feriados()
     datas_validas = []
     cur = inicio
     while cur <= fim:
-        if cur.weekday() in weekdays and cur not in FERIADOS_2026:
+        if cur.weekday() in weekdays and cur not in feriados:
             datas_validas.append(cur)
         cur += datetime.timedelta(days=1)
 
@@ -383,12 +407,16 @@ def api_professor_grades(request, prof_id):
     return JsonResponse(dict(mapping), safe=False)
 
 
-def calcular_stats_conteudo(prof, data_ini=None, data_fim=None):
+def calcular_stats_conteudo(prof, data_ini=None, data_fim=None, feriados=None):
     """Return total/preenchidos/faltam content stats.
     - Admin/Diretor/Secretaria: global totals across ALL professors.
     - Professor: totals for their own turmas only.
     - Others (inspetor, etc.): zeros.
+
+    Aceita `feriados` pré-calculado para evitar queries repetidas em loops.
     """
+    if feriados is None:
+        feriados = get_feriados()
     from .models import GradeHoraria, ConteudoProgramatico
     import datetime
 
@@ -405,57 +433,73 @@ def calcular_stats_conteudo(prof, data_ini=None, data_fim=None):
 
     DIA_TO_WEEKDAY = {'1': 0, '2': 1, '3': 2, '4': 3, '5': 4}
     hoje = date.today()
-    ano = hoje.year
-    
-    # Use provided dates or defaults
-    if data_ini:
-        if isinstance(data_ini, str):
-            inicio = datetime.datetime.strptime(data_ini, '%Y-%m-%d').date()
-        else:
-            inicio = data_ini
+    # Get period from configuration or defaults
+    config = Configuracao.objects.first()
+    if config:
+        config_ini = config.inicio_periodo_letivo
+        config_fim = config.fim_periodo_letivo
     else:
-        inicio = datetime.date(ano, 2, 3)
+        ano = hoje.year
+        config_ini = datetime.date(ano, 2, 3)
+        config_fim = datetime.date(ano, 12, 18)
 
+    # Use provided dates or defaults
+    inicio = config_ini
+    if data_ini:
+        try:
+            if isinstance(data_ini, str):
+                inicio_prov = datetime.datetime.strptime(data_ini, '%Y-%m-%d').date()
+            else:
+                inicio_prov = data_ini
+            # Ensure we respect the academic period boundaries if filter is wider
+            inicio = max(inicio, inicio_prov)
+        except ValueError:
+            pass
+
+    fim = config_fim
     if data_fim:
-        if isinstance(data_fim, str):
-            fim = datetime.datetime.strptime(data_fim, '%Y-%m-%d').date()
-        else:
-            fim = data_fim
-    else:
-        fim = datetime.date(ano, 12, 18)
+        try:
+            if isinstance(data_fim, str):
+                fim_prov = datetime.datetime.strptime(data_fim, '%Y-%m-%d').date()
+            else:
+                fim_prov = data_fim
+            fim = min(fim, fim_prov)
+        except ValueError:
+            pass
 
     # Determine scope: global or per-professor
     global_view = (not prof) or (prof.cargo in CARGOS_GLOBAIS)
 
     if global_view:
-        # All unique (professor, turma) pairs from GradeHoraria
-        pares = GradeHoraria.objects.values('professor_id', 'turma__codigo').distinct()
+        # All unique (professor, turma, disciplina) triads from GradeHoraria
+        triades = GradeHoraria.objects.values('professor_id', 'turma__codigo', 'disciplina_id').distinct()
     else:
-        # Only this professor's turmas
-        pares = GradeHoraria.objects.filter(professor=prof).values('professor_id', 'turma__codigo').distinct()
+        # Only this professor's (turma, disciplina) pairings
+        triades = GradeHoraria.objects.filter(professor=prof).values('professor_id', 'turma__codigo', 'disciplina_id').distinct()
 
     total = 0
     total_ate_hoje = 0
     preenchidos = 0
     preenchidos_ate_hoje = 0
 
-    # Cache per (prof_id, turma_codigo) → valid weekdays
-    weekdays_por_par = defaultdict(set)
-    for par in pares:
+    # Cache per (prof_id, turma_codigo, disc_id) → valid weekdays
+    weekdays_por_triade = defaultdict(set)
+    for t in triades:
         dias = GradeHoraria.objects.filter(
-            professor_id=par['professor_id'],
-            turma__codigo=par['turma__codigo']
+            professor_id=t['professor_id'],
+            turma__codigo=t['turma__codigo'],
+            disciplina_id=t['disciplina_id']
         ).values_list('dia_semana', flat=True).distinct()
-        weekdays_por_par[(par['professor_id'], par['turma__codigo'])] = {
+        weekdays_por_triade[(t['professor_id'], t['turma__codigo'], t['disciplina_id'])] = {
             DIA_TO_WEEKDAY[d] for d in dias if d in DIA_TO_WEEKDAY
         }
 
-    for (prof_id, turma_codigo), weekdays in weekdays_por_par.items():
+    for (prof_id, turma_codigo, disc_id), weekdays in weekdays_por_triade.items():
         if not weekdays:
             continue
         cur = inicio
         while cur <= fim:
-            if cur.weekday() in weekdays and cur not in FERIADOS_2026:
+            if cur.weekday() in weekdays and cur not in feriados:
                 total += 1
                 if cur <= hoje:
                     total_ate_hoje += 1
@@ -464,6 +508,7 @@ def calcular_stats_conteudo(prof, data_ini=None, data_fim=None):
         qs_lancados = ConteudoProgramatico.objects.filter(
             professor_id=prof_id,
             turmas__codigo=turma_codigo,
+            disciplina_id=disc_id,
             data__gte=inicio,
             data__lte=fim
         ).values('data').distinct()
@@ -505,11 +550,11 @@ def relatorio_pendencias(request):
     if nome_filtro:
         professores = professores.filter(nome__icontains=nome_filtro)
 
-    # We reuse calcular_stats_conteudo but it might be slow for many professors.
-    # Optimized loop:
+    # Pre-fetch feriados once to avoid N+1 queries inside the loop
+    feriados_set = get_feriados()
     relatorio = []
     for p in professores:
-        stats = calcular_stats_conteudo(p, data_ini=data_ini, data_fim=data_fim)
+        stats = calcular_stats_conteudo(p, data_ini=data_ini, data_fim=data_fim, feriados=feriados_set)
         if stats['total_conteudo'] > 0:
             p.stats = stats
             relatorio.append(p)
@@ -540,11 +585,18 @@ def detalhe_pendencias_professor(request, prof_id):
     import datetime
 
     DIA_TO_WEEKDAY = {'1': 0, '2': 1, '3': 2, '4': 3, '5': 4}
-    ano = date.today().year
     hoje = datetime.date.today()
-    inicio = datetime.date(ano, 2, 3)
+    config = Configuracao.objects.first()
+    if config:
+        inicio = config.inicio_periodo_letivo
+        config_fim = config.fim_periodo_letivo
+    else:
+        ano = hoje.year
+        inicio = datetime.date(ano, 2, 3)
+        config_fim = datetime.date(ano, 12, 18)
     # Pendencies only count up to today
-    fim = min(hoje, datetime.date(ano, 12, 18))
+    fim = min(hoje, config_fim)
+    feriados = get_feriados()
 
     # All (turma, disciplina) pairings for this professor
     grades = GradeHoraria.objects.filter(professor=professor).select_related('turma', 'disciplina')
@@ -571,7 +623,7 @@ def detalhe_pendencias_professor(request, prof_id):
         missing_dates = []
         cur = inicio
         while cur <= fim:
-            if cur.weekday() in info['weekdays'] and cur not in FERIADOS_2026:
+            if cur.weekday() in info['weekdays'] and cur not in feriados:
                 if cur not in lancados:
                     missing_dates.append(cur)
             cur += datetime.timedelta(days=1)
@@ -1378,9 +1430,10 @@ def exportar_pendencias_pdf(request):
     if nome_filtro:
         professores = professores.filter(nome__icontains=nome_filtro)
 
+    feriados_set = get_feriados()
     relatorio = []
     for p in professores:
-        stats = calcular_stats_conteudo(p, data_ini=data_ini, data_fim=data_fim)
+        stats = calcular_stats_conteudo(p, data_ini=data_ini, data_fim=data_fim, feriados=feriados_set)
         if stats['total_conteudo'] > 0:
             p.stats = stats
             relatorio.append(p)
