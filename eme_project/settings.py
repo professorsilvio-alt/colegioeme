@@ -143,3 +143,17 @@ if not DEBUG:
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
+
+# ──────────────────────────────────────────────
+# SESSION
+# ──────────────────────────────────────────────
+# Sessão expira após 8 horas de inatividade (ideal para uso escolar)
+SESSION_COOKIE_AGE = 8 * 60 * 60  # 8 horas em segundos
+SESSION_SAVE_EVERY_REQUEST = True  # Renova o timer a cada request
+SESSION_COOKIE_HTTPONLY = True      # JS não acessa o cookie de sessão
+
+# ──────────────────────────────────────────────
+# CONTENT SECURITY POLICY (básico)
+# ──────────────────────────────────────────────
+# Permite recursos apenas da própria origem e do Google Fonts (se usado no futuro)
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'

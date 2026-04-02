@@ -936,7 +936,15 @@ def ocorrencia_excluir_varios(request):
 def ocorrencia_mudar_status(request):
     ids = request.POST.getlist('ids')
     novo_status = request.POST.get('status', 'Resolvida')
-    Ocorrencia.objects.filter(pk__in=ids).update(status=novo_status)
+    prof = get_professor(request.user)
+
+    qs = Ocorrencia.objects.filter(pk__in=ids)
+
+    # Professor comum só pode alterar status das próprias ocorrências
+    if prof and not prof.pode_ver_tudo:
+        qs = qs.filter(professor=prof)
+
+    qs.update(status=novo_status)
     messages.success(request, f'Status alterado para "{novo_status}".')
     return redirect('dashboard')
 
@@ -958,7 +966,7 @@ def ocorrencia_mudar_status_direto(request, pk):
     oc.status = 'Resolvida' if oc.status == 'Aberta' else 'Aberta'
     oc.save()
     messages.success(request, f'Status da OC-{oc.pk:04d} alterado para {oc.status}.')
-    return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
+    return redirect('dashboard')
 
 
 @login_required

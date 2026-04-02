@@ -52,6 +52,12 @@ compare_*.py
 verify_*.py
 consolidate_*.py
 extract_pdf.py
+# Scripts utilitários de manutenção (contêm lógica sensível)
+change_passwords.py
+populate_suggestions.py
+split_conteudos.py
+export_utf8.py
+test_suggestions_api.py
 
 # Generated text/json reports (ignore most, but keep requirements)
 *.txt
