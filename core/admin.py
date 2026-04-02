@@ -3,7 +3,7 @@ from django.urls import path
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.html import format_html
 from django.contrib import messages
-from .models import Turma, Disciplina, Professor, Aluno, Ocorrencia, ConteudoProgramatico, GradeHoraria, InspetorProxy, ProfessorDocente, SugestaoConteudo
+from .models import Turma, Disciplina, Professor, Aluno, Ocorrencia, ConteudoProgramatico, GradeHoraria, InspetorProxy, ProfessorDocente, SugestaoConteudo, Configuracao
 import datetime
 
 
@@ -430,3 +430,25 @@ class ProfessorDocenteAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         obj.cargo = 'PROFESSOR'
         super().save_model(request, obj, form, change)
+@admin.register(Configuracao)
+class ConfiguracaoAdmin(admin.ModelAdmin):
+    list_display = ['inicio_periodo_letivo', 'fim_periodo_letivo']
+    fieldsets = [
+        ('Período Letivo', {
+            'fields': ['inicio_periodo_letivo', 'fim_periodo_letivo'],
+        }),
+        ('Feriados', {
+            'fields': ['feriados'],
+            'description': (
+                'Um feriado por linha, no formato <strong>AAAA-MM-DD</strong>. '
+                'Linhas iniciadas com <code>#</code> são tratadas como comentários. '
+                'Exemplo: <code>2026-04-21  # Tiradentes</code>'
+            ),
+        }),
+    ]
+
+    def has_add_permission(self, request):
+        # Only allow one configuration instance
+        if self.model.objects.exists():
+            return False
+        return super().has_add_permission(request)

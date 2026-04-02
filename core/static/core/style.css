@@ -14,7 +14,7 @@ body {
 header {
     background: #003366;
     color: #fff;
-    padding: 8px 16px; /* Thinner header */
+    padding: 16px 24px;
     position: sticky;
     top: 0;
     z-index: 100;
@@ -22,13 +22,11 @@ header {
 
 .header-inner {
     display: flex;
-    flex-wrap: wrap; /* Permitir quebra se necessário em 750px */
     align-items: center;
     justify-content: space-between;
-    max-width: 1300px;
+    max-width: 1400px;
     margin: auto;
-    font-size: 14px;
-    gap: 10px;
+    font-size: 16px; /* Reduced for nav usage */
 }
 
 .header-left {
@@ -44,24 +42,19 @@ header {
 
 .header-nav {
     display: flex;
-    gap: 6px; /* Tighten gap */
-    margin: 0;
-    flex-wrap: wrap;
-    justify-content: flex-start;
+    gap: 15px;
+    margin: 0 20px;
 }
 
-.nav-item, .nav-item:link, .nav-item:visited {
-    color: #ffffff !important;
+.nav-item {
+    color: rgba(255, 255, 255, 0.85);
     text-decoration: none;
-    font-size: 13px; /* Slightly smaller */
+    font-size: 14px;
     font-weight: 600;
-    padding: 4px 8px; /* Compact padding */
-    border-radius: 4px;
+    padding: 8px 12px;
+    border-radius: 6px;
     transition: 0.2s;
     white-space: nowrap;
-    display: flex;
-    align-items: center;
-    gap: 3px;
 }
 
 .nav-item:hover {
@@ -178,11 +171,11 @@ header {
 .logo-escola {
     width: 240px;
     height: 120px;
-    border-radius: 50% / 50%;
+    border-radius: 50%;
     object-fit: cover;
     border: 3px solid #fff;
     background: #003366;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
     display: block;
     margin: 40px auto;
 }
@@ -190,36 +183,33 @@ header {
 .header-logo {
     width: 70px;
     height: 35px;
-    border-radius: 50% / 50%;
-    object-fit: cover; /* Fill the oval frame */
-    background: #003366; /* Match header color exactly */
-    margin-right: 0;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid #fff;
+    background: #003366;
+    margin-right: 12px;
     vertical-align: middle;
-    transition: transform 0.2s;
-}
-
-.header-logo:hover {
-    transform: scale(1.05);
 }
 
 .login-logo {
-    width: 160px;
-    height: 80px;
-    border-radius: 50% / 50%;
+    width: 260px;
+    height: 130px;
+    border-radius: 50%;
     object-fit: cover;
-    border: 2px solid #fff;
+    border: 3px solid #fff;
     background: #003366;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
     display: block;
     margin-left: auto;
     margin-right: auto;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
 
 .card {
-    flex: 0 0 calc(33.333% - 10px); /* Exactly 3 per row if space allows */
-    min-width: 180px;
+    flex: 1;
+    min-width: 120px;
     background: #003366;
-    padding: 10px 12px;
+    padding: 6px 10px;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, .15);
     text-align: center;
@@ -229,42 +219,14 @@ header {
 
 .card h3 {
     margin: 0;
-    font-size: 12px;
+    font-size: 11px;
     color: #b3d1ff;
 }
 
 .card p {
-    font-size: 20px;
+    font-size: 18px;
     margin: 2px 0 0;
     font-weight: 700;
-}
-
-/* ──────────────────────────── RESPONSIVENESS ──────────────────────────── */
-@media (max-width: 900px) {
-    .header-inner {
-        justify-content: center;
-        gap: 5px;
-    }
-    .header-left {
-        width: 100%;
-        justify-content: center;
-        margin-bottom: 5px;
-    }
-    .header-nav {
-        justify-content: center;
-        width: 100%;
-    }
-}
-
-@media (max-width: 600px) {
-    .card {
-        flex: 1 1 100%; /* Uma coluna apenas em telas bem pequenas */
-    }
-    .header-right {
-        width: 100%;
-        justify-content: center;
-        margin-top: 10px;
-    }
 }
 
 /* ──────────────────────────── ALERTS ──────────────────────────── */
@@ -654,4 +616,4 @@ tr:hover td {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
+}

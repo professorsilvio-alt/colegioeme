@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+import datetime
 
 
 class Turma(models.Model):
@@ -192,3 +193,36 @@ class SugestaoConteudo(models.Model):
 
     def __str__(self):
         return f'{self.disciplina} | {self.texto[:50]}'
+
+
+class Configuracao(models.Model):
+    inicio_periodo_letivo = models.DateField(verbose_name="Início do Período Letivo", default=datetime.date(datetime.date.today().year, 2, 3))
+    fim_periodo_letivo = models.DateField(verbose_name="Fim do Período Letivo", default=datetime.date(datetime.date.today().year, 12, 18))
+    feriados = models.TextField(
+        blank=True,
+        default='',
+        verbose_name="Feriados",
+        help_text=(
+            "Liste os feriados, um por linha, no formato AAAA-MM-DD. "
+            "Linhas iniciadas com # são tratadas como comentários e ignoradas."
+        ),
+    )
+
+    class Meta:
+        verbose_name = "Configuração"
+        verbose_name_plural = "Configurações"
+
+    def __str__(self):
+        return f"Configuração do Ano Letivo ({self.inicio_periodo_letivo.year})"
+
+    def get_feriados(self):
+        """Retorna um set de datetime.date com os feriados configurados."""
+        dates = set()
+        for line in self.feriados.splitlines():
+            line = line.strip().split('#')[0].strip()
+            if line:
+                try:
+                    dates.add(datetime.date.fromisoformat(line))
+                except ValueError:
+                    pass
+        return dates
