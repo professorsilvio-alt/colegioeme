@@ -409,32 +409,20 @@ def api_professor_grades(request, prof_id):
 
 
 def calcular_stats_conteudo(prof, data_ini=None, data_fim=None, feriados=None):
-    """Return total/preenchidos/faltam content stats.
-    - Admin/Diretor/Secretaria: global totals across ALL professors.
-    - Professor: totals for their own turmas only.
-    - Others (inspetor, etc.): zeros.
-
-    Aceita `feriados` pré-calculado para evitar queries repetidas em loops.
+    """
+    Retorna estatísticas de total/preenchidos/faltam.
+    Otimizado para evitar o problema N+1 queries.
     """
     if feriados is None:
         feriados = get_feriados()
-    from .models import GradeHoraria, ConteudoProgramatico
+    from .models import GradeHoraria, ConteudoProgramatico, Turma
+    from django.db.models import Q
     import datetime
 
     CARGOS_GLOBAIS = ['ADMIN', 'DIRETOR', 'SECRETARIA', 'COORDENADOR', 'AUX_COORD', 'ORIENTADOR']
-
-    if not prof:
-        # Superuser sem perfil – mostra global
-        pass
-    elif prof.cargo == 'INSPETOR':
-        return {
-            'total_conteudo': 0, 'preenchidos': 0, 'faltam': 0,
-            'total_ate_hoje': 0, 'preenchidos_ate_hoje': 0, 'faltam_ate_hoje': 0
-        }
-
-    DIA_TO_WEEKDAY = {'1': 0, '2': 1, '3': 2, '4': 3, '5': 4}
-    hoje = date.today()
-    # Get period from configuration or defaults
+    hoje = datetime.date.today()
+    
+    # Datas do período letivo
     config = Configuracao.objects.first()
     if config:
         config_ini = config.inicio_periodo_letivo
@@ -444,60 +432,68 @@ def calcular_stats_conteudo(prof, data_ini=None, data_fim=None, feriados=None):
         config_ini = datetime.date(ano, 2, 3)
         config_fim = datetime.date(ano, 12, 18)
 
-    # Use provided dates or defaults
+    # Filtros de data
     inicio = config_ini
     if data_ini:
         try:
-            if isinstance(data_ini, str):
-                inicio_prov = datetime.datetime.strptime(data_ini, '%Y-%m-%d').date()
-            else:
-                inicio_prov = data_ini
-            # Ensure we respect the academic period boundaries if filter is wider
+            inicio_prov = datetime.datetime.strptime(data_ini, '%Y-%m-%d').date() if isinstance(data_ini, str) else data_ini
             inicio = max(inicio, inicio_prov)
-        except ValueError:
-            pass
+        except (ValueError, TypeError): pass
 
     fim = config_fim
     if data_fim:
         try:
-            if isinstance(data_fim, str):
-                fim_prov = datetime.datetime.strptime(data_fim, '%Y-%m-%d').date()
-            else:
-                fim_prov = data_fim
+            fim_prov = datetime.datetime.strptime(data_fim, '%Y-%m-%d').date() if isinstance(data_fim, str) else data_fim
             fim = min(fim, fim_prov)
-        except ValueError:
-            pass
+        except (ValueError, TypeError): pass
 
-    # Determine scope: global or per-professor
+    # Escopo: global ou por professor
     global_view = (not prof) or (prof.cargo in CARGOS_GLOBAIS)
+    
+    # 1. Busca todas as grades relevantes de uma vez
+    gh_qs = GradeHoraria.objects.select_related('turma', 'professor')
+    if not global_view:
+        gh_qs = gh_qs.filter(professor=prof)
+    
+    grades = list(gh_qs)
+    if not grades:
+        return {
+            'total_conteudo': 0, 'preenchidos': 0, 'faltam': 0,
+            'total_ate_hoje': 0, 'preenchidos_ate_hoje': 0, 'faltam_ate_hoje': 0
+        }
 
-    if global_view:
-        # All unique (professor, turma, disciplina) triads from GradeHoraria
-        triades = GradeHoraria.objects.values('professor_id', 'turma__codigo', 'disciplina_id').distinct()
-    else:
-        # Only this professor's (turma, disciplina) pairings
-        triades = GradeHoraria.objects.filter(professor=prof).values('professor_id', 'turma__codigo', 'disciplina_id').distinct()
+    # Agrupa dias da semana por tríade (prof, turma, disc) em memória
+    DIA_TO_WEEKDAY = {'1': 0, '2': 1, '3': 2, '4': 3, '5': 4}
+    weekdays_map = defaultdict(set)
+    triades_por_prof = defaultdict(set) # prof_id -> set of (turma_cod, disc_id)
+    
+    for g in grades:
+        key = (g.professor_id, g.turma.codigo, g.disciplina_id)
+        if g.dia_semana in DIA_TO_WEEKDAY:
+            weekdays_map[key].add(DIA_TO_WEEKDAY[g.dia_semana])
+            triades_por_prof[g.professor_id].add((g.turma.codigo, g.disciplina_id))
 
+    # 2. Busca todos os conteúdos lançados no período de uma vez
+    cp_qs = ConteudoProgramatico.objects.filter(data__gte=inicio, data__lte=fim).prefetch_related('turmas')
+    if not global_view:
+        cp_qs = cp_qs.filter(professor=prof)
+    
+    # Mapeia lançamentos existentes: (prof_id, turma_cod, disc_id) -> set of dates
+    lancados_map = defaultdict(set)
+    for cp in cp_qs:
+        for t in cp.turmas.all():
+            key = (cp.professor_id, t.codigo, cp.disciplina_id)
+            if key in weekdays_map: # Só conta se estiver na grade
+                lancados_map[key].add(cp.data)
+
+    # 3. Processa cálculos em Python
     total = 0
     total_ate_hoje = 0
     preenchidos = 0
     preenchidos_ate_hoje = 0
 
-    # Cache per (prof_id, turma_codigo, disc_id) → valid weekdays
-    weekdays_por_triade = defaultdict(set)
-    for t in triades:
-        dias = GradeHoraria.objects.filter(
-            professor_id=t['professor_id'],
-            turma__codigo=t['turma__codigo'],
-            disciplina_id=t['disciplina_id']
-        ).values_list('dia_semana', flat=True).distinct()
-        weekdays_por_triade[(t['professor_id'], t['turma__codigo'], t['disciplina_id'])] = {
-            DIA_TO_WEEKDAY[d] for d in dias if d in DIA_TO_WEEKDAY
-        }
-
-    for (prof_id, turma_codigo, disc_id), weekdays in weekdays_por_triade.items():
-        if not weekdays:
-            continue
+    for key, weekdays in weekdays_map.items():
+        # Cálculo de esperado (Total)
         cur = inicio
         while cur <= fim:
             if cur.weekday() in weekdays and cur not in feriados:
@@ -506,16 +502,10 @@ def calcular_stats_conteudo(prof, data_ini=None, data_fim=None, feriados=None):
                     total_ate_hoje += 1
             cur += datetime.timedelta(days=1)
         
-        qs_lancados = ConteudoProgramatico.objects.filter(
-            professor_id=prof_id,
-            turmas__codigo=turma_codigo,
-            disciplina_id=disc_id,
-            data__gte=inicio,
-            data__lte=fim
-        ).values('data').distinct()
-        
-        preenchidos += qs_lancados.count()
-        preenchidos_ate_hoje += qs_lancados.filter(data__lte=hoje).count()
+        # Cálculo de realizado (Preenchidos)
+        dates_lancadas = lancados_map.get(key, set())
+        preenchidos += len(dates_lancadas)
+        preenchidos_ate_hoje += len([d for d in dates_lancadas if d <= hoje])
 
     return {
         'total_conteudo': total,
