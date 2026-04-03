@@ -251,6 +251,11 @@ def dashboard(request):
             disciplinas_tab_c = prof.get_disciplinas()
             professores_tab_c = Professor.objects.filter(pk=prof.pk)
 
+    # Garante que as disciplinas referentes a eventuais Aulas Extras que o usuário lançou apareçam no filtro
+    if cont_qs.exists():
+        lancadas_ids = cont_qs.values_list('disciplina_id', flat=True).distinct()
+        disciplinas_tab_c = (disciplinas_tab_c | Disciplina.objects.filter(pk__in=lancadas_ids)).distinct()
+
     context = {
         'prof': prof,
         'turmas': turmas_qs,
