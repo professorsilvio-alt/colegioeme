@@ -528,7 +528,8 @@ function carregarDisciplinasDaTurma(codigo) {
     discSel.innerHTML = '<option value="">Carregando...</option>';
     profSel.innerHTML = '<option value="">Selecione a disciplina primeiro...</option>';
     if (!codigo) { discSel.innerHTML = '<option value="">Selecione a turma primeiro...</option>'; return; }
-    fetch('/api/turma/' + codigo + '/disciplinas/')
+    const url = `/api/turma/${codigo}/disciplinas/?extra=${modoConteudo === 'extra' ? '1' : '0'}`;
+    fetch(url)
         .then(r => r.json())
         .then(discs => {
             discSel.innerHTML = '<option value="">Selecione a disciplina...</option>' +
@@ -543,7 +544,8 @@ function carregarProfessoresDaTurmaDisc() {
     const profSel = document.getElementById('profSelectCont');
     profSel.innerHTML = '<option value="">Carregando...</option>';
     if (!codigo || !discId) { profSel.innerHTML = '<option value="">Selecione turma e disciplina...</option>'; return; }
-    fetch('/api/turma/' + codigo + '/disciplina/' + discId + '/professores/')
+    const url = `/api/turma/${codigo}/disciplina/${discId}/professores/?extra=${modoConteudo === 'extra' ? '1' : '0'}`;
+    fetch(url)
         .then(r => r.json())
         .then(profs => {
             if (!profs.length) {

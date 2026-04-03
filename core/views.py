@@ -307,15 +307,30 @@ def api_disciplinas_turma(request, codigo):
     """Return disciplines taught in a given turma (from GradeHoraria), filtered by logged-in professor."""
     from .models import GradeHoraria
     prof_logado = get_professor(request.user)
+    is_extra = request.GET.get('extra') == '1'
 
-    qs = GradeHoraria.objects.filter(turma__codigo=codigo)
+    if is_extra:
+        # Modo Aula Extra: ignora a grade horária.
+        # Mostra as disciplinas que o professor pode lecionar (se não for admin)
+        # Mais Eletivas liberadas para as turmas alvo 11 a 32.
+        turmas_eletivas = ['11', '12', '13', '21', '22', '23', '31', '32']
+        if prof_logado and not prof_logado.pode_ver_tudo and not prof_logado.todas_disciplinas:
+            discs = prof_logado.disciplinas.all()
+        else:
+            discs = Disciplina.objects.all()
 
-    # If logged-in user is a professor (not admin/coord), only show their own disciplines
-    if prof_logado and not prof_logado.pode_ver_tudo:
-        qs = qs.filter(professor=prof_logado)
-
-    disc_ids = qs.values_list('disciplina_id', flat=True).distinct()
-    discs = Disciplina.objects.filter(pk__in=disc_ids).order_by('nome')
+        if codigo in turmas_eletivas:
+            eletivas = Disciplina.objects.filter(nome__in=['Eletiva 1', 'Eletiva 2'])
+            discs = (discs | eletivas).distinct()
+            
+        discs = discs.order_by('nome')
+    else:
+        qs = GradeHoraria.objects.filter(turma__codigo=codigo)
+        if prof_logado and not prof_logado.pode_ver_tudo:
+            qs = qs.filter(professor=prof_logado)
+        disc_ids = qs.values_list('disciplina_id', flat=True).distinct()
+        discs = Disciplina.objects.filter(pk__in=disc_ids).order_by('nome')
+        
     return JsonResponse(list(discs.values('id', 'nome')), safe=False)
 
 
@@ -324,14 +339,22 @@ def api_professores_turma_disc(request, codigo, disc_id):
     """Return professors who teach a given discipline in a given turma."""
     from .models import GradeHoraria
     prof_logado = get_professor(request.user)
-    prof_ids = GradeHoraria.objects.filter(
-        turma__codigo=codigo,
-        disciplina__pk=disc_id
-    ).values_list('professor_id', flat=True).distinct()
-    profs = Professor.objects.filter(pk__in=prof_ids).order_by('nome')
-    # If the logged-in user is a professor (not admin), limit to themselves
+    is_extra = request.GET.get('extra') == '1'
+
+    if is_extra:
+        # Modo Aula extra: ignora a grade. Todos os professores aptos (ou si mesmo).
+        profs = Professor.objects.all().order_by('nome')
+    else:
+        prof_ids = GradeHoraria.objects.filter(
+            turma__codigo=codigo,
+            disciplina__pk=disc_id
+        ).values_list('professor_id', flat=True).distinct()
+        profs = Professor.objects.filter(pk__in=prof_ids).order_by('nome')
+        
+    # If the logged-in user is a professor (not admin/coord), limit to themselves
     if prof_logado and not prof_logado.pode_ver_tudo:
         profs = profs.filter(pk=prof_logado.pk)
+        
     return JsonResponse(list(profs.values('id', 'nome')), safe=False)
 
 
