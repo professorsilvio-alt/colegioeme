@@ -464,13 +464,13 @@ def calcular_stats_conteudo(prof, data_ini=None, data_fim=None, feriados=None):
 
     # Agrupa dias da semana por tríade (prof, turma, disc) em memória
     DIA_TO_WEEKDAY = {'1': 0, '2': 1, '3': 2, '4': 3, '5': 4}
-    weekdays_map = defaultdict(set)
+    slots_map = defaultdict(lambda: defaultdict(int)) # key -> weekday -> número de aulas no dia
     triades_por_prof = defaultdict(set) # prof_id -> set of (turma_cod, disc_id)
     
     for g in grades:
         key = (g.professor_id, g.turma.codigo, g.disciplina_id)
         if g.dia_semana in DIA_TO_WEEKDAY:
-            weekdays_map[key].add(DIA_TO_WEEKDAY[g.dia_semana])
+            slots_map[key][DIA_TO_WEEKDAY[g.dia_semana]] += 1
             triades_por_prof[g.professor_id].add((g.turma.codigo, g.disciplina_id))
 
     # 2. Busca todos os conteúdos lançados no período de uma vez
@@ -483,7 +483,7 @@ def calcular_stats_conteudo(prof, data_ini=None, data_fim=None, feriados=None):
     for cp in cp_qs:
         for t in cp.turmas.all():
             key = (cp.professor_id, t.codigo, cp.disciplina_id)
-            if key in weekdays_map: # Só conta se estiver na grade
+            if key in slots_map: # Só conta se estiver na grade
                 lancados_map[key].add(cp.data)
 
     # 3. Processa cálculos em Python
@@ -492,20 +492,27 @@ def calcular_stats_conteudo(prof, data_ini=None, data_fim=None, feriados=None):
     preenchidos = 0
     preenchidos_ate_hoje = 0
 
-    for key, weekdays in weekdays_map.items():
+    for key, weekdays_counts in slots_map.items():
         # Cálculo de esperado (Total)
         cur = inicio
         while cur <= fim:
-            if cur.weekday() in weekdays and cur not in feriados:
-                total += 1
+            weekday = cur.weekday()
+            if weekday in weekdays_counts and cur not in feriados:
+                count = weekdays_counts[weekday]
+                total += count
                 if cur <= hoje:
-                    total_ate_hoje += 1
+                    total_ate_hoje += count
             cur += datetime.timedelta(days=1)
         
-        # Cálculo de realizado (Preenchidos)
+        # Cálculo de realizado (Preenchidos) multiplicando pelo número de aulas do dia
         dates_lancadas = lancados_map.get(key, set())
-        preenchidos += len(dates_lancadas)
-        preenchidos_ate_hoje += len([d for d in dates_lancadas if d <= hoje])
+        for d in dates_lancadas:
+            weekday = d.weekday()
+            if weekday in weekdays_counts:
+                count = weekdays_counts[weekday]
+                preenchidos += count
+                if d <= hoje:
+                    preenchidos_ate_hoje += count
 
     return {
         'total_conteudo': total,
