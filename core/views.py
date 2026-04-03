@@ -1052,8 +1052,23 @@ def conteudo_editar(request, pk):
         cont.descricao = descricao
         cont.save()
         
-        turmas = Turma.objects.filter(codigo__in=turmas_cods)
-        cont.turmas.set(turmas)
+        turmas = list(Turma.objects.filter(codigo__in=turmas_cods))
+        if turmas:
+            # A primeira turma fica no registro atual
+            cont.turmas.set([turmas[0]])
+            
+            # Turmas adicionais criam/separam em novos registros
+            for extra_turma in turmas[1:]:
+                novo_cp = ConteudoProgramatico.objects.create(
+                    data=cont.data,
+                    professor=cont.professor,
+                    disciplina=cont.disciplina,
+                    descricao=cont.descricao
+                )
+                novo_cp.turmas.add(extra_turma)
+        else:
+            cont.turmas.clear()
+
         
         messages.success(request, 'Conteúdo atualizado com sucesso!')
         return redirect('/?tab=conteudos')
