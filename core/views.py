@@ -312,7 +312,8 @@ def api_disciplinas_turma(request, codigo):
     if is_extra:
         # Modo Aula Extra: ignora a grade horária.
         # Mostra as disciplinas que o professor pode lecionar (se não for admin)
-        turmas_1_e_2_ano = ['11', '12', '13', '21', '22', '23']
+        turmas_1_ano = ['11', '12', '13']
+        turmas_2_ano = ['21', '22', '23']
         turmas_3_ano = ['31', '32']
         
         if prof_logado and not prof_logado.pode_ver_tudo and not prof_logado.todas_disciplinas:
@@ -320,10 +321,18 @@ def api_disciplinas_turma(request, codigo):
         else:
             discs = Disciplina.objects.all()
 
-        if codigo in turmas_1_e_2_ano:
-            Disciplina.objects.get_or_create(nome='Eletiva 1')
-            Disciplina.objects.get_or_create(nome='Eletiva 2')
-            extras = Disciplina.objects.filter(nome__in=['Eletiva 1', 'Eletiva 2'])
+        if codigo in turmas_1_ano:
+            areas = ['Sociedade e Cidadania', 'Sustentabilidade e Meio Ambiente']
+            for area in areas:
+                Disciplina.objects.get_or_create(nome=area)
+            extras = Disciplina.objects.filter(nome__in=areas)
+            discs = (discs | extras).distinct()
+            
+        elif codigo in turmas_2_ano:
+            areas = ['Educação Financeira', 'Múltiplas Linguagens']
+            for area in areas:
+                Disciplina.objects.get_or_create(nome=area)
+            extras = Disciplina.objects.filter(nome__in=areas)
             discs = (discs | extras).distinct()
             
         elif codigo in turmas_3_ano:
@@ -530,8 +539,11 @@ def calcular_stats_conteudo(prof, data_ini=None, data_fim=None, feriados=None):
     extras_adicionais_ate_hoje = 0
     
     disciplinas_peso_2 = [
-        'Eletiva 1', 'Eletiva 2', 'Ciências da Natureza', 
-        'Ciências Humanas', 'Matemática e suas tecnologias', 'Linguagens e códigos'
+        'Eletiva 1', 'Eletiva 2', # Nomes legados, caso existam registros
+        'Sociedade e Cidadania', 'Sustentabilidade e Meio Ambiente',
+        'Educação Financeira', 'Múltiplas Linguagens',
+        'Ciências da Natureza', 'Ciências Humanas', 
+        'Matemática e suas tecnologias', 'Linguagens e códigos'
     ]
 
     for cp in cp_qs:
