@@ -320,10 +320,20 @@ def api_disciplinas_turma(request, codigo):
             discs = Disciplina.objects.all()
 
         if codigo in turmas_eletivas:
+            Disciplina.objects.get_or_create(nome='Eletiva 1')
+            Disciplina.objects.get_or_create(nome='Eletiva 2')
             eletivas = Disciplina.objects.filter(nome__in=['Eletiva 1', 'Eletiva 2'])
             discs = (discs | eletivas).distinct()
             
-        discs = discs.order_by('nome')
+        # Remover duplicatas devido a JOINs no UNION e ordenar
+        ids_vistos = set()
+        lista_discs = []
+        for d in discs.order_by('nome').values('id', 'nome'):
+            if d['id'] not in ids_vistos:
+                ids_vistos.add(d['id'])
+                lista_discs.append(d)
+                
+        return JsonResponse(lista_discs, safe=False)
     else:
         qs = GradeHoraria.objects.filter(turma__codigo=codigo)
         if prof_logado and not prof_logado.pode_ver_tudo:
