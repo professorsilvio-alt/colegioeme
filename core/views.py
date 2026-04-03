@@ -1004,7 +1004,7 @@ def conteudo_criar(request):
         cont.turmas.add(turma)
 
     messages.success(request, 'Conteúdo(s) lançado(s) com sucesso!')
-    return redirect('dashboard')
+    return redirect('/?tab=conteudos')
 
 
 @login_required
@@ -1056,7 +1056,7 @@ def conteudo_editar(request, pk):
         cont.turmas.set(turmas)
         
         messages.success(request, 'Conteúdo atualizado com sucesso!')
-        return redirect('dashboard')
+        return redirect('/?tab=conteudos')
 
     # Data needed for the form
     turmas_qs = prof.get_turmas() if prof else Turma.objects.all()
