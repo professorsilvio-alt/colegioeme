@@ -1347,6 +1347,7 @@ def exportar_ocorrencias_pdf(request):
     styles = getSampleStyleSheet()
     small = ParagraphStyle('small', fontSize=7, leading=9)
     filter_style = ParagraphStyle('filters', fontSize=9, italic=True)
+    cell_normal = ParagraphStyle('cell_normal', fontSize=8, leading=10)
     
     elems = []
     logo = _get_logo_element()
@@ -1369,12 +1370,12 @@ def exportar_ocorrencias_pdf(request):
             oc.turma.codigo if oc.turma else '',
             Paragraph(oc.alunos_str(), small),
             oc.professor.nome if oc.professor else '',
-            oc.disciplina.nome if oc.disciplina else '',
+            Paragraph(oc.disciplina.nome if oc.disciplina else '', cell_normal),
             oc.status,
         ])
     # Total width with 1.0cm margins on A4 (21cm) is 19cm.
-    # 1.8+2.0+1.4+5.4+4.0+2.4+2.0 = 19.0cm (Perfect Fill)
-    t = Table(data, colWidths=[1.8*cm, 2.0*cm, 1.4*cm, 5.4*cm, 4.0*cm, 2.4*cm, 2.0*cm], repeatRows=1)
+    # 1.8+2.0+1.4+5.0+4.0+2.8+2.0 = 19.0cm (Perfect Fill)
+    t = Table(data, colWidths=[1.8*cm, 2.0*cm, 1.4*cm, 5.0*cm, 4.0*cm, 2.8*cm, 2.0*cm], repeatRows=1)
     t.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#003366')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
@@ -1429,6 +1430,7 @@ def exportar_conteudos_pdf(request):
     styles = getSampleStyleSheet()
     small = ParagraphStyle('small', fontSize=7, leading=9)
     filter_style = ParagraphStyle('filters', fontSize=9, italic=True)
+    cell_normal = ParagraphStyle('cell_normal', fontSize=8, leading=10)
 
     elems = []
     logo = _get_logo_element()
@@ -1449,12 +1451,12 @@ def exportar_conteudos_pdf(request):
             c.data.strftime('%d/%m/%Y') if c.data else '',
             c.turmas_str(),
             c.professor.nome if c.professor else '',
-            c.disciplina.nome if c.disciplina else '',
+            Paragraph(c.disciplina.nome if c.disciplina else '', cell_normal),
             Paragraph(c.descricao, small),
         ])
     # Total width with 1.0cm margins on A4 (21cm) is 19cm.
-    # 1.8+1.6+2.8+2.6+10.2 = 19.0cm (Perfect Fill)
-    t = Table(data, colWidths=[1.8*cm, 1.6*cm, 2.8*cm, 2.6*cm, 10.2*cm], repeatRows=1)
+    # 1.8+1.6+2.8+3.4+9.4 = 19.0cm (Perfect Fill)
+    t = Table(data, colWidths=[1.8*cm, 1.6*cm, 2.8*cm, 3.4*cm, 9.4*cm], repeatRows=1)
     t.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#003366')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
