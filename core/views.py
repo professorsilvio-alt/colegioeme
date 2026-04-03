@@ -628,13 +628,37 @@ def relatorio_pendencias(request):
             p.stats = stats
             relatorio.append(p)
 
+    # Tabela Extra - Controle de Aulas Extras
+    disciplina_extra_filtro = request.GET.get('disciplina_extra', '')
+    disciplinas_peso_2 = [
+        'Eletiva 1', 'Eletiva 2', 'Sociedade e Cidadania', 'Sustentabilidade e Meio Ambiente',
+        'Educação Financeira', 'Múltiplas Linguagens', 'Ciências da Natureza', 
+        'Ciências Humanas', 'Matemática e suas tecnologias', 'Linguagens e códigos'
+    ]
+    
+    extras_qs = ConteudoProgramatico.objects.filter(
+        disciplina__nome__in=disciplinas_peso_2
+    ).select_related('professor', 'disciplina').prefetch_related('turmas').order_by('-data')
+    
+    if nome_filtro:
+        extras_qs = extras_qs.filter(professor__nome__icontains=nome_filtro)
+    if data_ini:
+        extras_qs = extras_qs.filter(data__gte=data_ini)
+    if data_fim:
+        extras_qs = extras_qs.filter(data__lte=data_fim)
+    if disciplina_extra_filtro:
+        extras_qs = extras_qs.filter(disciplina__nome=disciplina_extra_filtro)
+
     context = {
         'prof': prof_user,
         'relatorio': relatorio,
         'nome_filtro': nome_filtro,
         'data_ini': data_ini,
         'data_fim': data_fim,
+        'disciplina_extra_filtro': disciplina_extra_filtro,
         'todas_turmas': Turma.objects.all(),
+        'aulas_extras_lancadas': extras_qs,
+        'opcoes_extras': disciplinas_peso_2,
     }
     return render(request, 'core/relatorio_pendencias.html', context)
 

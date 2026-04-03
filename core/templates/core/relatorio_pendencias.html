@@ -26,6 +26,15 @@
                     <label style="font-size: 11px; display: block;">Fim</label>
                     <input type="date" name="data_fim" value="{{ data_fim }}" style="padding: 7px; border: 1px solid #ccc; border-radius: 4px; width: 130px;">
                 </div>
+                <div>
+                    <label style="font-size: 11px; display: block;">Disc. Extra (Aulas Extras)</label>
+                    <select name="disciplina_extra" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                        <option value="">Todas...</option>
+                        {% for d in opcoes_extras %}
+                        <option value="{{ d }}" {% if disciplina_extra_filtro == d %}selected{% endif %}>{{ d }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
                 <button type="submit" class="btn-filter-action btn-primary">Filtrar</button>
                 <a href="{% url 'relatorio_pendencias_pdf' %}?{{ request.GET.urlencode }}" class="btn-filter-action btn-pdf">📄 Exportar PDF</a>
                 <a href="{% url 'relatorio_pendencias' %}" class="btn-filter-action btn-gray">Limpar</a>
@@ -118,6 +127,47 @@
             </tbody>
         </table>
     </div>
+
+    <!-- Tabela Histórico de Aulas Extras -->
+    {% if prof.cargo == 'ADMIN' or prof.cargo == 'DIRETOR' or prof.cargo == 'SECRETARIA' or prof.cargo == 'COORDENADOR' %}
+    <br>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <h2 style="color: #003366; margin: 0; font-size: 20px;">Histórico de Aulas Extras Lançadas</h2>
+        <span style="background: #e67e22; color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;">
+            {{ aulas_extras_lancadas|length }} Registro(s) Encontrado(s)
+        </span>
+    </div>
+    <div class="card-table">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead style="background: #e67e22; color: white;">
+                <tr>
+                    <th style="padding: 12px; text-align: left;">Data</th>
+                    <th style="padding: 12px; text-align: left;">Professor</th>
+                    <th style="padding: 12px; text-align: left;">Disciplina Extra</th>
+                    <th style="padding: 12px; text-align: left;">Turmas (Aplicadas)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for extra in aulas_extras_lancadas %}
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 12px; width: 120px;">{{ extra.data|date:"d/m/Y" }}</td>
+                    <td style="padding: 12px;"><strong>{{ extra.professor.nome }}</strong></td>
+                    <td style="padding: 12px; color: #d35400; font-weight: 500;">{{ extra.disciplina.nome }}</td>
+                    <td style="padding: 12px;">
+                        {% for t in extra.turmas.all %}
+                            <span style="background: #f1f2f6; padding: 2px 6px; border-radius: 4px; font-size: 12px; margin-right: 4px; border: 1px solid #dfe4ea;">{{ t.codigo }}</span>
+                        {% endfor %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="padding: 20px; text-align: center; color: #999;">Nenhuma Aula Extra foi encontrada neste intervalo.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
 </div>
 
 <style>
