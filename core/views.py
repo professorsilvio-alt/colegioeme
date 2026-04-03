@@ -1628,3 +1628,59 @@ def forcar_troca_senha(request):
         'erros': erros,
         'prof': prof,
     })
+
+
+from django.http import HttpResponse
+
+def diagnostico_servidor(request):
+    """
+    Página temporária para auditar inconsistências de contagem no servidor.
+    Acessível apenas por usuários logados (preferencialmente admin).
+    """
+    if not request.user.is_authenticated:
+        return HttpResponse("Acesso negado.")
+
+    from .models import Professor, ConteudoProgramatico, GradeHoraria, Configuracao
+    import datetime
+
+    prof = get_professor(request.user)
+    stats = calcular_stats_conteudo(prof)
+    
+    config = Configuracao.objects.first()
+
+    output = [
+        "--- DIAGNÓSTICO DO SERVIDOR EME ---",
+        f"Horário do Servidor: {datetime.datetime.now()}",
+        f"Usuário Autenticado: {request.user.username}",
+        f"Perfil Vinculado: {prof.nome if prof else 'Nenhum'}",
+        f"Cargo Identificado: {prof.cargo if prof else 'N/A'}",
+        f"Permissora Visão Global? {'SIM' if (not prof or prof.cargo in ['ADMIN', 'DIRETOR', 'SECRETARIA', 'COORDENADOR', 'AUX_COORD', 'ORIENTADOR']) else 'NÃO'}",
+        f"Configuração Início: {config.inicio_periodo_letivo if config else 'N/A'}",
+        f"Configuração Fim: {config.fim_periodo_letivo if config else 'N/A'}",
+        "",
+        "--- ESTATÍSTICAS CALCULADAS ---",
+        f"Lançamentos Totais (Esperados): {stats.get('total_conteudo')}",
+        f"Já Preenchidos (Encontrados): {stats.get('preenchidos')}",
+        f"Total de CPs no Banco: {ConteudoProgramatico.objects.count()}",
+        "",
+        "--- AMOSTRA DE CONFLITOS (Últimos 50) ---"
+    ]
+
+    # Amostra de CPs e se batem com a grade
+    cps = ConteudoProgramatico.objects.all().order_by('-data')[:50]
+    for cp in cps:
+        turmas = list(cp.turmas.all())
+        turma_cods = [t.codigo for t in turmas]
+        
+        # Verifica se o professor do CP tem alguma grade ativa para essa combinação
+        grades = GradeHoraria.objects.filter(
+            professor=cp.professor,
+            turma__codigo__in=turma_cods,
+            disciplina=cp.disciplina
+        )
+        tem_grade = grades.exists()
+
+        status = "✅ OK" if tem_grade else "❌ SEM GRADE (Não contado)"
+        output.append(f"CP {cp.id}: {cp.data} | Prof {cp.professor.nome} | Turmas {turma_cods} | Disc {cp.disciplina.nome} -> {status}")
+
+    return HttpResponse("\n".join(output), content_type="text/plain; charset=utf-8")

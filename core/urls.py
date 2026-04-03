@@ -6,6 +6,7 @@ urlpatterns = [
     path('', views.dashboard, name='dashboard'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
+    path('diagnostico-servidor/', views.diagnostico_servidor, name='diagnostico_servidor'),
 
     # API
     path('api/alunos/<str:codigo>/', views.api_alunos_turma, name='api_alunos_turma'),
