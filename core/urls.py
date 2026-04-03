@@ -51,4 +51,5 @@ urlpatterns = [
     path('gerenciar-sugestoes/', views.gerenciar_sugestoes, name='gerenciar_sugestoes'),
     path('sugestao/<int:pk>/editar/', views.sugestao_editar, name='sugestao_editar'),
     path('sugestao/<int:pk>/excluir/', views.sugestao_excluir, name='sugestao_excluir'),
+    path('sugestoes/acoes-massa/', views.sugestoes_acoes_massa, name='sugestoes_acoes_massa'),
 ]

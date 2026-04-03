@@ -892,6 +892,52 @@ def sugestao_excluir(request, pk):
 
 @login_required
 @require_POST
+def sugestoes_acoes_massa(request):
+    sugestoes_ids = request.POST.getlist('sugestao_id')
+    acao = request.POST.get('acao')
+
+    if not sugestoes_ids:
+        messages.error(request, "Nenhuma sugestão selecionada.")
+        return redirect('gerenciar_sugestoes')
+
+    prof = get_professor(request.user)
+    if not request.user.is_superuser:
+        if not prof or not prof.pode_editar_tudo:
+            messages.error(request, "Acesso restrito.")
+            return redirect('dashboard')
+
+    sugestoes = SugestaoConteudo.objects.filter(pk__in=sugestoes_ids)
+
+    if acao == 'excluir':
+        count = sugestoes.count()
+        sugestoes.delete()
+        messages.success(request, f"{count} sugestões excluídas com sucesso.")
+    
+    elif acao == 'editar':
+        disc_id = request.POST.get('disciplina')
+        turmas_ids = request.POST.getlist('turmas')
+        
+        if not disc_id:
+            messages.error(request, "Para edição em massa, é necessário informar a nova disciplina.")
+            return redirect('gerenciar_sugestoes')
+            
+        disciplina = get_object_or_404(Disciplina, pk=disc_id)
+        
+        for sug in sugestoes:
+            sug.disciplina = disciplina
+            sug.save()
+            if turmas_ids:
+                sug.turmas.set(turmas_ids)
+            else:
+                sug.turmas.clear()
+                
+        messages.success(request, f"{sugestoes.count()} sugestões foram atualizadas com sucesso.")
+        
+    return redirect('gerenciar_sugestoes')
+
+
+@login_required
+@require_POST
 def ocorrencia_criar(request):
     prof = get_professor(request.user)
     data = request.POST.get('data')

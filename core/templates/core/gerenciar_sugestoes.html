@@ -54,12 +54,26 @@
         </form>
     </div>
 
+    <!-- Ações em Massa -->
+    <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; gap: 10px; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+        <select id="acaoMassaSelect" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+            <option value="">Ações em massa...</option>
+            <option value="excluir">🗑️ Excluir Selecionadas</option>
+            <option value="editar">✏️ Editar Disciplina/Turmas em Massa</option>
+        </select>
+        <button type="button" class="btn-primary" onclick="executarAcaoMassa()" style="padding: 8px 15px;">Aplicar</button>
+    </div>
+
     <!-- Lista de Sugestões Existentes (Opcional, mas útil) -->
-    <div class="card-table" style="background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden;">
-        <table style="width: 100%; border-collapse: collapse;">
-            <thead style="background: #003366; color: white;">
-                <tr>
-                    <th style="padding: 12px; text-align: left;">Disciplina</th>
+    <form id="sugestoesMassaForm" method="post" action="{% url 'sugestoes_acoes_massa' %}">
+        {% csrf_token %}
+        <input type="hidden" name="acao" id="acaoMassaInput">
+        <div class="card-table" style="background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead style="background: #003366; color: white;">
+                    <tr>
+                        <th style="padding: 12px; text-align: center; width: 40px;"><input type="checkbox" onclick="toggleAllSugestoes(this)"></th>
+                        <th style="padding: 12px; text-align: left;">Disciplina</th>
                     <th style="padding: 12px; text-align: left;">Turmas</th>
                     <th style="padding: 12px; text-align: left;">Texto da Sugestão</th>
                     <th style="padding: 12px; text-align: center;">Ações</th>
@@ -68,6 +82,7 @@
             <tbody>
                 {% for s in sugestoes %}
                 <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 12px; text-align: center;"><input type="checkbox" name="sugestao_id" value="{{ s.pk }}" class="sugestao-cb"></td>
                     <td style="padding: 12px;"><strong>{{ s.disciplina.nome }}</strong></td>
                     <td style="padding: 12px;">
                         {% for t in s.turmas.all %}
@@ -92,12 +107,13 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="4" style="padding: 30px; text-align: center; color: #999;">Nenhuma sugestão cadastrada ainda. Use o formulário acima para importar.</td>
+                    <td colspan="5" style="padding: 30px; text-align: center; color: #999;">Nenhuma sugestão cadastrada ainda. Use o formulário acima para importar.</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+    </form>
 </div>
 
 <!-- Modal de Edição -->
@@ -144,6 +160,46 @@
     </div>
 </div>
 
+<!-- Modal de Edição em Massa -->
+<div id="modalEditarMassa" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;">
+    <div style="background-color: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 600px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">
+            <h2 style="margin: 0; color: #003366;">✏️ Editar Sugestões em Massa</h2>
+            <button onclick="fecharModalEditarMassa()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">&times;</button>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <p style="color: #666; font-size: 14px;">Você está editando a <strong>Disciplina</strong> e/ou as <strong>Turmas</strong> de todos os itens selecionados. O texto das sugestões será preservado.</p>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+            <div>
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Nova Disciplina</label>
+                <select id="mass_edit_disciplina" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ccc;">
+                    {% for d in disciplinas %}
+                    <option value="{{ d.pk }}">{{ d.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Novas Turmas</label>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 5px; border: 1px solid #ccc; padding: 10px; border-radius: 6px; background: white; max-height: 100px; overflow-y: auto;">
+                    {% for t in turmas %}
+                    <label style="font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 3px;">
+                        <input type="checkbox" value="{{ t.pk }}" class="mass_edit_turma_checkbox"> {{ t.codigo }}
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+            <button type="button" onclick="fecharModalEditarMassa()" class="btn-gray" style="padding: 10px 20px;">Cancelar</button>
+            <button type="button" onclick="submeterMassaForm(event)" class="btn-primary" style="padding: 10px 25px;">Salvar Alterações</button>
+        </div>
+    </div>
+</div>
+
 <script>
 function abrirModalEditar(id, texto, discId, turmasIds) {
     const modal = document.getElementById('modalEditar');
@@ -174,9 +230,75 @@ function fecharModal() {
 // Close on click outside
 window.onclick = function(event) {
     const modal = document.getElementById('modalEditar');
+    const modalMassa = document.getElementById('modalEditarMassa');
     if (event.target == modal) {
         fecharModal();
     }
+    if (event.target == modalMassa) {
+        fecharModalEditarMassa();
+    }
+}
+
+function toggleAllSugestoes(source) {
+    const checkboxes = document.querySelectorAll('.sugestao-cb');
+    for(var i=0, n=checkboxes.length; i<n; i++) {
+        checkboxes[i].checked = source.checked;
+    }
+}
+
+function executarAcaoMassa() {
+    const acao = document.getElementById('acaoMassaSelect').value;
+    const form = document.getElementById('sugestoesMassaForm');
+    const inputAcao = document.getElementById('acaoMassaInput');
+    const checkboxChecked = document.querySelectorAll('.sugestao-cb:checked');
+
+    if (checkboxChecked.length === 0) {
+        alert('Selecione pelo menos uma sugestão.');
+        return;
+    }
+
+    if (!acao) {
+        alert('Selecione uma ação no menu.');
+        return;
+    }
+
+    if (acao === 'excluir') {
+        if (confirm('Tem certeza que deseja excluir as sugestões selecionadas?')) {
+            inputAcao.value = 'excluir';
+            form.submit();
+        }
+    } else if (acao === 'editar') {
+        inputAcao.value = 'editar';
+        document.getElementById('modalEditarMassa').style.display = 'flex';
+    }
+}
+
+function fecharModalEditarMassa() {
+    document.getElementById('modalEditarMassa').style.display = 'none';
+}
+
+function submeterMassaForm(e) {
+    if (e) e.preventDefault();
+    const form = document.getElementById('sugestoesMassaForm');
+    const maskDisc = document.getElementById('mass_edit_disciplina').value;
+    const massTurmas = document.querySelectorAll('.mass_edit_turma_checkbox:checked');
+    
+    let dummyDisc = document.createElement('input');
+    dummyDisc.type = 'hidden';
+    dummyDisc.name = 'disciplina';
+    dummyDisc.value = maskDisc;
+    form.appendChild(dummyDisc);
+    
+    massTurmas.forEach(t => {
+        let dummyT = document.createElement('input');
+        dummyT.type = 'hidden';
+        dummyT.name = 'turmas';
+        dummyT.value = t.value;
+        form.appendChild(dummyT);
+    });
+    
+    // Submit gracefully
+    form.submit();
 }
 </script>
 {% endblock %}
