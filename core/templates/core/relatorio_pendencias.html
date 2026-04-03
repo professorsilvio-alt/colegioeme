@@ -13,31 +13,33 @@
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
         <!-- Filtro -->
         <div class="filters-bar" style="height: 100%;">
-            <form method="get" action="" style="display: flex; gap: 10px; align-items: flex-end;">
+            <form method="get" action="" style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
                 <div>
                     <label>Filtrar por Professor</label>
                     <input type="text" name="nome" value="{{ nome_filtro }}" placeholder="Nome do professor..." style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 180px;">
                 </div>
                 <div>
                     <label style="font-size: 11px; display: block;">Início</label>
-                    <input type="date" name="data_ini" value="{{ data_ini }}" style="padding: 7px; border: 1px solid #ccc; border-radius: 4px; width: 130px;">
+                    <input type="date" name="data_ini" value="{{ data_ini }}" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 130px;">
                 </div>
                 <div>
                     <label style="font-size: 11px; display: block;">Fim</label>
-                    <input type="date" name="data_fim" value="{{ data_fim }}" style="padding: 7px; border: 1px solid #ccc; border-radius: 4px; width: 130px;">
+                    <input type="date" name="data_fim" value="{{ data_fim }}" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 130px;">
                 </div>
                 <div>
                     <label style="font-size: 11px; display: block;">Disc. Extra (Aulas Extras)</label>
-                    <select name="disciplina_extra" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                    <select name="disciplina_extra" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 220px;">
                         <option value="">Todas...</option>
                         {% for d in opcoes_extras %}
                         <option value="{{ d }}" {% if disciplina_extra_filtro == d %}selected{% endif %}>{{ d }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                <button type="submit" class="btn-filter-action btn-primary">Filtrar</button>
-                <a href="{% url 'relatorio_pendencias_pdf' %}?{{ request.GET.urlencode }}" class="btn-filter-action btn-pdf">📄 Exportar PDF</a>
-                <a href="{% url 'relatorio_pendencias' %}" class="btn-filter-action btn-gray">Limpar</a>
+                <div style="display: flex; gap: 8px; margin-top: 5px;">
+                    <button type="submit" class="btn-filter-action btn-primary" style="padding: 8px 12px;">Filtrar</button>
+                    <a href="{% url 'relatorio_pendencias_pdf' %}?{{ request.GET.urlencode }}" class="btn-filter-action btn-pdf" style="padding: 8px 12px; display: flex; align-items: center;">📄 Exportar PDF</a>
+                    <a href="{% url 'relatorio_pendencias' %}" class="btn-filter-action btn-gray" style="padding: 8px 12px; display: flex; align-items: center;">Limpar</a>
+                </div>
             </form>
         </div>
 
