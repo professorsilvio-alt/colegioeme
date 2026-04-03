@@ -1179,6 +1179,10 @@ def conteudo_editar(request, pk):
     turmas_qs = prof.get_turmas() if prof else Turma.objects.all()
     disciplinas_qs = prof.get_disciplinas() if prof else Disciplina.objects.all()
     
+    # Garantia de que a disciplina de origem (como aula extra) apareça no dropdown da edição
+    if cont.disciplina:
+        disciplinas_qs = (disciplinas_qs | Disciplina.objects.filter(pk=cont.disciplina.pk)).distinct()
+
     context = {
         'cont': cont,
         'turmas': turmas_qs,
