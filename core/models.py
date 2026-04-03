@@ -60,10 +60,19 @@ class Professor(models.Model):
 
     @property
     def pode_ver_tudo(self):
+        """Acesso global para visualização de relatórios e dados (exceto restrições específicas)."""
         return self.cargo in ['ADMIN', 'DIRETOR', 'COORDENADOR', 'AUX_COORD', 'ORIENTADOR', 'SECRETARIA', 'INSPETOR']
 
     @property
+    def pode_ver_ocorrencias(self):
+        """Secretaria não deve visualizar ocorrências."""
+        if self.cargo == 'SECRETARIA':
+            return False
+        return True
+
+    @property
     def pode_editar_tudo(self):
+        """Acesso para editar qualquer registro no sistema."""
         return self.cargo in ['ADMIN', 'DIRETOR']
 
     @property

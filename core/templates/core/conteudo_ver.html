@@ -37,6 +37,7 @@
             </div>
         </div>
 
+        {% if prof.cargo != 'COORDENADOR' %}
         {% if prof.pode_editar_tudo or cont.professor == prof %}
         <div style="margin-top: 30px; display: flex; gap: 10px;">
             <a href="{% url 'conteudo_editar' cont.pk %}" class="btn-primary" style="text-decoration: none; padding: 10px 25px;">✏ Editar Lançamento</a>
@@ -45,6 +46,7 @@
                 <button type="submit" class="btn-danger" style="padding: 10px 25px;" onclick="return confirm('Tem certeza que deseja excluir este conteúdo?')">🗑 Excluir</button>
             </form>
         </div>
+        {% endif %}
         {% endif %}
     </div>
 </div>

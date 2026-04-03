@@ -22,7 +22,9 @@
         {% if user.is_authenticated %}
         <nav class="header-nav">
             <a href="{% url 'dashboard' %}" class="nav-item">🏠 Dashboard</a>
+            {% if not prof or prof.pode_ver_ocorrencias %}
             <a href="{% url 'dashboard' %}?tab=ocorrencias" class="nav-item">📋 Ocorrências</a>
+            {% endif %}
             {% if not prof or prof.cargo != 'INSPETOR' %}
             <a href="{% url 'dashboard' %}?tab=conteudos" class="nav-item">📚 Diário</a>
             {% endif %}

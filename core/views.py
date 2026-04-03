@@ -109,10 +109,15 @@ def ocorrencias_do_usuario(user):
     qs = Ocorrencia.objects.select_related('turma', 'professor', 'disciplina').prefetch_related('alunos')
     if not prof:
         return qs  # superuser/admin sem perfil: vê tudo
-    if prof and prof.cargo == 'INSPETOR':
-        # Inspetor vê agora todas as ocorrências (regra atualizada)
+    
+    # Secretária não deve visualizar as ocorrências
+    if not prof.pode_ver_ocorrencias:
+        return Ocorrencia.objects.none()
+
+    if prof.cargo == 'INSPETOR' or prof.cargo in ['DIRETOR', 'COORDENADOR', 'AUX_COORD', 'ORIENTADOR', 'ADMIN']:
+        # Cargos de gestão e inspetores veem tudo (respeitando a restrição de secretária acima)
         pass
-    elif prof and not prof.pode_ver_tudo:
+    else:
         # Professor comum vê apenas suas próprias ocorrências
         qs = qs.filter(professor=prof)
     return qs
@@ -951,6 +956,12 @@ def ocorrencia_criar(request):
     turma = get_object_or_404(Turma, codigo=turma_cod)
     disciplina = get_object_or_404(Disciplina, pk=disc_id) if disc_id else None
     
+    # Security: Ensure only admins or professors can create occurrences.
+    # Orientador and Coordenador only change status.
+    if prof and prof.cargo in ['ORIENTADOR', 'COORDENADOR', 'SECRETARIA']:
+        messages.error(request, 'Seu cargo não permite registrar novas ocorrências.')
+        return redirect('dashboard')
+
     # Security: Ensure only admins can set a specific professor
     if prof_id and prof and prof.pode_editar_tudo:
         professor = get_object_or_404(Professor, pk=prof_id)
@@ -990,12 +1001,12 @@ def ocorrencia_editar(request, pk):
     oc = get_object_or_404(Ocorrencia, pk=pk)
     prof = get_professor(request.user)
     
-    # Check permissions
-    # Check permissions: Inspectors cannot edit ANY occurrence
-    if prof and prof.cargo == 'INSPETOR':
-        messages.error(request, 'Inspetores não podem editar ocorrências, apenas alterar o status.')
+    # Gestão de permissões específicas:
+    # Coordenador e Orientador visualizam tudo, mas não editam nada (apenas status).
+    if prof and prof.cargo in ['COORDENADOR', 'ORIENTADOR', 'INSPETOR']:
+        messages.error(request, 'Seu cargo permiti apenas a visualização e alteração de status desta ocorrência.')
         return redirect('dashboard')
-    
+
     if prof and not prof.pode_editar_tudo and oc.professor != prof:
         messages.error(request, 'Você não tem permissão para editar esta ocorrência.')
         return redirect('dashboard')
@@ -1043,10 +1054,9 @@ def ocorrencia_excluir(request, pk):
     oc = get_object_or_404(Ocorrencia, pk=pk)
     prof = get_professor(request.user)
     
-    # Check permissions
-    # Check permissions: Inspectors cannot delete
-    if prof and prof.cargo == 'INSPETOR':
-        messages.error(request, 'Inspetores não podem excluir ocorrências.')
+    # Check permissions logic
+    if prof and prof.cargo in ['COORDENADOR', 'ORIENTADOR', 'INSPETOR']:
+        messages.error(request, 'Você não tem permissão para excluir ocorrências.')
         return redirect('dashboard')
 
     if prof and not prof.pode_editar_tudo and oc.professor != prof:
@@ -1181,6 +1191,11 @@ def conteudo_editar(request, pk):
     cont = get_object_or_404(ConteudoProgramatico, pk=pk)
     prof = get_professor(request.user)
     
+    # Permissões: Coordenador visualiza mas não edita diários.
+    if prof and prof.cargo == 'COORDENADOR':
+        messages.error(request, 'Coordenadores não podem editar lançamentos nos diários.')
+        return redirect('dashboard')
+
     # Check permissions
     if prof and not prof.pode_editar_tudo and cont.professor != prof:
         messages.error(request, 'Você não tem permissão para editar este conteúdo.')
@@ -1250,6 +1265,11 @@ def conteudo_excluir(request, pk):
     cont = get_object_or_404(ConteudoProgramatico, pk=pk)
     prof = get_professor(request.user)
     
+    # Permissões: Coordenador não exclui diários.
+    if prof and prof.cargo == 'COORDENADOR':
+        messages.error(request, 'Coordenadores não podem excluir lançamentos nos diários.')
+        return redirect('dashboard')
+
     # Check permissions
     if prof and not prof.pode_editar_tudo and cont.professor != prof:
         messages.error(request, 'Você não tem permissão para excluir este conteúdo.')

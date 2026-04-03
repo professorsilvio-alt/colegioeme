@@ -54,7 +54,7 @@
     </div>
 
     <div style="display: flex; gap: 10px; margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">
-        {% if prof.cargo != 'INSPETOR' %}
+        {% if prof.cargo != 'INSPETOR' and prof.cargo != 'COORDENADOR' and prof.cargo != 'ORIENTADOR' %}
             {% if prof.pode_editar_tudo or oc.professor == prof %}
             <a href="{% url 'ocorrencia_editar' oc.pk %}" class="btn-primary" style="text-decoration: none; background: #2980b9;">✏ Editar Ocorrência</a>
             {% endif %}

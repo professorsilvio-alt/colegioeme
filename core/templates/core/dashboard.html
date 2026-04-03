@@ -6,6 +6,7 @@
 
 <!-- DASHBOARD CARDS -->
 <div class="dashboard">
+    {% if prof.pode_ver_ocorrencias %}
     <div class="card">
         <h3>Ocorrências Totais</h3>
         <p>{{ total }}</p>
@@ -18,6 +19,7 @@
         <h3>Ocorrências Resolvidas</h3>
         <p>{{ resolvidas }}</p>
     </div>
+    {% endif %}
 </div>
 
 <!-- CARDS DIÁRIO DE CONTEÚDO — apenas para não-inspetores -->
@@ -42,7 +44,7 @@
 
 <!-- ═══════════════ ABA DASHBOARD (INÍCIO) ═══════════════ -->
 <div id="tab-dashboard" class="tab-pane {% if not request.GET.tab or request.GET.tab == 'dashboard' %}active{% endif %}"
-    {% if request.GET.tab and request.GET.tab != 'dashboard' %}style="display:none;" {% endif %}>
+    {% if request.GET.tab and request.GET.tab !='dashboard' %}style="display:none;" {% endif %}>
 
     {% if prof.cargo == 'PROFESSOR' %}
     <h2 style="color: #003366; margin-top: 5px;">📅 Meu Horário</h2>
@@ -86,9 +88,11 @@
 
 
 <!-- ═══════════════ ABA OCORRÊNCIAS ═══════════════ -->
-<div id="tab-ocorrencias" class="tab-pane {% if request.GET.tab == 'ocorrencias' %}active{% endif %}" {% if request.GET.tab != 'ocorrencias' %}style="display:none;" {% endif %}>
+<div id="tab-ocorrencias" class="tab-pane {% if request.GET.tab == 'ocorrencias' %}active{% endif %}" {% if
+    request.GET.tab !='ocorrencias' %}style="display:none;" {% endif %}>
 
-    {% if prof.cargo != 'INSPETOR' and prof.cargo != 'AUX_COORD' and prof.cargo != 'ORIENTADOR' and prof.cargo != 'SECRETARIA' %}
+    {% if prof.pode_ver_ocorrencias %}
+    {% if prof.cargo != 'INSPETOR' and prof.cargo != 'AUX_COORD' and prof.cargo != 'ORIENTADOR' and prof.cargo != 'SECRETARIA' and prof.cargo != 'COORDENADOR' %}
     <button class="btn-primary" onclick="toggleSection('formOcorrencia')">+ Registrar Nova Ocorrência</button>
     {% endif %}
 
@@ -151,7 +155,7 @@
                     <select name="filtro_turma" onchange="this.form.submit()">
                         <option value="">Todas</option>
                         {% for t in turmas %}
-                        <option value="{{ t.codigo }}" {% if filtro_turma == t.codigo %}selected{% endif %}>{{ t.codigo }}
+                        <option value="{{ t.codigo }}" {% if filtro_turma==t.codigo %}selected{% endif %}>{{ t.codigo }}
                         </option>
                         {% endfor %}
                     </select>
@@ -160,8 +164,8 @@
                     <label>Status</label>
                     <select name="filtro_status" onchange="this.form.submit()">
                         <option value="">Todos</option>
-                        <option value="Aberta" {% if filtro_status == "Aberta" %}selected{% endif %}>Aberta</option>
-                        <option value="Resolvida" {% if filtro_status == "Resolvida" %}selected{% endif %}>Resolvida
+                        <option value="Aberta" {% if filtro_status=="Aberta" %}selected{% endif %}>Aberta</option>
+                        <option value="Resolvida" {% if filtro_status=="Resolvida" %}selected{% endif %}>Resolvida
                         </option>
                     </select>
                 </div>
@@ -170,7 +174,7 @@
                     <select name="filtro_professor" onchange="this.form.submit()">
                         <option value="">Todos</option>
                         {% for p in todos_professores %}
-                        <option value="{{ p.pk }}" {% if filtro_professor == p.pk|stringformat:"d" %}selected{% endif %}>
+                        <option value="{{ p.pk }}" {% if filtro_professor==p.pk|stringformat:"d" %}selected{% endif %}>
                             {{ p.nome }}</option>
                         {% endfor %}
                     </select>
@@ -239,9 +243,8 @@
                     <td>{{ oc.disciplina.nome|default:"-" }}</td>
                     <td class="status-{{ oc.status|lower }}">{{ oc.status }}</td>
                     <td>
-                        <a href="{% url 'ocorrencia_ver' oc.pk %}" class="btn-sm" style="background: #16a085;">👁
-                            Ver</a>
-                        {% if prof.cargo != 'INSPETOR' %}
+                        <a href="{% url 'ocorrencia_ver' oc.pk %}" class="btn-sm" style="background: #16a085;">👁 Ver</a>
+                        {% if prof.cargo != 'INSPETOR' and prof.cargo != 'COORDENADOR' and prof.cargo != 'ORIENTADOR' %}
                         {% if prof.pode_editar_tudo or oc.professor == prof %}
                         <a href="{% url 'ocorrencia_editar' oc.pk %}" class="btn-sm">✏ Editar</a>
                         {% with padded_id=oc.pk|stringformat:"04d" %}
@@ -261,12 +264,18 @@
             </tbody>
         </table>
     </form>
+    {% else %}
+    <div style="text-align: center; padding: 40px 0;">
+        <p style="color: #666; font-size: 1.2em;">Você não tem permissão para visualizar ocorrências.</p>
+    </div>
+    {% endif %}
 </div><!-- /tab-ocorrencias -->
 
 
 <!-- ═══════════════ ABA CONTEÚDOS ═══════════════ -->
 {% if prof.cargo != 'INSPETOR' %}
-<div id="tab-conteudos" class="tab-pane {% if request.GET.tab == 'conteudos' %}active{% endif %}" {% if request.GET.tab != 'conteudos' %}style="display:none;" {% else %}style="display:block;" {% endif %}>
+<div id="tab-conteudos" class="tab-pane {% if request.GET.tab == 'conteudos' %}active{% endif %}" {% if request.GET.tab
+    !='conteudos' %}style="display:none;" {% else %}style="display:block;" {% endif %}>
 
     {% if prof.cargo == 'PROFESSOR' or prof.pode_editar_tudo %}
     <button class="btn-primary" onclick="toggleSectionConteudo('normal')">+ Lançar Conteúdo Programático</button>
@@ -361,7 +370,7 @@
                     <select name="filtro_turma_c" onchange="this.form.submit()">
                         <option value="">Todas</option>
                         {% for t in turmas %}
-                        <option value="{{ t.codigo }}" {% if filtro_turma_c == t.codigo %}selected{% endif %}>{{ t.codigo
+                        <option value="{{ t.codigo }}" {% if filtro_turma_c==t.codigo %}selected{% endif %}>{{ t.codigo
                             }}</option>
                         {% endfor %}
                     </select>
@@ -371,7 +380,7 @@
                     <select name="filtro_disc_c" onchange="this.form.submit()">
                         <option value="">Todas</option>
                         {% for d in disciplinas_tab_c %}
-                        <option value="{{ d.pk }}" {% if filtro_disc_c == d.pk|stringformat:"d" %}selected{% endif %}>{{
+                        <option value="{{ d.pk }}" {% if filtro_disc_c==d.pk|stringformat:"d" %}selected{% endif %}>{{
                             d.nome }}</option>
                         {% endfor %}
                     </select>
@@ -381,7 +390,7 @@
                     <select name="filtro_prof_c" onchange="this.form.submit()">
                         <option value="">Todos</option>
                         {% for p in professores_tab_c %}
-                        <option value="{{ p.pk }}" {% if filtro_prof_c == p.pk|stringformat:"d" %}selected{% endif %}>{{
+                        <option value="{{ p.pk }}" {% if filtro_prof_c==p.pk|stringformat:"d" %}selected{% endif %}>{{
                             p.nome }}</option>
                         {% endfor %}
                     </select>
@@ -444,11 +453,13 @@
                     <td>
                         <a href="{% url 'conteudo_ver' c.pk %}" class="btn-sm"
                             style="background: #16a085; text-decoration: none;">👁 Ver</a>
+                        {% if prof.cargo != 'COORDENADOR' %}
                         {% if prof.pode_editar_tudo or c.professor == prof %}
                         <a href="{% url 'conteudo_editar' c.pk %}" class="btn-sm" style="text-decoration: none;">✏
                             Editar</a>
                         <button type="submit" formaction="{% url 'conteudo_excluir' c.pk %}"
                             class="btn-sm btn-danger-sm" onclick="return confirm('Excluir conteúdo?')">🗑</button>
+                        {% endif %}
                         {% endif %}
                     </td>
                 </tr>
