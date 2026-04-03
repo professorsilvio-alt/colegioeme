@@ -312,18 +312,31 @@ def api_disciplinas_turma(request, codigo):
     if is_extra:
         # Modo Aula Extra: ignora a grade horária.
         # Mostra as disciplinas que o professor pode lecionar (se não for admin)
-        # Mais Eletivas liberadas para as turmas alvo 11 a 32.
-        turmas_eletivas = ['11', '12', '13', '21', '22', '23', '31', '32']
+        turmas_1_e_2_ano = ['11', '12', '13', '21', '22', '23']
+        turmas_3_ano = ['31', '32']
+        
         if prof_logado and not prof_logado.pode_ver_tudo and not prof_logado.todas_disciplinas:
             discs = prof_logado.disciplinas.all()
         else:
             discs = Disciplina.objects.all()
 
-        if codigo in turmas_eletivas:
+        if codigo in turmas_1_e_2_ano:
             Disciplina.objects.get_or_create(nome='Eletiva 1')
             Disciplina.objects.get_or_create(nome='Eletiva 2')
-            eletivas = Disciplina.objects.filter(nome__in=['Eletiva 1', 'Eletiva 2'])
-            discs = (discs | eletivas).distinct()
+            extras = Disciplina.objects.filter(nome__in=['Eletiva 1', 'Eletiva 2'])
+            discs = (discs | extras).distinct()
+            
+        elif codigo in turmas_3_ano:
+            areas = [
+                'Ciências da Natureza',
+                'Ciências Humanas',
+                'Matemática e suas tecnologias',
+                'Linguagens e códigos'
+            ]
+            for area in areas:
+                Disciplina.objects.get_or_create(nome=area)
+            extras = Disciplina.objects.filter(nome__in=areas)
+            discs = (discs | extras).distinct()
             
         # Remover duplicatas devido a JOINs no UNION e ordenar
         ids_vistos = set()
