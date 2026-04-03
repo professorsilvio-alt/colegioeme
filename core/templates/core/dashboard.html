@@ -41,53 +41,56 @@
 
 
 <!-- ═══════════════ ABA DASHBOARD (INÍCIO) ═══════════════ -->
-<div id="tab-dashboard" class="tab-pane {% if not request.GET.tab or request.GET.tab == 'dashboard' %}active{% endif %}" {% if request.GET.tab and request.GET.tab != 'dashboard' %}style="display:none;"{% endif %}>
-    
+<div id="tab-dashboard" class="tab-pane {% if not request.GET.tab or request.GET.tab == 'dashboard' %}active{% endif %}"
+    {% if request.GET.tab and request.GET.tab !='dashboard' %}style="display:none;" {% endif %}>
+
     {% if prof.cargo == 'PROFESSOR' %}
-        <h2 style="color: #003366; margin-top: 5px;">📅 Meu Horário</h2>
-        <table class="schedule-table">
-            <thead>
-                <tr>
-                    <th>Segunda</th>
-                    <th>Terça</th>
-                    <th>Quarta</th>
-                    <th>Quinta</th>
-                    <th>Sexta</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    {% for dia_num in "12345" %}
-                    <td>
-                        {% for gh in prof.grade_horaria.all %}
-                            {% if gh.dia_semana == dia_num %}
-                            <div class="aula-card">
-                                <span class="aula-hora">{{ gh.hora_inicio|time:"H:i" }} — {{ gh.hora_fim|time:"H:i" }}</span>
-                                <span class="aula-turma">Turma {{ gh.turma.codigo }}</span>
-                                <span class="aula-disc" title="{{ gh.disciplina.nome }}">{{ gh.disciplina.nome }}</span>
-                            </div>
-                            {% endif %}
-                        {% endfor %}
-                    </td>
+    <h2 style="color: #003366; margin-top: 5px;">📅 Meu Horário</h2>
+    <table class="schedule-table">
+        <thead>
+            <tr>
+                <th>Segunda</th>
+                <th>Terça</th>
+                <th>Quarta</th>
+                <th>Quinta</th>
+                <th>Sexta</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                {% for dia_num in "12345" %}
+                <td>
+                    {% for gh in prof.grade_horaria.all %}
+                    {% if gh.dia_semana == dia_num %}
+                    <div class="aula-card">
+                        <span class="aula-hora">{{ gh.hora_inicio|time:"H:i" }} — {{ gh.hora_fim|time:"H:i" }}</span>
+                        <span class="aula-turma">Turma {{ gh.turma.codigo }}</span>
+                        <span class="aula-disc" title="{{ gh.disciplina.nome }}">{{ gh.disciplina.nome }}</span>
+                    </div>
+                    {% endif %}
                     {% endfor %}
-                </tr>
-            </tbody>
-        </table>
+                </td>
+                {% endfor %}
+            </tr>
+        </tbody>
+    </table>
     {% else %}
-        <div style="text-align: center; padding: 40px 0;">
-            <img src="{% static 'core/logo.jpg' %}" alt="Logo EME" class="logo-escola">
-            <h1 style="color: #003366; font-size: 2.5em; margin-top: 10px;">Sistema EME</h1>
-            <p style="color: #666; font-size: 1.2em;">Bem-vindo ao sistema de gestão escolar.</p>
-        </div>
+    <div style="text-align: center; padding: 40px 0;">
+        <img src="{% static 'core/logo.jpg' %}" alt="Logo EME" class="logo-escola">
+        <h1 style="color: #003366; font-size: 2.5em; margin-top: 10px;">Sistema EME</h1>
+        <p style="color: #666; font-size: 1.2em;">Bem-vindo ao sistema de gestão escolar.</p>
+    </div>
     {% endif %}
 
 </div><!-- /tab-dashboard -->
 
 
 <!-- ═══════════════ ABA OCORRÊNCIAS ═══════════════ -->
-<div id="tab-ocorrencias" class="tab-pane {% if request.GET.tab == 'ocorrencias' %}active{% endif %}" {% if request.GET.tab != 'ocorrencias' %}style="display:none;"{% endif %}>
+<div id="tab-ocorrencias" class="tab-pane {% if request.GET.tab == 'ocorrencias' %}active{% endif %}" {% if
+    request.GET.tab !='ocorrencias' %}style="display:none;" {% endif %}>
 
-    {% if prof.cargo != 'INSPETOR' and prof.cargo != 'AUX_COORD' and prof.cargo != 'ORIENTADOR' and prof.cargo != 'SECRETARIA' %}
+    {% if prof.cargo != 'INSPETOR' and prof.cargo != 'AUX_COORD' and prof.cargo != 'ORIENTADOR' and prof.cargo !=
+    'SECRETARIA' %}
     <button class="btn-primary" onclick="toggleSection('formOcorrencia')">+ Registrar Nova Ocorrência</button>
     {% endif %}
 
@@ -113,7 +116,8 @@
             </div>
 
             <label>Disciplina</label>
-            <select name="disciplina" id="discSelectOc" required onchange="carregarProfessores(this.value, 'profSelectOc')">
+            <select name="disciplina" id="discSelectOc" required
+                onchange="carregarProfessores(this.value, 'profSelectOc')">
                 <option value="">Selecione...</option>
                 {% for d in disciplinas %}
                 <option value="{{ d.pk }}">{{ d.nome }}</option>
@@ -149,7 +153,8 @@
                     <select name="filtro_turma" onchange="this.form.submit()">
                         <option value="">Todas</option>
                         {% for t in turmas %}
-                        <option value="{{ t.codigo }}" {% if filtro_turma == t.codigo %}selected{% endif %}>{{ t.codigo }}</option>
+                        <option value="{{ t.codigo }}" {% if filtro_turma==t.codigo %}selected{% endif %}>{{ t.codigo }}
+                        </option>
                         {% endfor %}
                     </select>
                 </div>
@@ -157,8 +162,9 @@
                     <label>Status</label>
                     <select name="filtro_status" onchange="this.form.submit()">
                         <option value="">Todos</option>
-                        <option value="Aberta" {% if filtro_status == "Aberta" %}selected{% endif %}>Aberta</option>
-                        <option value="Resolvida" {% if filtro_status == "Resolvida" %}selected{% endif %}>Resolvida</option>
+                        <option value="Aberta" {% if filtro_status=="Aberta" %}selected{% endif %}>Aberta</option>
+                        <option value="Resolvida" {% if filtro_status=="Resolvida" %}selected{% endif %}>Resolvida
+                        </option>
                     </select>
                 </div>
                 <div>
@@ -166,7 +172,8 @@
                     <select name="filtro_professor" onchange="this.form.submit()">
                         <option value="">Todos</option>
                         {% for p in todos_professores %}
-                        <option value="{{ p.pk }}" {% if filtro_professor == p.pk|stringformat:"d" %}selected{% endif %}>{{ p.nome }}</option>
+                        <option value="{{ p.pk }}" {% if filtro_professor==p.pk|stringformat:"d" %}selected{% endif %}>
+                            {{ p.nome }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -193,16 +200,18 @@
             {% if prof.pode_editar_tudo %}
             <button type="submit" formaction="{% url 'ocorrencia_excluir_varios' %}" class="btn-danger"
                 onclick="return confirm('Excluir selecionadas?')">🗑 Excluir Selecionadas</button>
-            <button type="submit" formaction="{% url 'ocorrencia_mudar_status' %}"
-                class="btn-success" onclick="document.getElementById('statusMassa').value='Resolvida'">✔ Marcar Resolvidas</button>
-            <button type="submit" formaction="{% url 'ocorrencia_mudar_status' %}"
-                class="btn-warning" onclick="document.getElementById('statusMassa').value='Aberta'">↩ Marcar Abertas</button>
+            <button type="submit" formaction="{% url 'ocorrencia_mudar_status' %}" class="btn-success"
+                onclick="document.getElementById('statusMassa').value='Resolvida'">✔ Marcar Resolvidas</button>
+            <button type="submit" formaction="{% url 'ocorrencia_mudar_status' %}" class="btn-warning"
+                onclick="document.getElementById('statusMassa').value='Aberta'">↩ Marcar Abertas</button>
             <input type="hidden" name="status" id="statusMassa" value="Resolvida">
             {% endif %}
-            
+
             {% if prof.pode_gerar_relatorios %}
-            <a href="{% url 'exportar_ocorrencias_csv' %}?{{ request.GET.urlencode }}" class="btn-export">📥 CSV (Filtrado)</a>
-            <a href="{% url 'exportar_ocorrencias_pdf' %}?{{ request.GET.urlencode }}" class="btn-export btn-pdf" style="margin-left: 5px;" download="ocorrencias_filtrado.pdf">📄 PDF (Filtrado)</a>
+            <a href="{% url 'exportar_ocorrencias_csv' %}?{{ request.GET.urlencode }}" class="btn-export">📥 CSV
+                (Filtrado)</a>
+            <a href="{% url 'exportar_ocorrencias_pdf' %}?{{ request.GET.urlencode }}" class="btn-export btn-pdf"
+                style="margin-left: 5px;" download="ocorrencias_filtrado.pdf">📄 PDF (Filtrado)</a>
             {% endif %}
         </div>
 
@@ -210,37 +219,47 @@
             <thead>
                 <tr>
                     <th><input type="checkbox" onclick="toggleAll(this, 'oc_check')"></th>
-                    <th>ID</th><th>Data</th><th>Turma</th><th>Alunos</th>
-                    <th>Professor</th><th>Disciplina</th><th>Status</th><th>Ações</th>
+                    <th>ID</th>
+                    <th>Data</th>
+                    <th>Turma</th>
+                    <th>Alunos</th>
+                    <th>Professor</th>
+                    <th>Disciplina</th>
+                    <th>Status</th>
+                    <th>Ações</th>
                 </tr>
             </thead>
             <tbody>
-            {% for oc in ocorrencias %}
-            <tr>
-                <td><input type="checkbox" name="ids" value="{{ oc.pk }}" class="oc_check"></td>
-                <td>OC-{{ oc.pk|stringformat:"04d" }}</td>
-                <td>{{ oc.data|date:"d/m/Y" }}</td>
-                <td>{{ oc.turma.codigo|default:"-" }}</td>
-                <td>{{ oc.alunos_str|truncatechars:60 }}</td>
-                <td>{{ oc.professor.nome|default:"-" }}</td>
-                <td>{{ oc.disciplina.nome|default:"-" }}</td>
-                <td class="status-{{ oc.status|lower }}">{{ oc.status }}</td>
-                <td>
-                    <a href="{% url 'ocorrencia_ver' oc.pk %}" class="btn-sm" style="background: #16a085;">👁 Ver</a>
-                    {% if prof.cargo != 'INSPETOR' %}
+                {% for oc in ocorrencias %}
+                <tr>
+                    <td><input type="checkbox" name="ids" value="{{ oc.pk }}" class="oc_check"></td>
+                    <td>OC-{{ oc.pk|stringformat:"04d" }}</td>
+                    <td>{{ oc.data|date:"d/m/Y" }}</td>
+                    <td>{{ oc.turma.codigo|default:"-" }}</td>
+                    <td>{{ oc.alunos_str|truncatechars:60 }}</td>
+                    <td>{{ oc.professor.nome|default:"-" }}</td>
+                    <td>{{ oc.disciplina.nome|default:"-" }}</td>
+                    <td class="status-{{ oc.status|lower }}">{{ oc.status }}</td>
+                    <td>
+                        <a href="{% url 'ocorrencia_ver' oc.pk %}" class="btn-sm" style="background: #16a085;">👁
+                            Ver</a>
+                        {% if prof.cargo != 'INSPETOR' %}
                         {% if prof.pode_editar_tudo or oc.professor == prof %}
                         <a href="{% url 'ocorrencia_editar' oc.pk %}" class="btn-sm">✏ Editar</a>
                         {% with padded_id=oc.pk|stringformat:"04d" %}
-                        <button type="submit" formaction="{% url 'ocorrencia_excluir' oc.pk %}" class="btn-sm btn-danger-sm"
+                        <button type="submit" formaction="{% url 'ocorrencia_excluir' oc.pk %}"
+                            class="btn-sm btn-danger-sm"
                             onclick="return confirm('Excluir OC-{{ padded_id }}?')">🗑</button>
                         {% endwith %}
                         {% endif %}
-                    {% endif %}
-                </td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="9" style="text-align:center;color:#999">Nenhuma ocorrência encontrada.</td></tr>
-            {% endfor %}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" style="text-align:center;color:#999">Nenhuma ocorrência encontrada.</td>
+                </tr>
+                {% endfor %}
             </tbody>
         </table>
     </form>
@@ -249,7 +268,8 @@
 
 <!-- ═══════════════ ABA CONTEÚDOS ═══════════════ -->
 {% if prof.cargo != 'INSPETOR' %}
-<div id="tab-conteudos" class="tab-pane {% if request.GET.tab == 'conteudos' %}active{% endif %}" {% if request.GET.tab != 'conteudos' %}style="display:none;"{% else %}style="display:block;"{% endif %}>
+<div id="tab-conteudos" class="tab-pane {% if request.GET.tab == 'conteudos' %}active{% endif %}" {% if request.GET.tab
+    !='conteudos' %}style="display:none;" {% else %}style="display:block;" {% endif %}>
 
     {% if prof.cargo == 'PROFESSOR' or prof.pode_editar_tudo %}
     <button class="btn-primary" onclick="toggleSectionConteudo('normal')">+ Lançar Conteúdo Programático</button>
@@ -257,19 +277,25 @@
     {% endif %}
 
     {% if prof.pode_ver_tudo or prof.cargo == 'PROFESSOR' %}
-    <a href="{% url 'relatorio_pendencias' %}" class="btn-gray" style="text-decoration: none; padding: 10px 15px; display: inline-block;">📊 Relatório de Pendências</a>
+    <a href="{% url 'relatorio_pendencias' %}" class="btn-gray"
+        style="text-decoration: none; padding: 10px 15px; display: inline-block;">📊 Relatório de Pendências</a>
     {% endif %}
 
     {% if prof.pode_gerar_relatorios %}
     <a href="{% url 'exportar_conteudos_csv' %}" class="btn-export">📥 CSV (Completo)</a>
-    <a href="{% url 'exportar_conteudos_pdf' %}" class="btn-export btn-pdf" style="margin-left: 5px;" download="conteudos_completo.pdf">📄 PDF (Completo)</a>
+    <a href="{% url 'exportar_conteudos_pdf' %}" class="btn-export btn-pdf" style="margin-left: 5px;"
+        download="conteudos_completo.pdf">📄 PDF (Completo)</a>
     {% endif %}
 
     {% if prof.cargo == 'ADMIN' or user.is_superuser %}
     {% if config_pk %}
-    <a href="{% url 'admin:core_configuracao_change' config_pk %}" class="btn-extra-class" style="background: #8e44ad; text-decoration: none; padding: 10px 15px; display: inline-block; margin-left: 5px;">⚙️ Configurar Período Letivo</a>
+    <a href="{% url 'admin:core_configuracao_change' config_pk %}" class="btn-extra-class"
+        style="background: #8e44ad; text-decoration: none; padding: 10px 15px; display: inline-block; margin-left: 5px;">⚙️
+        Configurar Período Letivo</a>
     {% else %}
-    <a href="{% url 'admin:core_configuracao_add' %}" class="btn-extra-class" style="background: #8e44ad; text-decoration: none; padding: 10px 15px; display: inline-block; margin-left: 5px;">⚙️ Criar Configuração</a>
+    <a href="{% url 'admin:core_configuracao_add' %}" class="btn-extra-class"
+        style="background: #8e44ad; text-decoration: none; padding: 10px 15px; display: inline-block; margin-left: 5px;">⚙️
+        Criar Configuração</a>
     {% endif %}
     {% endif %}
 
@@ -280,15 +306,19 @@
             {% csrf_token %}
 
             <label>Turma</label>
-            <select name="turmas" id="turmaSelectCont" required onchange="carregarDisciplinasDaTurma(this.value); carregarTurmasMesmaSerie(this.value)">
+            <select name="turmas" id="turmaSelectCont" required
+                onchange="carregarDisciplinasDaTurma(this.value); carregarTurmasMesmaSerie(this.value)">
                 <option value="">Selecione a turma...</option>
                 {% for t in turmas %}
                 <option value="{{ t.codigo }}">Turma {{ t.codigo }}</option>
                 {% endfor %}
             </select>
 
-            <div id="companionTurmasWrapper" style="display:none; margin-top: 10px; background: #f0f4f8; padding: 10px; border-radius: 4px; border: 1px dashed #4a90d9;">
-                <label style="font-size: 13px; font-weight: bold; color: #003366; margin-bottom: 5px; display: block;">Copiar também para (mesma série):</label>
+            <div id="companionTurmasWrapper"
+                style="display:none; margin-top: 10px; background: #f0f4f8; padding: 10px; border-radius: 4px; border: 1px dashed #4a90d9;">
+                <label
+                    style="font-size: 13px; font-weight: bold; color: #003366; margin-bottom: 5px; display: block;">Copiar
+                    também para (mesma série):</label>
                 <div id="companionTurmasContainer" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
             </div>
 
@@ -298,7 +328,8 @@
             </select>
 
             <label>Professor</label>
-            <select name="professor" id="profSelectCont" required onchange="carregarDatasValidas(); carregarTurmasMesmaSerie(document.getElementById('turmaSelectCont').value)">
+            <select name="professor" id="profSelectCont" required
+                onchange="carregarDatasValidas(); carregarTurmasMesmaSerie(document.getElementById('turmaSelectCont').value)">
                 <option value="">Selecione a disciplina primeiro...</option>
             </select>
 
@@ -307,9 +338,11 @@
             <div id="dataContWrapper">
                 <em style="color:#999; font-size:13px;">Selecione turma, disciplina e professor primeiro.</em>
             </div>
-            <select id="dataSelectCont" style="display:none;" onchange="document.getElementById('dataConteudo').value=this.value; document.getElementById('dataConteudo').dispatchEvent(new Event('change'));">
+            <select id="dataSelectCont" style="display:none;"
+                onchange="document.getElementById('dataConteudo').value=this.value; document.getElementById('dataConteudo').dispatchEvent(new Event('change'));">
             </select>
-            <input type="date" id="dataInputExtra" style="display:none;" onchange="document.getElementById('dataConteudo').value=this.value; document.getElementById('dataConteudo').dispatchEvent(new Event('change'));">
+            <input type="date" id="dataInputExtra" style="display:none;"
+                onchange="document.getElementById('dataConteudo').value=this.value; document.getElementById('dataConteudo').dispatchEvent(new Event('change'));">
 
             <label>Conteúdo Ministrado</label>
             <div id="sugestoesContainer" style="margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 5px;"></div>
@@ -331,7 +364,8 @@
                     <select name="filtro_turma_c" onchange="this.form.submit()">
                         <option value="">Todas</option>
                         {% for t in turmas %}
-                        <option value="{{ t.codigo }}" {% if filtro_turma_c == t.codigo %}selected{% endif %}>{{ t.codigo }}</option>
+                        <option value="{{ t.codigo }}" {% if filtro_turma_c==t.codigo %}selected{% endif %}>{{ t.codigo
+                            }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -340,7 +374,8 @@
                     <select name="filtro_disc_c" onchange="this.form.submit()">
                         <option value="">Todas</option>
                         {% for d in disciplinas_tab_c %}
-                        <option value="{{ d.pk }}" {% if filtro_disc_c == d.pk|stringformat:"d" %}selected{% endif %}>{{ d.nome }}</option>
+                        <option value="{{ d.pk }}" {% if filtro_disc_c==d.pk|stringformat:"d" %}selected{% endif %}>{{
+                            d.nome }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -349,7 +384,8 @@
                     <select name="filtro_prof_c" onchange="this.form.submit()">
                         <option value="">Todos</option>
                         {% for p in professores_tab_c %}
-                        <option value="{{ p.pk }}" {% if filtro_prof_c == p.pk|stringformat:"d" %}selected{% endif %}>{{ p.nome }}</option>
+                        <option value="{{ p.pk }}" {% if filtro_prof_c==p.pk|stringformat:"d" %}selected{% endif %}>{{
+                            p.nome }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -379,41 +415,51 @@
             {% endif %}
 
             {% if prof.pode_gerar_relatorios or prof.cargo == 'PROFESSOR' %}
-                {% if prof.cargo != 'PROFESSOR' %}
-                <a href="{% url 'exportar_conteudos_csv' %}?{{ request.GET.urlencode }}" class="btn-export">📥 CSV (Filtrado)</a>
-                {% endif %}
-                <a href="{% url 'exportar_conteudos_pdf' %}?{{ request.GET.urlencode }}" class="btn-export btn-pdf" style="margin-left: 5px;" download="conteudos_filtrado.pdf">📄 PDF (Filtrado)</a>
+            {% if prof.cargo != 'PROFESSOR' %}
+            <a href="{% url 'exportar_conteudos_csv' %}?{{ request.GET.urlencode }}" class="btn-export">📥 CSV
+                (Filtrado)</a>
+            {% endif %}
+            <a href="{% url 'exportar_conteudos_pdf' %}?{{ request.GET.urlencode }}" class="btn-export btn-pdf"
+                style="margin-left: 5px;" download="conteudos_filtrado.pdf">📄 PDF (Filtrado)</a>
             {% endif %}
         </div>
         <table>
             <thead>
                 <tr>
                     <th><input type="checkbox" onclick="toggleAll(this, 'cont_check')"></th>
-                    <th>Data</th><th>Turmas</th><th>Professor</th><th>Disciplina</th>
-                    <th>Descrição</th><th>Ações</th>
+                    <th>Data</th>
+                    <th>Turmas</th>
+                    <th>Professor</th>
+                    <th>Disciplina</th>
+                    <th>Descrição</th>
+                    <th>Ações</th>
                 </tr>
             </thead>
             <tbody>
-            {% for c in conteudos %}
-            <tr>
-                <td><input type="checkbox" name="ids" value="{{ c.pk }}" class="cont_check"></td>
-                <td>{{ c.data|date:"d/m/Y" }}</td>
-                <td>{{ c.turmas_str }}</td>
-                <td>{{ c.professor.nome|default:"-" }}</td>
-                <td>{{ c.disciplina.nome|default:"-" }}</td>
-                <td>{{ c.descricao|truncatechars:80 }}</td>
-                <td>
-                    <a href="{% url 'conteudo_ver' c.pk %}" class="btn-sm" style="background: #16a085; text-decoration: none;">👁 Ver</a>
-                    {% if prof.pode_editar_tudo or c.professor == prof %}
-                    <a href="{% url 'conteudo_editar' c.pk %}" class="btn-sm" style="text-decoration: none;">✏ Editar</a>
-                    <button type="submit" formaction="{% url 'conteudo_excluir' c.pk %}" class="btn-sm btn-danger-sm"
-                        onclick="return confirm('Excluir conteúdo?')">🗑</button>
-                    {% endif %}
-                </td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="7" style="text-align:center;color:#999">Nenhum conteúdo lançado.</td></tr>
-            {% endfor %}
+                {% for c in conteudos %}
+                <tr>
+                    <td><input type="checkbox" name="ids" value="{{ c.pk }}" class="cont_check"></td>
+                    <td>{{ c.data|date:"d/m/Y" }}</td>
+                    <td>{{ c.turmas_str }}</td>
+                    <td>{{ c.professor.nome|default:"-" }}</td>
+                    <td>{{ c.disciplina.nome|default:"-" }}</td>
+                    <td>{{ c.descricao|truncatechars:80 }}</td>
+                    <td>
+                        <a href="{% url 'conteudo_ver' c.pk %}" class="btn-sm"
+                            style="background: #16a085; text-decoration: none;">👁 Ver</a>
+                        {% if prof.pode_editar_tudo or c.professor == prof %}
+                        <a href="{% url 'conteudo_editar' c.pk %}" class="btn-sm" style="text-decoration: none;">✏
+                            Editar</a>
+                        <button type="submit" formaction="{% url 'conteudo_excluir' c.pk %}"
+                            class="btn-sm btn-danger-sm" onclick="return confirm('Excluir conteúdo?')">🗑</button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align:center;color:#999">Nenhum conteúdo lançado.</td>
+                </tr>
+                {% endfor %}
             </tbody>
         </table>
     </form>
@@ -425,467 +471,467 @@
 
 {% block extra_js %}
 <script>
-// ── TABS ──
-function showTab(name, btn) {
-    document.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    
-    const panel = document.getElementById('tab-' + name);
-    if (panel) panel.style.display = 'block';
-    
-    if (btn && btn.classList) {
-        btn.classList.add('active');
-    }
-}
+    // ── TABS ──
+    function showTab(name, btn) {
+        document.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
 
-// Restaurar aba ativa via query param
-const params = new URLSearchParams(location.search);
-if (params.get('tab') === 'conteudos') {
-    const btn = document.querySelectorAll('.tab-btn')[1];
-    if (btn) showTab('conteudos', btn);
-}
+        const panel = document.getElementById('tab-' + name);
+        if (panel) panel.style.display = 'block';
 
-// ── COLLAPSIBLE ──
-function toggleSection(id) {
-    const el = document.getElementById(id);
-    el.style.display = el.style.display === 'none' ? 'block' : 'none';
-}
-
-let modoConteudo = 'normal'; // 'normal' ou 'extra'
-
-function toggleSectionConteudo(modo) {
-    const el = document.getElementById('formConteudo');
-    const titulo = document.getElementById('tituloFormConteudo');
-    
-    // Se clicar no mesmo botão com o form aberto, fecha
-    if (el.style.display === 'block' && modo === modoConteudo) {
-        el.style.display = 'none';
-        return;
-    }
-
-    modoConteudo = modo;
-    el.style.display = 'block';
-    titulo.innerText = modo === 'extra' ? '⚡ Lançamento de Aula Extra' : 'Lançamento de Conteúdo Programático';
-    
-    // Limpar seleções anteriores ao trocar de modo
-    document.getElementById('turmaSelectCont').value = '';
-    document.getElementById('companionTurmasWrapper').style.display = 'none';
-    document.getElementById('companionTurmasContainer').innerHTML = '';
-    document.getElementById('discSelectCont').innerHTML = '<option value="">Selecione a turma primeiro...</option>';
-    document.getElementById('profSelectCont').innerHTML = '<option value="">Selecione a disciplina primeiro...</option>';
-    resetDataSelection();
-}
-
-function resetDataSelection() {
-    const wrapper = document.getElementById('dataContWrapper');
-    const dataSel = document.getElementById('dataSelectCont');
-    const dataInputExtra = document.getElementById('dataInputExtra');
-    const dataHidden = document.getElementById('dataConteudo');
-
-    dataSel.style.display = 'none';
-    dataInputExtra.style.display = 'none';
-    dataHidden.value = '';
-    wrapper.style.display = 'block';
-    wrapper.innerHTML = '<em style="color:#999; font-size:13px;">Selecione turma, disciplina e professor primeiro.</em>';
-}
-
-// ── SELECT ALL CHECKBOXES ──
-function toggleAll(master, cls) {
-    document.querySelectorAll('.' + cls).forEach(cb => cb.checked = master.checked);
-}
-
-// ── ALUNOS POR TURMA (AJAX) ──
-function carregarAlunos(codigo) {
-    const container = document.getElementById('alunosContainer');
-    if (!codigo) { container.innerHTML = '<em style="color:#999">Selecione a turma primeiro.</em>'; return; }
-    fetch('/api/alunos/' + codigo + '/')
-        .then(r => r.json())
-        .then(alunos => {
-            if (!alunos.length) { container.innerHTML = '<em>Nenhum aluno encontrado.</em>'; return; }
-            container.innerHTML = alunos.map(a =>
-                `<label class="checkbox-label"><input type="checkbox" name="alunos" value="${a.id}"> ${a.nome}</label>`
-            ).join('');
-        });
-}
-
-// ── PROFESSORES POR DISCIPLINA (AJAX) — usado no form de Ocorrências ──
-function carregarProfessores(discId, selectId) {
-    const sel = document.getElementById(selectId);
-    sel.innerHTML = '<option value="">Carregando...</option>';
-    if (!discId) { sel.innerHTML = '<option value="">Selecione a disciplina primeiro...</option>'; return; }
-    fetch('/api/professores/' + discId + '/')
-        .then(r => r.json())
-        .then(profs => {
-            sel.innerHTML = '<option value="">Selecione...</option>' +
-                profs.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
-        });
-}
-
-// ── DISCIPLINAS POR TURMA (AJAX) — Conteúdo form step 1 ──
-function carregarDisciplinasDaTurma(codigo) {
-    const discSel = document.getElementById('discSelectCont');
-    const profSel = document.getElementById('profSelectCont');
-    discSel.innerHTML = '<option value="">Carregando...</option>';
-    profSel.innerHTML = '<option value="">Selecione a disciplina primeiro...</option>';
-    if (!codigo) { discSel.innerHTML = '<option value="">Selecione a turma primeiro...</option>'; return; }
-    const url = `/api/turma/${codigo}/disciplinas/?extra=${modoConteudo === 'extra' ? '1' : '0'}`;
-    fetch(url)
-        .then(r => r.json())
-        .then(discs => {
-            discSel.innerHTML = '<option value="">Selecione a disciplina...</option>' +
-                discs.map(d => `<option value="${d.id}">${d.nome}</option>`).join('');
-        });
-}
-
-// ── PROFESSORES POR TURMA+DISCIPLINA (AJAX) — Conteúdo form step 2 ──
-function carregarProfessoresDaTurmaDisc() {
-    const codigo = document.getElementById('turmaSelectCont').value;
-    const discId = document.getElementById('discSelectCont').value;
-    const profSel = document.getElementById('profSelectCont');
-    profSel.innerHTML = '<option value="">Carregando...</option>';
-    if (!codigo || !discId) { profSel.innerHTML = '<option value="">Selecione turma e disciplina...</option>'; return; }
-    const url = `/api/turma/${codigo}/disciplina/${discId}/professores/?extra=${modoConteudo === 'extra' ? '1' : '0'}`;
-    fetch(url)
-        .then(r => r.json())
-        .then(profs => {
-            if (!profs.length) {
-                profSel.innerHTML = '<option value="">Nenhum professor encontrado</option>';
-                return;
-            }
-            profSel.innerHTML = '<option value="">Selecione...</option>' +
-                profs.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
-            // Auto-select if only one result, then load dates automatically
-            if (profs.length === 1) {
-                profSel.value = profs[0].id;
-                carregarDatasValidas();
-                carregarTurmasMesmaSerie(document.getElementById('turmaSelectCont').value);
-            }
-        });
-}
-
-// ── DATAS VÁLIDAS POR TURMA+PROFESSOR (AJAX) — Conteúdo form step 3 ──
-function carregarDatasValidas() {
-    const codigo = document.getElementById('turmaSelectCont').value;
-    const profId = document.getElementById('profSelectCont').value;
-    const wrapper = document.getElementById('dataContWrapper');
-    const dataSel = document.getElementById('dataSelectCont');
-    const dataInputExtra = document.getElementById('dataInputExtra');
-    const dataHidden = document.getElementById('dataConteudo');
-
-    dataSel.style.display = 'none';
-    dataInputExtra.style.display = 'none';
-    dataHidden.value = '';
-    wrapper.style.display = 'block';
-    wrapper.innerHTML = '<em style="color:#999; font-size:13px;">Selecione turma, disciplina e professor primeiro.</em>';
-
-    if (!codigo || !profId) return;
-
-    if (modoConteudo === 'extra') {
-        wrapper.style.display = 'none';
-        dataInputExtra.style.display = 'block';
-        dataInputExtra.value = new Date().toISOString().split('T')[0];
-        dataHidden.value = dataInputExtra.value;
-        return;
-    }
-
-    wrapper.innerHTML = '<em style="color:#999; font-size:13px;">Carregando datas...</em>';
-    fetch('/api/turma/' + codigo + '/professor/' + profId + '/datas/')
-        .then(r => r.json())
-        .then(datas => {
-            if (!datas.length) {
-                wrapper.innerHTML = '<em style="color:#c00; font-size:13px;">Nenhuma data de aula encontrada para esta turma.</em>';
-                return;
-            }
-            // Find first unlaunched date to pre-select
-            const primeiro = datas.find(d => !d.lancado) || datas[0];
-            dataSel.innerHTML = datas.map(d => {
-                const check = d.lancado ? ' ✓ já lançado' : '';
-                const style = d.lancado ? ' style="color:#666;"' : '';
-                return `<option value="${d.data}"${style}>${d.label}${check}</option>`;
-            }).join('');
-            dataSel.value = primeiro.data;
-            // Hide wrapper and show select
-            dataSel.style.display = 'block';
-            dataHidden.value = primeiro.data;
-
-            // Carregar sugestões de conteúdo
-            carregarSugestoes(codigo, profId); // Aqui passamos o que for preciso, ou pegamos da disc
-        });
-}
-
-let professorGrades = {}; // Cache global
-
-async function carregarTurmasMesmaSerie(codigoPrincipal) {
-    const wrapper = document.getElementById('companionTurmasWrapper');
-    const container = document.getElementById('companionTurmasContainer');
-    const select = document.getElementById('turmaSelectCont');
-    const profSelect = document.getElementById('profSelectCont');
-    const profId = profSelect ? profSelect.value : '';
-    
-    if (!wrapper || !container) return;
-    
-    container.innerHTML = '';
-    wrapper.style.display = 'none';
-
-    if (!codigoPrincipal) return;
-
-    wrapper.style.display = 'block';
-    if (!profId) {
-        container.innerHTML = '<em style="color:#999; font-size:12px;">Aguardando seleção do professor...</em>';
-        return;
-    }
-
-    try {
-        // Carregar grades do professor se ainda não tivermos
-        if (!professorGrades[profId]) {
-            const r = await fetch(`/api/professor/${profId}/grades/`);
-            if (!r.ok) throw new Error("Erro na API de grades");
-            professorGrades[profId] = await r.json();
+        if (btn && btn.classList) {
+            btn.classList.add('active');
         }
-        
-        const codigoLimpo = codigoPrincipal.trim();
-        // Série: pegamos o primeiro algarismo. Se não for dígito, pegamos o primeiro char.
-        const matches = codigoLimpo.match(/\d/);
-        const serie = matches ? matches[0] : codigoLimpo.charAt(0);
-        
-        container.innerHTML = '';
-        let found = false;
-
-        Array.from(select.options).forEach(opt => {
-            const val = opt.value ? opt.value.trim() : "";
-            if (!val || val === codigoLimpo) return;
-
-            const optMatches = val.match(/\d/);
-            const optSerie = optMatches ? optMatches[0] : val.charAt(0);
-
-            if (optSerie === serie) {
-                found = true;
-                const div = document.createElement('div');
-                div.style.display = 'flex';
-                div.style.flexDirection = 'column';
-                div.style.gap = '2px';
-                div.style.border = '1px solid #ccc';
-                div.style.padding = '5px';
-                div.style.borderRadius = '3px';
-                div.style.background = 'white';
-
-                const label = document.createElement('label');
-                label.style.fontSize = '12px';
-                label.style.cursor = 'pointer';
-                label.style.display = 'flex';
-                label.style.alignItems = 'center';
-                label.style.gap = '4px';
-                label.innerHTML = `<input type="checkbox" name="turmas" value="${val}" class="companion-check" data-turma="${val}"> ${val}`;
-                
-                const warning = document.createElement('span');
-                warning.className = 'companion-warning';
-                warning.style.fontSize = '10px';
-                warning.style.color = '#e74c3c';
-                warning.style.display = 'none';
-                warning.innerText = '⚠️ Sem aula nesta data';
-
-                div.appendChild(label);
-                div.appendChild(warning);
-                container.appendChild(div);
-            }
-        });
-
-        if (!found) {
-            container.innerHTML = '<em style="color:#999; font-size:12px;">Nenhuma outra turma da mesma série encontrada para este professor.</em>';
-            // Opcional: esconder após alguns segundos ou deixar a mensagem
-            setTimeout(() => { if (!found) wrapper.style.display = 'none'; }, 3000);
-        } else {
-            validarDatasCompanheiras();
-        }
-    } catch (e) {
-        console.error("Erro em carregarTurmasMesmaSerie:", e);
-        container.innerHTML = `<em style="color:#c00; font-size:12px;">Erro: ${e.message}</em>`;
-    }
-}
-
-function validarDatasCompanheiras() {
-    if (modoConteudo === 'extra') {
-        // Aula extra permite qualquer turma independente da grade
-        document.querySelectorAll('.companion-check').forEach(cb => {
-            cb.disabled = false;
-            cb.parentElement.style.opacity = '1';
-            cb.parentElement.nextElementSibling.style.display = 'none';
-        });
-        return;
     }
 
-    const dataValue = document.getElementById('dataConteudo').value;
-    const profId = document.getElementById('profSelectCont').value;
-    if (!dataValue || !profId || !professorGrades[profId]) return;
+    // Restaurar aba ativa via query param
+    const params = new URLSearchParams(location.search);
+    if (params.get('tab') === 'conteudos') {
+        const btn = document.querySelectorAll('.tab-btn')[1];
+        if (btn) showTab('conteudos', btn);
+    }
 
-    const dateObj = new Date(dataValue + 'T12:00:00'); // Meio-dia para evitar problemas de timezone
-    const jsWeekday = dateObj.getDay(); // 0=Dom, 1=Seg, ..., 6=Sab
-    const systemWeekday = jsWeekday.toString(); // '1'=Seg, ..., '5'=Sex
+    // ── COLLAPSIBLE ──
+    function toggleSection(id) {
+        const el = document.getElementById(id);
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
 
-    document.querySelectorAll('.companion-check').forEach(cb => {
-        const tCod = cb.getAttribute('data-turma');
-        const allowedDays = professorGrades[profId][tCod] || [];
-        const isCompatible = allowedDays.includes(systemWeekday);
+    let modoConteudo = 'normal'; // 'normal' ou 'extra'
 
-        if (!isCompatible) {
-            cb.checked = false;
-            cb.disabled = true;
-            cb.parentElement.style.opacity = '0.5';
-            cb.parentElement.nextElementSibling.style.display = 'block';
-        } else {
-            cb.disabled = false;
-            cb.parentElement.style.opacity = '1';
-            cb.parentElement.nextElementSibling.style.display = 'none';
+    function toggleSectionConteudo(modo) {
+        const el = document.getElementById('formConteudo');
+        const titulo = document.getElementById('tituloFormConteudo');
+
+        // Se clicar no mesmo botão com o form aberto, fecha
+        if (el.style.display === 'block' && modo === modoConteudo) {
+            el.style.display = 'none';
+            return;
         }
-    });
-}
 
-function carregarSugestoes(turmaCod, profId) {
-    const discId = document.getElementById('discSelectCont').value;
-    const container = document.getElementById('sugestoesContainer');
-    container.innerHTML = '';
+        modoConteudo = modo;
+        el.style.display = 'block';
+        titulo.innerText = modo === 'extra' ? '⚡ Lançamento de Aula Extra' : 'Lançamento de Conteúdo Programático';
 
-    if (!discId) return;
+        // Limpar seleções anteriores ao trocar de modo
+        document.getElementById('turmaSelectCont').value = '';
+        document.getElementById('companionTurmasWrapper').style.display = 'none';
+        document.getElementById('companionTurmasContainer').innerHTML = '';
+        document.getElementById('discSelectCont').innerHTML = '<option value="">Selecione a turma primeiro...</option>';
+        document.getElementById('profSelectCont').innerHTML = '<option value="">Selecione a disciplina primeiro...</option>';
+        resetDataSelection();
+    }
 
-    fetch(`/api/sugestoes/?turma=${turmaCod}&disciplina=${discId}`)
-        .then(r => r.json())
-        .then(sugestoes => {
-            if (!sugestoes.length) return;
-            
-            container.innerHTML = '<div style="width:100%; font-size:12px; color:#666; margin-bottom:5px;">Sugestões (clique para adicionar):</div>';
-            sugestoes.forEach(s => {
-                const badge = document.createElement('span');
-                badge.className = 'badge-suggestion';
-                badge.innerText = '+ ' + s.texto;
-                badge.onclick = () => adicionarSugestao(s.texto);
-                container.appendChild(badge);
+    function resetDataSelection() {
+        const wrapper = document.getElementById('dataContWrapper');
+        const dataSel = document.getElementById('dataSelectCont');
+        const dataInputExtra = document.getElementById('dataInputExtra');
+        const dataHidden = document.getElementById('dataConteudo');
+
+        dataSel.style.display = 'none';
+        dataInputExtra.style.display = 'none';
+        dataHidden.value = '';
+        wrapper.style.display = 'block';
+        wrapper.innerHTML = '<em style="color:#999; font-size:13px;">Selecione turma, disciplina e professor primeiro.</em>';
+    }
+
+    // ── SELECT ALL CHECKBOXES ──
+    function toggleAll(master, cls) {
+        document.querySelectorAll('.' + cls).forEach(cb => cb.checked = master.checked);
+    }
+
+    // ── ALUNOS POR TURMA (AJAX) ──
+    function carregarAlunos(codigo) {
+        const container = document.getElementById('alunosContainer');
+        if (!codigo) { container.innerHTML = '<em style="color:#999">Selecione a turma primeiro.</em>'; return; }
+        fetch('/api/alunos/' + codigo + '/')
+            .then(r => r.json())
+            .then(alunos => {
+                if (!alunos.length) { container.innerHTML = '<em>Nenhum aluno encontrado.</em>'; return; }
+                container.innerHTML = alunos.map(a =>
+                    `<label class="checkbox-label"><input type="checkbox" name="alunos" value="${a.id}"> ${a.nome}</label>`
+                ).join('');
             });
+    }
+
+    // ── PROFESSORES POR DISCIPLINA (AJAX) — usado no form de Ocorrências ──
+    function carregarProfessores(discId, selectId) {
+        const sel = document.getElementById(selectId);
+        sel.innerHTML = '<option value="">Carregando...</option>';
+        if (!discId) { sel.innerHTML = '<option value="">Selecione a disciplina primeiro...</option>'; return; }
+        fetch('/api/professores/' + discId + '/')
+            .then(r => r.json())
+            .then(profs => {
+                sel.innerHTML = '<option value="">Selecione...</option>' +
+                    profs.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+            });
+    }
+
+    // ── DISCIPLINAS POR TURMA (AJAX) — Conteúdo form step 1 ──
+    function carregarDisciplinasDaTurma(codigo) {
+        const discSel = document.getElementById('discSelectCont');
+        const profSel = document.getElementById('profSelectCont');
+        discSel.innerHTML = '<option value="">Carregando...</option>';
+        profSel.innerHTML = '<option value="">Selecione a disciplina primeiro...</option>';
+        if (!codigo) { discSel.innerHTML = '<option value="">Selecione a turma primeiro...</option>'; return; }
+        const url = `/api/turma/${codigo}/disciplinas/?extra=${modoConteudo === 'extra' ? '1' : '0'}`;
+        fetch(url)
+            .then(r => r.json())
+            .then(discs => {
+                discSel.innerHTML = '<option value="">Selecione a disciplina...</option>' +
+                    discs.map(d => `<option value="${d.id}">${d.nome}</option>`).join('');
+            });
+    }
+
+    // ── PROFESSORES POR TURMA+DISCIPLINA (AJAX) — Conteúdo form step 2 ──
+    function carregarProfessoresDaTurmaDisc() {
+        const codigo = document.getElementById('turmaSelectCont').value;
+        const discId = document.getElementById('discSelectCont').value;
+        const profSel = document.getElementById('profSelectCont');
+        profSel.innerHTML = '<option value="">Carregando...</option>';
+        if (!codigo || !discId) { profSel.innerHTML = '<option value="">Selecione turma e disciplina...</option>'; return; }
+        const url = `/api/turma/${codigo}/disciplina/${discId}/professores/?extra=${modoConteudo === 'extra' ? '1' : '0'}`;
+        fetch(url)
+            .then(r => r.json())
+            .then(profs => {
+                if (!profs.length) {
+                    profSel.innerHTML = '<option value="">Nenhum professor encontrado</option>';
+                    return;
+                }
+                profSel.innerHTML = '<option value="">Selecione...</option>' +
+                    profs.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+                // Auto-select if only one result, then load dates automatically
+                if (profs.length === 1) {
+                    profSel.value = profs[0].id;
+                    carregarDatasValidas();
+                    carregarTurmasMesmaSerie(document.getElementById('turmaSelectCont').value);
+                }
+            });
+    }
+
+    // ── DATAS VÁLIDAS POR TURMA+PROFESSOR (AJAX) — Conteúdo form step 3 ──
+    function carregarDatasValidas() {
+        const codigo = document.getElementById('turmaSelectCont').value;
+        const profId = document.getElementById('profSelectCont').value;
+        const wrapper = document.getElementById('dataContWrapper');
+        const dataSel = document.getElementById('dataSelectCont');
+        const dataInputExtra = document.getElementById('dataInputExtra');
+        const dataHidden = document.getElementById('dataConteudo');
+
+        dataSel.style.display = 'none';
+        dataInputExtra.style.display = 'none';
+        dataHidden.value = '';
+        wrapper.style.display = 'block';
+        wrapper.innerHTML = '<em style="color:#999; font-size:13px;">Selecione turma, disciplina e professor primeiro.</em>';
+
+        if (!codigo || !profId) return;
+
+        if (modoConteudo === 'extra') {
+            wrapper.style.display = 'none';
+            dataInputExtra.style.display = 'block';
+            dataInputExtra.value = new Date().toISOString().split('T')[0];
+            dataHidden.value = dataInputExtra.value;
+            return;
+        }
+
+        wrapper.innerHTML = '<em style="color:#999; font-size:13px;">Carregando datas...</em>';
+        fetch('/api/turma/' + codigo + '/professor/' + profId + '/datas/')
+            .then(r => r.json())
+            .then(datas => {
+                if (!datas.length) {
+                    wrapper.innerHTML = '<em style="color:#c00; font-size:13px;">Nenhuma data de aula encontrada para esta turma.</em>';
+                    return;
+                }
+                // Find first unlaunched date to pre-select
+                const primeiro = datas.find(d => !d.lancado) || datas[0];
+                dataSel.innerHTML = datas.map(d => {
+                    const check = d.lancado ? ' ✓ já lançado' : '';
+                    const style = d.lancado ? ' style="color:#666;"' : '';
+                    return `<option value="${d.data}"${style}>${d.label}${check}</option>`;
+                }).join('');
+                dataSel.value = primeiro.data;
+                // Hide wrapper and show select
+                dataSel.style.display = 'block';
+                dataHidden.value = primeiro.data;
+
+                // Carregar sugestões de conteúdo
+                carregarSugestoes(codigo, profId); // Aqui passamos o que for preciso, ou pegamos da disc
+            });
+    }
+
+    let professorGrades = {}; // Cache global
+
+    async function carregarTurmasMesmaSerie(codigoPrincipal) {
+        const wrapper = document.getElementById('companionTurmasWrapper');
+        const container = document.getElementById('companionTurmasContainer');
+        const select = document.getElementById('turmaSelectCont');
+        const profSelect = document.getElementById('profSelectCont');
+        const profId = profSelect ? profSelect.value : '';
+
+        if (!wrapper || !container) return;
+
+        container.innerHTML = '';
+        wrapper.style.display = 'none';
+
+        if (!codigoPrincipal) return;
+
+        wrapper.style.display = 'block';
+        if (!profId) {
+            container.innerHTML = '<em style="color:#999; font-size:12px;">Aguardando seleção do professor...</em>';
+            return;
+        }
+
+        try {
+            // Carregar grades do professor se ainda não tivermos
+            if (!professorGrades[profId]) {
+                const r = await fetch(`/api/professor/${profId}/grades/`);
+                if (!r.ok) throw new Error("Erro na API de grades");
+                professorGrades[profId] = await r.json();
+            }
+
+            const codigoLimpo = codigoPrincipal.trim();
+            // Série: pegamos o primeiro algarismo. Se não for dígito, pegamos o primeiro char.
+            const matches = codigoLimpo.match(/\d/);
+            const serie = matches ? matches[0] : codigoLimpo.charAt(0);
+
+            container.innerHTML = '';
+            let found = false;
+
+            Array.from(select.options).forEach(opt => {
+                const val = opt.value ? opt.value.trim() : "";
+                if (!val || val === codigoLimpo) return;
+
+                const optMatches = val.match(/\d/);
+                const optSerie = optMatches ? optMatches[0] : val.charAt(0);
+
+                if (optSerie === serie) {
+                    found = true;
+                    const div = document.createElement('div');
+                    div.style.display = 'flex';
+                    div.style.flexDirection = 'column';
+                    div.style.gap = '2px';
+                    div.style.border = '1px solid #ccc';
+                    div.style.padding = '5px';
+                    div.style.borderRadius = '3px';
+                    div.style.background = 'white';
+
+                    const label = document.createElement('label');
+                    label.style.fontSize = '12px';
+                    label.style.cursor = 'pointer';
+                    label.style.display = 'flex';
+                    label.style.alignItems = 'center';
+                    label.style.gap = '4px';
+                    label.innerHTML = `<input type="checkbox" name="turmas" value="${val}" class="companion-check" data-turma="${val}"> ${val}`;
+
+                    const warning = document.createElement('span');
+                    warning.className = 'companion-warning';
+                    warning.style.fontSize = '10px';
+                    warning.style.color = '#e74c3c';
+                    warning.style.display = 'none';
+                    warning.innerText = '⚠️ Sem aula nesta data';
+
+                    div.appendChild(label);
+                    div.appendChild(warning);
+                    container.appendChild(div);
+                }
+            });
+
+            if (!found) {
+                container.innerHTML = '<em style="color:#999; font-size:12px;">Nenhuma outra turma da mesma série encontrada para este professor.</em>';
+                // Opcional: esconder após alguns segundos ou deixar a mensagem
+                setTimeout(() => { if (!found) wrapper.style.display = 'none'; }, 3000);
+            } else {
+                validarDatasCompanheiras();
+            }
+        } catch (e) {
+            console.error("Erro em carregarTurmasMesmaSerie:", e);
+            container.innerHTML = `<em style="color:#c00; font-size:12px;">Erro: ${e.message}</em>`;
+        }
+    }
+
+    function validarDatasCompanheiras() {
+        if (modoConteudo === 'extra') {
+            // Aula extra permite qualquer turma independente da grade
+            document.querySelectorAll('.companion-check').forEach(cb => {
+                cb.disabled = false;
+                cb.parentElement.style.opacity = '1';
+                cb.parentElement.nextElementSibling.style.display = 'none';
+            });
+            return;
+        }
+
+        const dataValue = document.getElementById('dataConteudo').value;
+        const profId = document.getElementById('profSelectCont').value;
+        if (!dataValue || !profId || !professorGrades[profId]) return;
+
+        const dateObj = new Date(dataValue + 'T12:00:00'); // Meio-dia para evitar problemas de timezone
+        const jsWeekday = dateObj.getDay(); // 0=Dom, 1=Seg, ..., 6=Sab
+        const systemWeekday = jsWeekday.toString(); // '1'=Seg, ..., '5'=Sex
+
+        document.querySelectorAll('.companion-check').forEach(cb => {
+            const tCod = cb.getAttribute('data-turma');
+            const allowedDays = professorGrades[profId][tCod] || [];
+            const isCompatible = allowedDays.includes(systemWeekday);
+
+            if (!isCompatible) {
+                cb.checked = false;
+                cb.disabled = true;
+                cb.parentElement.style.opacity = '0.5';
+                cb.parentElement.nextElementSibling.style.display = 'block';
+            } else {
+                cb.disabled = false;
+                cb.parentElement.style.opacity = '1';
+                cb.parentElement.nextElementSibling.style.display = 'none';
+            }
         });
-}
-
-function adicionarSugestao(texto) {
-    const txt = document.getElementById('descConteudo');
-    if (txt.value && !txt.value.endsWith('\n')) txt.value += '\n';
-    txt.value += texto;
-}
-
-// ── VALIDAÇÃO FORM CONTEÚDO ──
-function validarFormCont() {
-    const data = document.getElementById('dataConteudo') && document.getElementById('dataConteudo').value;
-    if (!data) {
-        alert('Selecione a data da aula antes de salvar.');
-        return false;
-    }
-    return true;
-}
-
-// ── AUTO-LANÇAR DAS PENDÊNCIAS ──
-async function handleAutoLancar() {
-    const p = new URLSearchParams(location.search);
-    if (p.get('auto_lancar') !== '1') return;
-
-    // 1. Mudar para aba conteúdos (com verificação do botão)
-    const btnConteudos = document.querySelectorAll('.tab-btn')[1];
-    showTab('conteudos', btnConteudos);
-
-    const turma = p.get('turma');
-    const disciplina = p.get('disciplina');
-    const professor = p.get('professor');
-    const data = p.get('data');
-
-    if (!turma || !disciplina || !professor || !data) return;
-
-    // 2. Abrir form (Isso limpa os campos, então fazemos ANTES de preencher)
-    toggleSectionConteudo('normal');
-
-    // 3. Preencher Turma 
-    document.getElementById('turmaSelectCont').value = turma;
-    
-    // 4. Carregar e Preencher Disciplinas
-    await carregarDisciplinasDaTurmaAsync(turma);
-    document.getElementById('discSelectCont').value = disciplina;
-
-    // 5. Carregar e Preencher Professores
-    await carregarProfessoresDaTurmaDiscAsync();
-    document.getElementById('profSelectCont').value = professor;
-
-    // 6. Agora que temos o professor, carregamos as turmas da mesma série
-    carregarTurmasMesmaSerie(turma);
-
-    // 7. Carregar Datas e selecionar a correta
-    await carregarDatasValidasAsync();
-    
-    const dataSel = document.getElementById('dataSelectCont');
-    if (dataSel) {
-        dataSel.value = data;
-        document.getElementById('dataConteudo').value = data;
     }
 
-    // Scroll até o formulário
-    setTimeout(() => {
-        document.getElementById('formConteudo').scrollIntoView({ behavior: 'smooth' });
-    }, 500);
-}
+    function carregarSugestoes(turmaCod, profId) {
+        const discId = document.getElementById('discSelectCont').value;
+        const container = document.getElementById('sugestoesContainer');
+        container.innerHTML = '';
 
-// Versões Async dos carregamentos para facilitar o fluxo sequencial
-async function carregarDisciplinasDaTurmaAsync(codigo) {
-    const discSel = document.getElementById('discSelectCont');
-    const profSel = document.getElementById('profSelectCont');
-    discSel.innerHTML = '<option value="">Carregando...</option>';
-    if (!codigo) return;
-    
-    const r = await fetch('/api/turma/' + codigo + '/disciplinas/');
-    const discs = await r.json();
-    
-    discSel.innerHTML = '<option value="">Selecione a disciplina...</option>' +
-        discs.map(d => `<option value="${d.id}">${d.nome}</option>`).join('');
-}
+        if (!discId) return;
 
-async function carregarProfessoresDaTurmaDiscAsync() {
-    const codigo = document.getElementById('turmaSelectCont').value;
-    const discId = document.getElementById('discSelectCont').value;
-    const profSel = document.getElementById('profSelectCont');
-    profSel.innerHTML = '<option value="">Carregando...</option>';
-    if (!codigo || !discId) return;
-    
-    const r = await fetch('/api/turma/' + codigo + '/disciplina/' + discId + '/professores/');
-    const profs = await r.json();
-    
-    profSel.innerHTML = '<option value="">Selecione...</option>' +
-        profs.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
-}
+        fetch(`/api/sugestoes/?turma=${turmaCod}&disciplina=${discId}`)
+            .then(r => r.json())
+            .then(sugestoes => {
+                if (!sugestoes.length) return;
 
-async function carregarDatasValidasAsync() {
-    const codigo = document.getElementById('turmaSelectCont').value;
-    const profId = document.getElementById('profSelectCont').value;
-    const wrapper = document.getElementById('dataContWrapper');
-    const dataSel = document.getElementById('dataSelectCont');
-    const dataHidden = document.getElementById('dataConteudo');
-
-    if (modoConteudo === 'extra') return;
-    
-    wrapper.innerHTML = '<em style="color:#999; font-size:13px;">Carregando datas...</em>';
-    const r = await fetch('/api/turma/' + codigo + '/professor/' + profId + '/datas/');
-    const datas = await r.json();
-    
-    if (!datas.length) {
-        wrapper.innerHTML = '<em style="color:#c00; font-size:13px;">Nenhuma data de aula encontrada para esta turma.</em>';
-        return;
+                container.innerHTML = '<div style="width:100%; font-size:12px; color:#666; margin-bottom:5px;">Sugestões (clique para adicionar):</div>';
+                sugestoes.forEach(s => {
+                    const badge = document.createElement('span');
+                    badge.className = 'badge-suggestion';
+                    badge.innerText = '+ ' + s.texto;
+                    badge.onclick = () => adicionarSugestao(s.texto);
+                    container.appendChild(badge);
+                });
+            });
     }
-    
-    dataSel.innerHTML = datas.map(d => {
-        const check = d.lancado ? ' ✓ já lançado' : '';
-        const style = d.lancado ? ' style="color:#666;"' : '';
-        return `<option value="${d.data}"${style}>${d.label}${check}</option>`;
-    }).join('');
-    
-    dataSel.style.display = 'block';
-    wrapper.style.display = 'none';
 
-    carregarSugestoes(codigo, profId);
-}
+    function adicionarSugestao(texto) {
+        const txt = document.getElementById('descConteudo');
+        if (txt.value && !txt.value.endsWith('\n')) txt.value += '\n';
+        txt.value += texto;
+    }
 
-document.addEventListener('DOMContentLoaded', handleAutoLancar);
+    // ── VALIDAÇÃO FORM CONTEÚDO ──
+    function validarFormCont() {
+        const data = document.getElementById('dataConteudo') && document.getElementById('dataConteudo').value;
+        if (!data) {
+            alert('Selecione a data da aula antes de salvar.');
+            return false;
+        }
+        return true;
+    }
+
+    // ── AUTO-LANÇAR DAS PENDÊNCIAS ──
+    async function handleAutoLancar() {
+        const p = new URLSearchParams(location.search);
+        if (p.get('auto_lancar') !== '1') return;
+
+        // 1. Mudar para aba conteúdos (com verificação do botão)
+        const btnConteudos = document.querySelectorAll('.tab-btn')[1];
+        showTab('conteudos', btnConteudos);
+
+        const turma = p.get('turma');
+        const disciplina = p.get('disciplina');
+        const professor = p.get('professor');
+        const data = p.get('data');
+
+        if (!turma || !disciplina || !professor || !data) return;
+
+        // 2. Abrir form (Isso limpa os campos, então fazemos ANTES de preencher)
+        toggleSectionConteudo('normal');
+
+        // 3. Preencher Turma 
+        document.getElementById('turmaSelectCont').value = turma;
+
+        // 4. Carregar e Preencher Disciplinas
+        await carregarDisciplinasDaTurmaAsync(turma);
+        document.getElementById('discSelectCont').value = disciplina;
+
+        // 5. Carregar e Preencher Professores
+        await carregarProfessoresDaTurmaDiscAsync();
+        document.getElementById('profSelectCont').value = professor;
+
+        // 6. Agora que temos o professor, carregamos as turmas da mesma série
+        carregarTurmasMesmaSerie(turma);
+
+        // 7. Carregar Datas e selecionar a correta
+        await carregarDatasValidasAsync();
+
+        const dataSel = document.getElementById('dataSelectCont');
+        if (dataSel) {
+            dataSel.value = data;
+            document.getElementById('dataConteudo').value = data;
+        }
+
+        // Scroll até o formulário
+        setTimeout(() => {
+            document.getElementById('formConteudo').scrollIntoView({ behavior: 'smooth' });
+        }, 500);
+    }
+
+    // Versões Async dos carregamentos para facilitar o fluxo sequencial
+    async function carregarDisciplinasDaTurmaAsync(codigo) {
+        const discSel = document.getElementById('discSelectCont');
+        const profSel = document.getElementById('profSelectCont');
+        discSel.innerHTML = '<option value="">Carregando...</option>';
+        if (!codigo) return;
+
+        const r = await fetch('/api/turma/' + codigo + '/disciplinas/');
+        const discs = await r.json();
+
+        discSel.innerHTML = '<option value="">Selecione a disciplina...</option>' +
+            discs.map(d => `<option value="${d.id}">${d.nome}</option>`).join('');
+    }
+
+    async function carregarProfessoresDaTurmaDiscAsync() {
+        const codigo = document.getElementById('turmaSelectCont').value;
+        const discId = document.getElementById('discSelectCont').value;
+        const profSel = document.getElementById('profSelectCont');
+        profSel.innerHTML = '<option value="">Carregando...</option>';
+        if (!codigo || !discId) return;
+
+        const r = await fetch('/api/turma/' + codigo + '/disciplina/' + discId + '/professores/');
+        const profs = await r.json();
+
+        profSel.innerHTML = '<option value="">Selecione...</option>' +
+            profs.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+    }
+
+    async function carregarDatasValidasAsync() {
+        const codigo = document.getElementById('turmaSelectCont').value;
+        const profId = document.getElementById('profSelectCont').value;
+        const wrapper = document.getElementById('dataContWrapper');
+        const dataSel = document.getElementById('dataSelectCont');
+        const dataHidden = document.getElementById('dataConteudo');
+
+        if (modoConteudo === 'extra') return;
+
+        wrapper.innerHTML = '<em style="color:#999; font-size:13px;">Carregando datas...</em>';
+        const r = await fetch('/api/turma/' + codigo + '/professor/' + profId + '/datas/');
+        const datas = await r.json();
+
+        if (!datas.length) {
+            wrapper.innerHTML = '<em style="color:#c00; font-size:13px;">Nenhuma data de aula encontrada para esta turma.</em>';
+            return;
+        }
+
+        dataSel.innerHTML = datas.map(d => {
+            const check = d.lancado ? ' ✓ já lançado' : '';
+            const style = d.lancado ? ' style="color:#666;"' : '';
+            return `<option value="${d.data}"${style}>${d.label}${check}</option>`;
+        }).join('');
+
+        dataSel.style.display = 'block';
+        wrapper.style.display = 'none';
+
+        carregarSugestoes(codigo, profId);
+    }
+
+    document.addEventListener('DOMContentLoaded', handleAutoLancar);
 </script>
 
 <style>
@@ -900,6 +946,7 @@ document.addEventListener('DOMContentLoaded', handleAutoLancar);
         transition: all 0.2s;
         user-select: none;
     }
+
     .badge-suggestion:hover {
         background: #b3e5fc;
         transform: translateY(-1px);

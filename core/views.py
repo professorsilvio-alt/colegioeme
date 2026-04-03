@@ -1606,12 +1606,12 @@ def sugestao_criar_massa(request):
         return redirect('dashboard')
 
     if request.method == 'POST':
-        disc_id = request.POST.get('disciplina')
+        discs_ids = request.POST.getlist('disciplinas')
         turmas_ids = request.POST.getlist('turmas')
         file_obj = request.FILES.get('arquivo_excel')
 
-        if not disc_id or not turmas_ids or not file_obj:
-            messages.error(request, 'Selecione a disciplina, turmas e o arquivo Excel.')
+        if not discs_ids or not turmas_ids or not file_obj:
+            messages.error(request, 'Selecione pelo menos uma disciplina, turmas e o arquivo Excel.')
             return redirect('dashboard')
 
         try:
@@ -1660,7 +1660,7 @@ def sugestao_criar_massa(request):
                 messages.warning(request, 'Nenhum conteúdo encontrado na primeira coluna da planilha.')
                 return redirect('dashboard')
 
-            disciplina = get_object_or_404(Disciplina, pk=disc_id)
+            disciplinas = Disciplina.objects.filter(pk__in=discs_ids)
             turmas = Turma.objects.filter(pk__in=turmas_ids)
             
             from django.db import transaction
@@ -1668,10 +1668,12 @@ def sugestao_criar_massa(request):
                 # Opcional: Evitar duplicidade exata na mesma disc/turma?
                 # Por agora, cria direto seguindo o pedido anterior.
                 for txt in textos:
-                    sug = SugestaoConteudo.objects.create(disciplina=disciplina, texto=txt)
-                    sug.turmas.set(turmas)
+                    for disciplina in disciplinas:
+                        sug = SugestaoConteudo.objects.create(disciplina=disciplina, texto=txt)
+                        sug.turmas.set(turmas)
 
-            messages.success(request, f'{len(textos)} sugestões cadastradas com sucesso!')
+            total_criado = len(textos) * disciplinas.count()
+            messages.success(request, f'{total_criado} sugestões cadastradas com sucesso!')
         except Exception as e:
             messages.error(request, f'Erro ao processar Excel: {str(e)}')
             
