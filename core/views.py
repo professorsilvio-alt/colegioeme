@@ -526,17 +526,30 @@ def calcular_stats_conteudo(prof, data_ini=None, data_fim=None, feriados=None):
     
     # Mapeia lançamentos existentes: (prof_id, turma_cod, disc_id) -> set of dates
     lancados_map = defaultdict(set)
+    extras_adicionais = 0
+    extras_adicionais_ate_hoje = 0
+    
+    disciplinas_peso_2 = [
+        'Eletiva 1', 'Eletiva 2', 'Ciências da Natureza', 
+        'Ciências Humanas', 'Matemática e suas tecnologias', 'Linguagens e códigos'
+    ]
+
     for cp in cp_qs:
         for t in cp.turmas.all():
             key = (cp.professor_id, t.codigo, cp.disciplina_id)
             if key in slots_map: # Só conta se estiver na grade
                 lancados_map[key].add(cp.data)
+            elif cp.disciplina and cp.disciplina.nome in disciplinas_peso_2:
+                # Aula extra fora da grade com peso 2
+                extras_adicionais += 2
+                if cp.data <= hoje:
+                    extras_adicionais_ate_hoje += 2
 
     # 3. Processa cálculos em Python
-    total = 0
-    total_ate_hoje = 0
-    preenchidos = 0
-    preenchidos_ate_hoje = 0
+    total = extras_adicionais
+    total_ate_hoje = extras_adicionais_ate_hoje
+    preenchidos = extras_adicionais
+    preenchidos_ate_hoje = extras_adicionais_ate_hoje
 
     for key, weekdays_counts in slots_map.items():
         # Cálculo de esperado (Total)
