@@ -44,7 +44,7 @@
 
 <!-- ═══════════════ ABA DASHBOARD (INÍCIO) ═══════════════ -->
 <div id="tab-dashboard" class="tab-pane {% if not request.GET.tab or request.GET.tab == 'dashboard' %}active{% endif %}"
-    {% if request.GET.tab and request.GET.tab !='dashboard' %}style="display:none;" {% endif %}>
+    {% if request.GET.tab and request.GET.tab != 'dashboard' %}style="display:none;"{% endif %}>
 
     {% if prof.cargo == 'PROFESSOR' %}
     <h2 style="color: #003366; margin-top: 5px;">📅 Meu Horário</h2>
