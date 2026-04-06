@@ -88,8 +88,7 @@
 
 
 <!-- ═══════════════ ABA OCORRÊNCIAS ═══════════════ -->
-<div id="tab-ocorrencias" class="tab-pane {% if request.GET.tab == 'ocorrencias' %}active{% endif %}" {% if
-    request.GET.tab !='ocorrencias' %}style="display:none;" {% endif %}>
+<div id="tab-ocorrencias" class="tab-pane {% if request.GET.tab == 'ocorrencias' %}active{% endif %}" {% if request.GET.tab != 'ocorrencias' %}style="display:none;"{% endif %}>
 
     {% if prof.pode_ver_ocorrencias %}
     {% if prof.cargo != 'INSPETOR' and prof.cargo != 'AUX_COORD' and prof.cargo != 'ORIENTADOR' and prof.cargo != 'SECRETARIA' and prof.cargo != 'COORDENADOR' %}
@@ -274,8 +273,7 @@
 
 <!-- ═══════════════ ABA CONTEÚDOS ═══════════════ -->
 {% if prof.cargo != 'INSPETOR' %}
-<div id="tab-conteudos" class="tab-pane {% if request.GET.tab == 'conteudos' %}active{% endif %}" {% if request.GET.tab
-    !='conteudos' %}style="display:none;" {% else %}style="display:block;" {% endif %}>
+<div id="tab-conteudos" class="tab-pane {% if request.GET.tab == 'conteudos' %}active{% endif %}" {% if request.GET.tab != 'conteudos' %}style="display:none;" {% else %}style="display:block;"{% endif %}>
 
     {% if prof.cargo == 'PROFESSOR' or prof.pode_editar_tudo %}
     <button class="btn-primary" onclick="toggleSectionConteudo('normal')">+ Lançar Conteúdo Programático</button>
