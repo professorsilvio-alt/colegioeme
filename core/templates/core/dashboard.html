@@ -368,8 +368,7 @@
                     <select name="filtro_turma_c" onchange="this.form.submit()">
                         <option value="">Todas</option>
                         {% for t in turmas %}
-                        <option value="{{ t.codigo }}" {% if filtro_turma_c == t.codigo %}selected{% endif %}>{{ t.codigo
-                            }}</option>
+                        <option value="{{ t.codigo }}" {% if filtro_turma_c == t.codigo %}selected{% endif %}>{{ t.codigo }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -378,8 +377,7 @@
                     <select name="filtro_disc_c" onchange="this.form.submit()">
                         <option value="">Todas</option>
                         {% for d in disciplinas_tab_c %}
-                        <option value="{{ d.pk }}" {% if filtro_disc_c == d.pk|stringformat:"d" %}selected{% endif %}>{{
-                            d.nome }}</option>
+                        <option value="{{ d.pk }}" {% if filtro_disc_c == d.pk|stringformat:"d" %}selected{% endif %}>{{ d.nome }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -388,8 +386,7 @@
                     <select name="filtro_prof_c" onchange="this.form.submit()">
                         <option value="">Todos</option>
                         {% for p in professores_tab_c %}
-                        <option value="{{ p.pk }}" {% if filtro_prof_c == p.pk|stringformat:"d" %}selected{% endif %}>{{
-                            p.nome }}</option>
+                        <option value="{{ p.pk }}" {% if filtro_prof_c == p.pk|stringformat:"d" %}selected{% endif %}>{{ p.nome }}</option>
                         {% endfor %}
                     </select>
                 </div>
