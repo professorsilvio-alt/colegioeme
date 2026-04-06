@@ -15,12 +15,14 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-eme-2026-robus
 
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'SilvioFreitas.pythonanywhere.com,localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'SilvioFreitas.pythonanywhere.com,www.capelum.com,capelum.com,localhost,127.0.0.1').split(',')
 
 CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
     'http://localhost:8000',
     'https://*.pythonanywhere.com',
+    'https://www.capelum.com',
+    'https://capelum.com',
 ]
 
 INSTALLED_APPS = [
