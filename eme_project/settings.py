@@ -9,13 +9,13 @@ apply_patches()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Carrega variáveis de ambiente do arquivo .env
-load_dotenv(BASE_DIR / '.env')
+load_dotenv(BASE_DIR / '.env', override=True)
 
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-eme-2026-robust-key-placeholder-must-change-in-prod')
 
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'SilvioFreitas.pythonanywhere.com,localhost,127.0.0.1').split(',')
 
 CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
@@ -68,23 +68,30 @@ TEMPLATES = [
 WSGI_APPLICATION = 'eme_project.wsgi.application'
 
 # Banco de dados
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+USE_MYSQL = os.environ.get('USE_MYSQL', 'False') == 'True'
 
-# (Opcional) Configuração para MySQL no futuro:
-# DB_NAME = os.getenv('DB_NAME')
-# if DB_NAME:
-#     DATABASES = {
-#         'default': {
-#             'ENGINE': 'django.db.backends.mysql',
-#             'NAME': DB_NAME,
-#             ...
-#         }
-#     }
+if USE_MYSQL:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('DB_NAME', 'eme_db'),
+            'USER': os.environ.get('DB_USER', 'eme_user'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', 'eme_password'),
+            'HOST': os.environ.get('DB_HOST', 'db'),
+            'PORT': os.environ.get('DB_PORT', '3306'),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            },
+        }
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {
