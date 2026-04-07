@@ -1878,3 +1878,104 @@ def cadastrar_email(request):
         return redirect('dashboard')
 
     return render(request, 'core/cadastrar_email.html', {'prof': prof})
+
+
+# ──────────────────────────────────────────────
+# RECUPERAÇÃO DE SENHA (SENHA TEMPORÁRIA)
+# ──────────────────────────────────────────────
+
+def recuperar_senha(request):
+    """
+    Fluxo customizado de recuperação de senha:
+    1. Professor informa seu e-mail de contato
+    2. Sistema gera uma senha temporária
+    3. Envia por e-mail
+    4. Define deve_trocar_senha=True → professor é forçado a definir nova senha no próximo login
+    """
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip().lower()
+
+        if email:
+            from .models import Professor
+            from django.db.models import Q
+
+            # Busca professor pelo e-mail de contato OU e-mail do User
+            prof = Professor.objects.filter(
+                Q(email_contato__iexact=email) | Q(user__email__iexact=email)
+            ).first()
+
+            if prof and prof.email_contato:
+                import secrets
+                import string
+
+                # Gera senha temporária: 4 letras + 4 dígitos (fácil de digitar)
+                letras = ''.join(secrets.choice(string.ascii_lowercase) for _ in range(4))
+                nums   = ''.join(secrets.choice(string.digits) for _ in range(4))
+                senha_temp = letras + nums  # ex: xkqb7423
+
+                # Aplica a senha temporária
+                prof.user.set_password(senha_temp)
+                prof.user.save()
+
+                # Marca para troca obrigatória no próximo login
+                prof.deve_trocar_senha = True
+                prof.save(update_fields=['deve_trocar_senha'])
+
+                # Monta e envia o e-mail
+                _enviar_email_senha_temporaria(prof, senha_temp, request)
+
+        # Sempre redireciona (não revela se e-mail existe ou não — segurança)
+        return redirect('recuperar_senha_enviada')
+
+    return render(request, 'core/recuperar_senha.html')
+
+
+def recuperar_senha_enviada(request):
+    """Confirmação de envio — exibida independentemente de o e-mail existir."""
+    return render(request, 'core/recuperar_senha_enviada.html')
+
+
+def _enviar_email_senha_temporaria(prof, senha_temp, request):
+    """Envia e-mail com senha temporária. Em DEBUG, imprime no console."""
+    from django.core.mail import send_mail
+    from django.conf import settings
+
+    destino = prof.email_contato or prof.user.email
+    if not destino:
+        return
+
+    assunto = 'Capelum — Sua senha temporária de acesso'
+    corpo = f"""Olá, {prof.nome}!
+
+Recebemos uma solicitação de redefinição de senha para sua conta no Capelum — Sistema de Controle Acadêmico.
+
+Sua senha temporária é:
+
+    {senha_temp}
+
+Acesse o sistema em: https://capelum.com/login/
+
+Ao entrar com essa senha, você será solicitado a criar uma nova senha pessoal.
+
+Se você não solicitou a redefinição, ignore este e-mail. Sua conta permanece segura.
+
+---
+Capelum — Controle Acadêmico
+https://capelum.com
+(Mensagem automática — não responda a este e-mail)
+"""
+
+    try:
+        send_mail(
+            subject=assunto,
+            message=corpo,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[destino],
+            fail_silently=False,
+        )
+    except Exception as e:
+        # Em desenvolvimento (ConsoleBackend) vai imprimir no terminal
+        # Em produção sem SMTP configurado, registra o erro silenciosamente
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f'Falha ao enviar e-mail de senha temporária para {destino}: {e}')

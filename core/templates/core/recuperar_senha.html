@@ -1,0 +1,129 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Recuperar Senha — Capelum SCA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { height: 100vh; font-family: 'Inter', sans-serif; display: flex; background: #0a1628; overflow: hidden; }
+
+        .brand-panel {
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: linear-gradient(160deg, #1a3a6e 0%, #0e2347 50%, #162d5a 100%);
+            position: relative; overflow: hidden; padding: 40px; height: 100vh;
+        }
+        .brand-panel::before { content: ''; position: absolute; width: 500px; height: 500px; background: radial-gradient(circle, rgba(212,175,55,.06) 0%, transparent 70%); top: -80px; right: -80px; animation: float 8s ease-in-out infinite; }
+        .brand-panel::after  { content: ''; position: absolute; width: 350px; height: 350px; background: radial-gradient(circle, rgba(22,45,74,.8) 0%, transparent 70%); bottom: -40px; left: -40px; animation: float 10s ease-in-out infinite reverse; }
+        @keyframes float { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(20px,-20px) scale(1.05)} }
+        .geo-shape { position: absolute; border: 1px solid rgba(212,175,55,.1); border-radius: 50%; animation: pulse 6s ease-in-out infinite; }
+        .geo-1 { width: 280px; height: 280px; top: 10%; left: -40px; }
+        .geo-2 { width: 180px; height: 180px; bottom: 15%; right: 10%; animation-delay: 2s; }
+        @keyframes pulse { 0%,100%{opacity:.3;transform:scale(1)} 50%{opacity:.6;transform:scale(1.03)} }
+        .particles { position: absolute; inset: 0; overflow: hidden; }
+        .particle { position: absolute; width: 2px; height: 2px; background: rgba(212,175,55,.35); border-radius: 50%; animation: sparkle 4s ease-in-out infinite; }
+        .particle:nth-child(1){top:15%;left:25%} .particle:nth-child(2){top:35%;left:70%;animation-delay:1s}
+        .particle:nth-child(3){top:65%;left:15%;animation-delay:2s} .particle:nth-child(4){top:80%;left:60%;animation-delay:.5s}
+        .particle:nth-child(5){top:25%;left:85%;animation-delay:3s}
+        @keyframes sparkle { 0%,100%{opacity:0;transform:scale(0)} 50%{opacity:1;transform:scale(1)} }
+        .brand-content { position: relative; z-index: 2; text-align: center; display: flex; flex-direction: column; align-items: center; }
+        .brand-logo { width: 280px; height: auto; display: block; margin: 0 auto 20px; filter: drop-shadow(0 4px 24px rgba(212,175,55,.25)); animation: logoEntry .9s ease-out; }
+        @keyframes logoEntry { from{opacity:0;transform:translateY(-20px) scale(.9)} to{opacity:1;transform:translateY(0) scale(1)} }
+        .brand-product { display: inline-block; font-size: 12px; font-weight: 600; letter-spacing: 5px; color: rgba(212,175,55,.8); text-transform: uppercase; margin-bottom: 16px; padding: 8px 20px; border: 1px solid rgba(212,175,55,.2); border-radius: 30px; }
+        .brand-tagline { font-size: 14px; color: rgba(255,255,255,.4); font-weight: 300; max-width: 320px; line-height: 1.6; }
+
+        /* ── Right panel ── */
+        .form-panel {
+            width: 520px; height: 100vh;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background: #fff; padding: 40px 52px;
+            position: relative; overflow-y: auto; flex-shrink: 0;
+        }
+        .form-panel::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: linear-gradient(to bottom, #d4af37, #162d4a, #d4af37); }
+
+        .icon-wrap { font-size: 44px; margin-bottom: 14px; display: block; animation: pop .5s ease-out; }
+        @keyframes pop { 0%{transform:scale(0)} 70%{transform:scale(1.15)} 100%{transform:scale(1)} }
+
+        h2 { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-bottom: 8px; text-align: center; }
+        .subtitle { font-size: 14px; color: #8892a4; line-height: 1.6; text-align: center; margin-bottom: 28px; }
+
+        .input-group { width: 100%; margin-bottom: 6px; }
+        .input-group label { display: block; font-size: 11px; font-weight: 700; color: #4a5568; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .input-group input { width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 15px; font-family: 'Inter', sans-serif; color: #1a1a2e; background: #f8fafc; transition: all .25s; }
+        .input-group input:focus { outline: none; border-color: #162d4a; background: #fff; box-shadow: 0 0 0 3px rgba(22,45,74,.08); }
+        .input-group input::placeholder { color: #b0bccf; }
+        .input-hint { font-size: 12px; color: #9aa5b4; margin-top: 6px; }
+
+        .btn-primary { display: block; width: 100%; padding: 14px; background: linear-gradient(135deg, #162d4a, #0d1e33); color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; transition: all .3s; margin-top: 18px; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(22,45,74,.3); }
+        .btn-primary:active { transform: translateY(0); }
+
+        .back-link { display: block; text-align: center; margin-top: 18px; font-size: 13px; color: #8892a4; text-decoration: none; transition: color .2s; }
+        .back-link:hover { color: #162d4a; }
+
+        .notice-box { width: 100%; background: #fffbeb; border: 1px solid #fde68a; border-left: 4px solid #f59e0b; border-radius: 10px; padding: 14px 16px; margin-bottom: 24px; font-size: 13px; color: #92400e; line-height: 1.6; }
+        .notice-box strong { display: block; margin-bottom: 4px; font-size: 13px; }
+
+        .footer { margin-top: 36px; text-align: center; color: #b0bccf; font-size: 12px; }
+
+        @media (max-width: 900px) {
+            body { flex-direction: column; height: auto; overflow-y: auto; }
+            .brand-panel { height: auto; min-height: 30vh; }
+            .brand-logo { width: 150px; }
+            .form-panel { width: 100%; height: auto; padding: 36px 28px; }
+            .form-panel::before { width: 100%; height: 4px; background: linear-gradient(to right, #d4af37, #162d4a, #d4af37); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="brand-panel">
+    <div class="geo-shape geo-1"></div>
+    <div class="geo-shape geo-2"></div>
+    <div class="particles">
+        <div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+    </div>
+    <div class="brand-content">
+        <img src="{% static 'core/capelum_logo_transparent.png' %}?v=10" alt="Capelum" class="brand-logo">
+        <div class="brand-product">SCA — Sistema de Controle Acadêmico</div>
+        <p class="brand-tagline">Gestão escolar inteligente, moderna e segura para sua instituição de ensino.</p>
+    </div>
+</div>
+
+<div class="form-panel">
+    <span class="icon-wrap">🔑</span>
+    <h2>Recuperar acesso</h2>
+    <p class="subtitle">
+        Informe o e-mail que você cadastrou no sistema.<br>
+        Enviaremos uma senha temporária para você acessar e definir uma nova senha.
+    </p>
+
+    <div class="notice-box">
+        <strong>⚠ Atenção</strong>
+        Você precisa ter cadastrado seu e-mail de contato no sistema para usar esta função.
+        Caso não tenha feito isso, entre em contato com a secretaria da escola.
+    </div>
+
+    <form method="post" style="width:100%">
+        {% csrf_token %}
+        <div class="input-group">
+            <label for="id_email">E-mail cadastrado</label>
+            <input type="email" id="id_email" name="email" placeholder="seu@email.com" autocomplete="email" autofocus required>
+            <p class="input-hint">Digite o e-mail que você informou no seu primeiro acesso.</p>
+        </div>
+        <button type="submit" class="btn-primary">Enviar senha temporária</button>
+    </form>
+
+    <a href="{% url 'login' %}" class="back-link">← Voltar para o login</a>
+
+    <div class="footer"><p>© 2026 Capelum — Todos os direitos reservados</p></div>
+</div>
+
+</body>
+</html>

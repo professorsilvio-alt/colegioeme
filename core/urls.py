@@ -4,6 +4,8 @@ from . import views
 urlpatterns = [
     path('trocar-senha/', views.forcar_troca_senha, name='forcar_troca_senha'),
     path('cadastrar-email/', views.cadastrar_email, name='cadastrar_email'),
+    path('recuperar-senha/', views.recuperar_senha, name='password_reset'),
+    path('recuperar-senha/enviado/', views.recuperar_senha_enviada, name='recuperar_senha_enviada'),
     path('', views.dashboard, name='dashboard'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
