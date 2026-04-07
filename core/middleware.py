@@ -3,9 +3,9 @@ from django.urls import reverse, resolve
 
 
 # Caminhos técnicos que nunca devem ser interceptados
-CAMINHOS_TECNICOS = ('/static/', '/media/', '/favicon', '/admin/')
+CAMINHOS_TECNICOS = ('/static/', '/media/', '/favicon', '/admin/', '/password_reset/', '/reset/')
 # Nomes de views que são isentas
-VIEWS_ISENTAS = ('forcar_troca_senha', 'logout', 'login')
+VIEWS_ISENTAS = ('forcar_troca_senha', 'logout', 'login', 'cadastrar_email', 'password_reset', 'password_reset_done', 'password_reset_confirm', 'password_reset_complete')
 
 
 class ForcarTrocaSenhaMiddleware:

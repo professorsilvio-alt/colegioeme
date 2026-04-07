@@ -1817,10 +1817,64 @@ def forcar_troca_senha(request):
             prof.save()
             # Atualiza hash da sessão para não deslogar
             update_session_auth_hash(request, request.user)
-            messages.success(request, '✅ Senha atualizada! Seu acesso foi liberado.')
-            return redirect('dashboard')
+            messages.success(request, 'Senha atualizada! Agora cadastre seu e-mail de contato.')
+            return redirect('cadastrar_email')
 
     return render(request, 'core/trocar_senha.html', {
         'erros': erros,
         'prof': prof,
     })
+
+
+# ──────────────────────────────────────────────
+# CADASTRO DE E-MAIL DE CONTATO (PRIMEIRO ACESSO)
+# ──────────────────────────────────────────────
+
+@login_required
+def cadastrar_email(request):
+    """
+    Exibida após a troca de senha obrigatória.
+    Solicita o e-mail pessoal do professor para contato e recuperação de senha.
+    O professor pode pular (pular=1) e cadastrar depois via perfil.
+    """
+    prof = getattr(request.user, 'professor', None)
+
+    # Já foi preenchido ou não é professor → vai ao dashboard
+    if not prof:
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        # Se clicou em "Pular por agora"
+        if request.POST.get('pular'):
+            messages.info(request, 'Você pode cadastrar seu e-mail a qualquer momento nas configurações do perfil.')
+            return redirect('dashboard')
+
+        email = request.POST.get('email', '').strip()
+
+        if not email:
+            return render(request, 'core/cadastrar_email.html', {
+                'erro': 'Por favor, informe um endereço de e-mail válido.',
+                'prof': prof,
+            })
+
+        # Valida formato básico
+        from django.core.validators import validate_email
+        from django.core.exceptions import ValidationError as VE
+        try:
+            validate_email(email)
+        except VE:
+            return render(request, 'core/cadastrar_email.html', {
+                'erro': 'O endereço de e-mail informado não é válido.',
+                'prof': prof,
+            })
+
+        # Salva no modelo Professor e no User (para recuperação de senha)
+        prof.email_contato = email
+        prof.save(update_fields=['email_contato'])
+        request.user.email = email
+        request.user.save(update_fields=['email'])
+
+        messages.success(request, f'E-mail {email} cadastrado com sucesso! Bem-vindo ao Capelum.')
+        return redirect('dashboard')
+
+    return render(request, 'core/cadastrar_email.html', {'prof': prof})

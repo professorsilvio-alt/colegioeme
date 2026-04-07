@@ -54,6 +54,11 @@ class Professor(models.Model):
         verbose_name='Deve trocar senha',
         help_text='Força o usuário a criar uma nova senha no próximo acesso.',
     )
+    email_contato = models.EmailField(
+        blank=True, null=True,
+        verbose_name='E-mail de contato',
+        help_text='E-mail pessoal do professor para comunicações e recuperação de senha.',
+    )
 
     def __str__(self):
         return f'{self.nome} ({self.get_cargo_display()})'

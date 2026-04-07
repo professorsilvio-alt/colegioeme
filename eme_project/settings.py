@@ -17,13 +17,15 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'SilvioFreitas.pythonanywhere.com,www.capelum.com,capelum.com,localhost,127.0.0.1').split(',')
 
-CSRF_TRUSTED_ORIGINS = [
-    'http://127.0.0.1:8000',
-    'http://localhost:8000',
-    'https://*.pythonanywhere.com',
-    'https://www.capelum.com',
-    'https://capelum.com',
-]
+CSRF_TRUSTED_ORIGINS_ENV = os.environ.get(
+    'CSRF_TRUSTED_ORIGINS',
+    'https://*.pythonanywhere.com,http://*.pythonanywhere.com,https://www.capelum.com,https://capelum.com,http://127.0.0.1:8000,http://localhost:8000'
+)
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in CSRF_TRUSTED_ORIGINS_ENV.split(',')]
+
+# Cookie seguro apenas em HTTPS real (não no PythonAnywhere em HTTP)
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -168,3 +170,22 @@ SESSION_COOKIE_HTTPONLY = True      # JS não acessa o cookie de sessão
 # ──────────────────────────────────────────────
 # Permite recursos apenas da própria origem e do Google Fonts (se usado no futuro)
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
+
+# ──────────────────────────────────────────────
+# E-MAIL
+# ──────────────────────────────────────────────
+# Em desenvolvimento (DEBUG=True): imprime e-mails no terminal (sem servidor SMTP)
+# Em produção (DEBUG=False): usa SMTP real configurado no .env
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+EMAIL_HOST          = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT          = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_USE_TLS       = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_USE_SSL       = os.environ.get('EMAIL_USE_SSL', 'False') == 'True'
+EMAIL_HOST_USER     = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL  = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+SERVER_EMAIL        = DEFAULT_FROM_EMAIL
