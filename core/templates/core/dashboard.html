@@ -291,6 +291,13 @@
         download="conteudos_completo.pdf">📄 PDF (Completo)</a>
     {% endif %}
 
+    {% if prof.cargo == 'SECRETARIA' or prof.cargo == 'ADMIN' or prof.cargo == 'DIRETOR' %}
+    <a href="{% url 'lancamentos_coletivos' %}" class="btn-extra-class"
+        style="background:#1a7a4a; text-decoration:none; padding:10px 15px; display:inline-block; margin-left:5px;">
+        ✅ Confirmar Lançamentos
+    </a>
+    {% endif %}
+
     {% if prof.cargo == 'ADMIN' or user.is_superuser %}
     {% if config_pk %}
     <a href="{% url 'admin:core_configuracao_change' config_pk %}" class="btn-extra-class"
@@ -450,7 +457,7 @@
             </thead>
             <tbody>
                 {% for c in conteudos %}
-                <tr>
+                <tr {% if c.confirmado_secretaria %}style="background:#f0fff8;"{% endif %}>
                     <td><input type="checkbox" name="ids" value="{{ c.pk }}" class="cont_check"></td>
                     <td>{{ c.data|date:"d/m/Y" }}</td>
                     <td>{{ c.turmas_str }}</td>
@@ -458,14 +465,19 @@
                     <td>{{ c.disciplina.nome|default:"-" }}</td>
                     <td>{{ c.descricao|truncatechars:80 }}</td>
                     <td>
+                        {% if c.confirmado_secretaria %}
+                        <span style="display:inline-block; background:#e6f9ef; color:#1a7a4a; border:1px solid #9ee8c4; border-radius:12px; padding:2px 8px; font-size:10px; font-weight:700;">✅ Confirmado</span>
+                        {% endif %}
                         <a href="{% url 'conteudo_ver' c.pk %}" class="btn-sm"
                             style="background: #16a085; text-decoration: none;">👁 Ver</a>
                         {% if prof.cargo != 'COORDENADOR' %}
                         {% if prof.pode_editar_tudo or c.professor == prof %}
+                        {% if not c.confirmado_secretaria or prof.pode_editar_tudo %}
                         <a href="{% url 'conteudo_editar' c.pk %}" class="btn-sm" style="text-decoration: none;">✏
                             Editar</a>
                         <button type="submit" formaction="{% url 'conteudo_excluir' c.pk %}"
                             class="btn-sm btn-danger-sm" onclick="return confirm('Excluir conteúdo?')">🗑</button>
+                        {% endif %}
                         {% endif %}
                         {% endif %}
                     </td>

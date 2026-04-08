@@ -1190,10 +1190,15 @@ def conteudo_ver(request, pk):
 def conteudo_editar(request, pk):
     cont = get_object_or_404(ConteudoProgramatico, pk=pk)
     prof = get_professor(request.user)
-    
+
     # Permissões: Coordenador visualiza mas não edita diários.
     if prof and prof.cargo == 'COORDENADOR':
         messages.error(request, 'Coordenadores não podem editar lançamentos nos diários.')
+        return redirect('dashboard')
+
+    # Bloqueio: confirmado pela secretaria
+    if cont.confirmado_secretaria and not (prof and prof.pode_editar_tudo):
+        messages.error(request, '⛔ Este lançamento foi confirmado pela Secretaria e não pode ser editado.')
         return redirect('dashboard')
 
     # Check permissions
@@ -1264,17 +1269,22 @@ def conteudo_editar(request, pk):
 def conteudo_excluir(request, pk):
     cont = get_object_or_404(ConteudoProgramatico, pk=pk)
     prof = get_professor(request.user)
-    
+
     # Permissões: Coordenador não exclui diários.
     if prof and prof.cargo == 'COORDENADOR':
         messages.error(request, 'Coordenadores não podem excluir lançamentos nos diários.')
+        return redirect('dashboard')
+
+    # Bloqueio: confirmado pela secretaria
+    if cont.confirmado_secretaria and not (prof and prof.pode_editar_tudo):
+        messages.error(request, '⛔ Este lançamento foi confirmado pela Secretaria e não pode ser excluído.')
         return redirect('dashboard')
 
     # Check permissions
     if prof and not prof.pode_editar_tudo and cont.professor != prof:
         messages.error(request, 'Você não tem permissão para excluir este conteúdo.')
         return redirect('dashboard')
-        
+
     cont.delete()
     messages.success(request, 'Conteúdo excluído.')
     return redirect('dashboard')
@@ -1285,15 +1295,162 @@ def conteudo_excluir(request, pk):
 def conteudo_excluir_varios(request):
     ids = request.POST.getlist('ids')
     prof = get_professor(request.user)
-    
+
     # Restrict mass delete to those with global edit permissions
     if prof and not prof.pode_editar_tudo:
         messages.error(request, 'Você não tem permissão para realizar exclusão em massa.')
         return redirect('dashboard')
 
-    ConteudoProgramatico.objects.filter(pk__in=ids).delete()
-    messages.success(request, f'{len(ids)} conteúdo(s) excluído(s).')
+    # Nunca excluir confirmados (mesmo para ADMIN/DIRETOR, exige desconfirmar antes)
+    confirmados = ConteudoProgramatico.objects.filter(pk__in=ids, confirmado_secretaria=True).count()
+    if confirmados > 0:
+        messages.warning(request, f'{confirmados} lançamento(s) estão confirmados e não foram excluídos. Desconfirme-os primeiro.')
+        ids_excluir = list(ConteudoProgramatico.objects.filter(pk__in=ids, confirmado_secretaria=False).values_list('pk', flat=True))
+    else:
+        ids_excluir = ids
+
+    if ids_excluir:
+        ConteudoProgramatico.objects.filter(pk__in=ids_excluir).delete()
+        messages.success(request, f'{len(ids_excluir)} conteúdo(s) excluído(s).')
     return redirect('dashboard')
+
+
+# ──────────────────────────────────────────────
+# LANÇAMENTOS COLETIVOS (agrupados por conteúdo)
+# ──────────────────────────────────────────────
+
+@login_required
+def lancamentos_coletivos(request):
+    """
+    Exibe lançamentos agrupados por (professor, disciplina, data, descricao).
+    Turmas que receberam o mesmo conteúdo no mesmo dia aparecem agrupadas.
+    Permite à secretaria confirmar lançamentos.
+    """
+    prof = get_professor(request.user)
+
+    # Apenas perfis com acesso gerencial
+    if not prof or not prof.pode_ver_tudo:
+        messages.error(request, 'Acesso restrito.')
+        return redirect('dashboard')
+
+    # Filtros opcionais
+    filtro_prof    = request.GET.get('filtro_prof', '')
+    filtro_data_ini = request.GET.get('data_ini', '')
+    filtro_data_fim = request.GET.get('data_fim', '')
+    filtro_confirmado = request.GET.get('confirmado', '0')  # '0'=pendentes '1'=confirmados 'todos'
+
+    qs = ConteudoProgramatico.objects.select_related('professor', 'disciplina').prefetch_related('turmas')
+
+    if filtro_prof:
+        qs = qs.filter(professor_id=filtro_prof)
+    if filtro_data_ini:
+        qs = qs.filter(data__gte=filtro_data_ini)
+    if filtro_data_fim:
+        qs = qs.filter(data__lte=filtro_data_fim)
+    if filtro_confirmado == '0':
+        qs = qs.filter(confirmado_secretaria=False)
+    elif filtro_confirmado == '1':
+        qs = qs.filter(confirmado_secretaria=True)
+
+    qs = qs.order_by('-data', 'professor__nome', 'disciplina__nome')
+
+    # Agrupar por (professor, disciplina, data, descricao)
+    grupos = {}  # chave -> {'ids': [], 'turmas': set(), 'obj': primeiro_cont}
+    for cont in qs:
+        chave = (cont.professor_id, cont.disciplina_id, cont.data, cont.descricao)
+        if chave not in grupos:
+            grupos[chave] = {
+                'ids': [],
+                'turmas': [],
+                'obj': cont,
+                'confirmado': cont.confirmado_secretaria,
+                'confirmado_em': cont.confirmado_em,
+                'confirmado_por': cont.confirmado_por,
+            }
+        grupos[chave]['ids'].append(cont.pk)
+        for t in cont.turmas.all():
+            if t.codigo not in [x.codigo for x in grupos[chave]['turmas']]:
+                grupos[chave]['turmas'].append(t)
+
+    # Ordenar turmas dentro de cada grupo
+    for g in grupos.values():
+        g['turmas'].sort(key=lambda t: t.codigo)
+        g['turmas_str'] = ', '.join(t.codigo for t in g['turmas'])
+        g['ids_str'] = ','.join(str(i) for i in g['ids'])
+
+    grupos_lista = list(grupos.values())
+
+    professores = Professor.objects.filter(cargo='PROFESSOR').order_by('nome')
+
+    return render(request, 'core/lancamentos_coletivos.html', {
+        'grupos': grupos_lista,
+        'professores': professores,
+        'prof': prof,
+        'filtro_prof': filtro_prof,
+        'filtro_data_ini': filtro_data_ini,
+        'filtro_data_fim': filtro_data_fim,
+        'filtro_confirmado': filtro_confirmado,
+        'is_secretaria': prof.cargo in ['SECRETARIA', 'ADMIN', 'DIRETOR'],
+    })
+
+
+@login_required
+@require_POST
+def conteudo_confirmar(request):
+    """
+    A secretaria confirma lançamentos selecionados.
+    Após confirmado, professores não podem editar nem excluir.
+    """
+    prof = get_professor(request.user)
+
+    if not prof or prof.cargo not in ['SECRETARIA', 'ADMIN', 'DIRETOR']:
+        messages.error(request, 'Apenas a Secretaria pode confirmar lançamentos.')
+        return redirect('lancamentos_coletivos')
+
+    ids_raw = request.POST.get('ids_confirmacao', '')
+    if not ids_raw:
+        messages.warning(request, 'Nenhum lançamento selecionado.')
+        return redirect('lancamentos_coletivos')
+
+    try:
+        ids = [int(i.strip()) for i in ids_raw.split(',') if i.strip().isdigit()]
+    except ValueError:
+        messages.error(request, 'Dados inválidos.')
+        return redirect('lancamentos_coletivos')
+
+    import django.utils.timezone as tz
+    agora = tz.now()
+
+    atualizados = ConteudoProgramatico.objects.filter(pk__in=ids, confirmado_secretaria=False)
+    count = atualizados.update(
+        confirmado_secretaria=True,
+        confirmado_em=agora,
+        confirmado_por=request.user,
+    )
+
+    messages.success(request, f'✅ {count} lançamento(s) confirmado(s) com sucesso! Os professores não poderão mais alterá-los.')
+    return redirect('lancamentos_coletivos')
+
+
+@login_required
+@require_POST
+def conteudo_desconfirmar(request, pk):
+    """
+    Administrador ou Diretor pode desconfirmar um lançamento (devolver para edição).
+    """
+    prof = get_professor(request.user)
+
+    if not prof or not prof.pode_editar_tudo:
+        messages.error(request, 'Apenas Admin ou Diretor podem desconfirmar lançamentos.')
+        return redirect('lancamentos_coletivos')
+
+    cont = get_object_or_404(ConteudoProgramatico, pk=pk)
+    cont.confirmado_secretaria = False
+    cont.confirmado_em = None
+    cont.confirmado_por = None
+    cont.save(update_fields=['confirmado_secretaria', 'confirmado_em', 'confirmado_por'])
+    messages.success(request, f'Lançamento {pk} desconfirmado e aberto para edição novamente.')
+    return redirect('lancamentos_coletivos')
 
 
 # ──────────────────────────────────────────────

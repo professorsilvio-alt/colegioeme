@@ -139,6 +139,24 @@ class ConteudoProgramatico(models.Model):
     descricao = models.TextField()
     criado_em = models.DateTimeField(auto_now_add=True)
 
+    # ── Confirmação pela Secretaria ──────────────────────
+    confirmado_secretaria = models.BooleanField(
+        default=False,
+        verbose_name='Confirmado pela Secretaria',
+        help_text='Quando confirmado, o professor não pode mais editar ou excluir o lançamento.',
+    )
+    confirmado_em = models.DateTimeField(
+        null=True, blank=True,
+        verbose_name='Confirmado em',
+    )
+    confirmado_por = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='conteudos_confirmados',
+        verbose_name='Confirmado por',
+    )
+
     class Meta:
         ordering = ['-data']
 

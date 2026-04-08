@@ -1,0 +1,219 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block title %}Lançamentos Coletivos — Capelum SCA{% endblock %}
+
+{% block content %}
+<style>
+    .lc-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
+    .lc-title { font-size:22px; font-weight:700; color:#003366; margin:0; }
+    .lc-filters { background:#f4f7fc; border:1px solid #dce6f5; border-radius:10px; padding:16px 20px; margin-bottom:20px; }
+    .lc-filters form { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; }
+    .lc-filters .fgroup { display:flex; flex-direction:column; gap:4px; }
+    .lc-filters label { font-size:12px; font-weight:600; color:#555; }
+    .lc-filters select, .lc-filters input[type=date] { border:1px solid #ccd8ea; border-radius:6px; padding:6px 10px; font-size:13px; background:#fff; }
+    .lc-filters button { padding:7px 18px; background:#003366; color:#fff; border:none; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; }
+    .lc-filters a.btn-limpar { padding:7px 14px; background:#8e9aaa; color:#fff; border-radius:6px; font-size:13px; font-weight:600; text-decoration:none; }
+
+    .lc-table { width:100%; border-collapse:collapse; font-size:13px; margin-top:12px; }
+    .lc-table thead th { background:#003366; color:#fff; padding:10px 12px; text-align:left; font-weight:600; font-size:12px; letter-spacing:.4px; white-space:nowrap; }
+    .lc-table tbody tr { border-bottom:1px solid #e8eef6; transition:background .15s; }
+    .lc-table tbody tr:hover { background:#f0f5ff; }
+    .lc-table td { padding:10px 12px; vertical-align:top; color:#2d3748; }
+    .lc-table td.desc { max-width:360px; white-space:pre-wrap; word-break:break-word; font-size:13px; line-height:1.5; }
+    .lc-table td.turmas { white-space:nowrap; }
+
+    .badge-confirmado { display:inline-block; background:#e6f9ef; color:#1a7a4a; border:1px solid #9ee8c4; border-radius:20px; padding:3px 10px; font-size:11px; font-weight:700; }
+    .badge-pendente { display:inline-block; background:#fff7ea; color:#b45309; border:1px solid #fcd498; border-radius:20px; padding:3px 10px; font-size:11px; font-weight:700; }
+
+    .btn-confirmar { display:inline-block; padding:10px 24px; background:linear-gradient(135deg,#1a7a4a,#12593a); color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; transition:all .2s; }
+    .btn-confirmar:hover { transform:translateY(-1px); box-shadow:0 4px 16px rgba(26,122,74,.3); }
+    .btn-confirmar:disabled { background:#aaa; cursor:not-allowed; transform:none; }
+
+    .selall-bar { display:flex; align-items:center; gap:14px; padding:10px 14px; background:#eef4ff; border:1px solid #c5d8f7; border-radius:8px; margin-bottom:12px; font-size:13px; }
+    .selall-bar label { cursor:pointer; }
+
+    .confirmation-bar { position:sticky; bottom:16px; background:#fff; border:2px solid #003366; border-radius:12px; padding:14px 20px; display:flex; align-items:center; gap:16px; box-shadow:0 8px 32px rgba(0,51,102,.18); margin-top:20px; }
+    .confirmation-bar .count-badge { background:#003366; color:#fff; border-radius:20px; padding:4px 14px; font-size:13px; font-weight:700; }
+
+    .empty-state { text-align:center; padding:60px 20px; color:#8899aa; }
+    .empty-state .icon { font-size:48px; margin-bottom:12px; display:block; }
+</style>
+
+<div class="lc-header">
+    <h1 class="lc-title">📋 Lançamentos de Conteúdo Programático</h1>
+    <a href="{% url 'dashboard' %}?tab=conteudos" style="font-size:13px; color:#4a90d9;">← Voltar ao Dashboard</a>
+</div>
+
+{# ── Filtros ── #}
+<div class="lc-filters">
+    <form method="get">
+        <div class="fgroup">
+            <label>Professor</label>
+            <select name="filtro_prof">
+                <option value="">Todos</option>
+                {% for p in professores %}
+                <option value="{{ p.pk }}" {% if filtro_prof == p.pk|stringformat:"d" %}selected{% endif %}>{{ p.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="fgroup">
+            <label>Data Inicial</label>
+            <input type="date" name="data_ini" value="{{ filtro_data_ini }}">
+        </div>
+        <div class="fgroup">
+            <label>Data Final</label>
+            <input type="date" name="data_fim" value="{{ filtro_data_fim }}">
+        </div>
+        <div class="fgroup">
+            <label>Status</label>
+            <select name="confirmado">
+                <option value="0" {% if filtro_confirmado == "0" %}selected{% endif %}>⏳ Pendentes</option>
+                <option value="1" {% if filtro_confirmado == "1" %}selected{% endif %}>✅ Confirmados</option>
+                <option value="todos" {% if filtro_confirmado == "todos" %}selected{% endif %}>Todos</option>
+            </select>
+        </div>
+        <button type="submit">Filtrar</button>
+        <a href="{% url 'lancamentos_coletivos' %}" class="btn-limpar">Limpar</a>
+    </form>
+</div>
+
+{% if messages %}
+{% for m in messages %}
+<div style="padding:10px 16px; margin-bottom:12px; border-radius:8px;
+    background:{% if 'confirmado' in m.message or '✅' in m.message %}#e6f9ef{% elif 'Nenhum' in m.message or '⛔' in m.message %}#fff0f0{% else %}#fff7ea{% endif %};
+    border:1px solid {% if 'confirmado' in m.message or '✅' in m.message %}#9ee8c4{% elif 'Nenhum' in m.message %}#f5c6cb{% else %}#fcd498{% endif %};
+    color:#333; font-size:13px; font-weight:600;">
+    {{ m }}
+</div>
+{% endfor %}
+{% endif %}
+
+{% if grupos %}
+
+{% if is_secretaria and filtro_confirmado != "1" %}
+<form method="post" action="{% url 'conteudo_confirmar' %}" id="formConfirmar">
+    {% csrf_token %}
+    <input type="hidden" name="ids_confirmacao" id="hiddenIds" value="">
+
+    <div class="selall-bar">
+        <label>
+            <input type="checkbox" id="checkAll" onchange="toggleTudo(this)">
+            <strong>Selecionar todos</strong>
+        </label>
+        <span style="color:#888;">|</span>
+        <span id="contadorSel">0 selecionados</span>
+    </div>
+{% endif %}
+
+<table class="lc-table">
+    <thead>
+        <tr>
+            {% if is_secretaria and filtro_confirmado != "1" %}<th style="width:36px;"></th>{% endif %}
+            <th>Data</th>
+            <th>Professor</th>
+            <th>Disciplina</th>
+            <th>Turmas</th>
+            <th>Conteúdo Ministrado</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for g in grupos %}
+        <tr>
+            {% if is_secretaria and filtro_confirmado != "1" %}
+            <td style="text-align:center;">
+                {% if not g.confirmado %}
+                <input type="checkbox" class="row-check" data-ids="{{ g.ids_str }}" onchange="atualizarSelecao()">
+                {% endif %}
+            </td>
+            {% endif %}
+            <td><strong>{{ g.obj.data|date:"d/m/Y" }}</strong></td>
+            <td>{{ g.obj.professor.nome|default:"—" }}</td>
+            <td>{{ g.obj.disciplina.nome|default:"—" }}</td>
+            <td class="turmas">
+                {% for t in g.turmas %}
+                <span style="display:inline-block; background:#dce8ff; color:#003366; border-radius:4px; padding:2px 7px; font-size:11px; font-weight:700; margin:1px;">{{ t.codigo }}</span>
+                {% endfor %}
+            </td>
+            <td class="desc">{{ g.obj.descricao }}</td>
+            <td>
+                {% if g.confirmado %}
+                <span class="badge-confirmado">✅ Confirmado</span>
+                <div style="font-size:10px; color:#888; margin-top:3px;">
+                    {% if g.confirmado_em %}{{ g.confirmado_em|date:"d/m/Y H:i" }}{% endif %}
+                    {% if g.confirmado_por %}<br>por {{ g.confirmado_por.username }}{% endif %}
+                </div>
+                {% if prof.pode_editar_tudo %}
+                <form method="post" action="{% url 'conteudo_desconfirmar' g.ids.0 %}" style="margin-top:5px;">
+                    {% csrf_token %}
+                    <button type="submit" onclick="return confirm('Desconfirmar este lançamento?')"
+                        style="padding:3px 10px; font-size:11px; background:#e74c3c; color:#fff; border:none; border-radius:4px; cursor:pointer;">
+                        ↩ Desconfirmar
+                    </button>
+                </form>
+                {% endif %}
+                {% else %}
+                <span class="badge-pendente">⏳ Pendente</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if is_secretaria and filtro_confirmado != "1" %}
+    <div class="confirmation-bar">
+        <span class="count-badge" id="confirmBar">0 selecionados</span>
+        <button type="submit" class="btn-confirmar" id="btnConfirmar" disabled
+            onclick="prepararConfirmacao()">
+            ✅ Confirmar Lançamentos Selecionados
+        </button>
+        <span style="font-size:12px; color:#666;">Após confirmar, os professores não poderão mais editar ou excluir estes lançamentos.</span>
+    </div>
+</form>
+{% endif %}
+
+<div style="margin-top:12px; font-size:12px; color:#888;">{{ grupos|length }} grupo(s) de lançamento encontrado(s).</div>
+
+{% else %}
+<div class="empty-state">
+    <span class="icon">📭</span>
+    <p style="font-size:16px; font-weight:600;">Nenhum lançamento encontrado com os filtros selecionados.</p>
+    <a href="{% url 'lancamentos_coletivos' %}" style="color:#4a90d9; font-size:13px;">Limpar filtros</a>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function atualizarSelecao() {
+        const checks = document.querySelectorAll('.row-check:checked');
+        const total = checks.length;
+        document.getElementById('contadorSel').textContent = total + ' selecionado(s)';
+        document.getElementById('confirmBar').textContent = total + ' selecionado(s)';
+        document.getElementById('btnConfirmar').disabled = total === 0;
+
+        // Atualizar check-all
+        const todos = document.querySelectorAll('.row-check');
+        document.getElementById('checkAll').indeterminate = total > 0 && total < todos.length;
+        document.getElementById('checkAll').checked = total === todos.length && todos.length > 0;
+    }
+
+    function toggleTudo(master) {
+        document.querySelectorAll('.row-check').forEach(cb => cb.checked = master.checked);
+        atualizarSelecao();
+    }
+
+    function prepararConfirmacao() {
+        // Coleta todos os IDs de todos os grupos selecionados
+        const checks = document.querySelectorAll('.row-check:checked');
+        const allIds = [];
+        checks.forEach(cb => {
+            const ids = cb.getAttribute('data-ids').split(',');
+            ids.forEach(id => { if (id.trim()) allIds.push(id.trim()); });
+        });
+        document.getElementById('hiddenIds').value = allIds.join(',');
+    }
+</script>
+{% endblock %}

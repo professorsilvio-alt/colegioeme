@@ -172,7 +172,7 @@ SESSION_COOKIE_HTTPONLY = True      # JS não acessa o cookie de sessão
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
 
 # ──────────────────────────────────────────────
-# E-MAIL
+# E-MAIL — GoDaddy SMTP (suporte@capelum.com)
 # ──────────────────────────────────────────────
 # Em desenvolvimento (DEBUG=True): imprime e-mails no terminal (sem servidor SMTP)
 # Em produção (DEBUG=False): usa SMTP real configurado no .env
@@ -181,11 +181,12 @@ if DEBUG:
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
-EMAIL_HOST          = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT          = int(os.environ.get('EMAIL_PORT', 587))
-EMAIL_USE_TLS       = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
-EMAIL_USE_SSL       = os.environ.get('EMAIL_USE_SSL', 'False') == 'True'
-EMAIL_HOST_USER     = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST          = os.environ.get('EMAIL_HOST', 'smtpout.secureserver.net')
+EMAIL_PORT          = int(os.environ.get('EMAIL_PORT', 465))
+EMAIL_USE_TLS       = os.environ.get('EMAIL_USE_TLS', 'False') == 'True'
+EMAIL_USE_SSL       = os.environ.get('EMAIL_USE_SSL', 'True') == 'True'
+EMAIL_HOST_USER     = os.environ.get('EMAIL_HOST_USER', 'suporte@capelum.com')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL  = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+DEFAULT_FROM_EMAIL  = os.environ.get('DEFAULT_FROM_EMAIL', 'Capelum <suporte@capelum.com>')
 SERVER_EMAIL        = DEFAULT_FROM_EMAIL
+EMAIL_TIMEOUT       = 10  # segundos — evita travamento em caso de falha SMTP
