@@ -113,11 +113,13 @@
 
 {% if grupos %}
 
-{# ─── MODO CONFIRMAÇÃO (itens pendentes) ─── #}
-{% if is_secretaria and filtro_confirmado != "1" %}
-<form method="post" action="{% url 'conteudo_confirmar' %}" id="formConfirmar">
+<form method="post" id="formLote">
     {% csrf_token %}
     <input type="hidden" name="ids_confirmacao" id="hiddenIdsConfirmar" value="">
+    <input type="hidden" name="ids_desconfirmacao" id="hiddenIdsDesconfirmar" value="">
+
+    {# ─── MODO CONFIRMAÇÃO (itens pendentes) ─── #}
+    {% if is_secretaria and filtro_confirmado != "1" %}
     <div class="selall-bar" id="selallBarConfirmar">
         <label>
             <input type="checkbox" id="checkAllPendentes" onchange="toggleTudo('pendente', this)">
@@ -126,13 +128,10 @@
         <span style="color:#ccc;">|</span>
         <span id="contadorPendente">0 selecionado(s)</span>
     </div>
-{% endif %}
+    {% endif %}
 
-{# ─── MODO DESCONFIRMAÇÃO (itens confirmados — somente admin/diretor) ─── #}
-{% if prof.pode_editar_tudo and filtro_confirmado != "0" %}
-<form method="post" action="{% url 'conteudo_desconfirmar_varios' %}" id="formDesconfirmar">
-    {% csrf_token %}
-    <input type="hidden" name="ids_desconfirmacao" id="hiddenIdsDesconfirmar" value="">
+    {# ─── MODO DESCONFIRMAÇÃO (itens confirmados — somente admin/diretor) ─── #}
+    {% if prof.pode_editar_tudo and filtro_confirmado != "0" %}
     <div class="selall-bar" id="selallBarDesconf" style="background:#fff5f5; border-color:#f5c6cb;">
         <label>
             <input type="checkbox" id="checkAllConfirmados" onchange="toggleTudo('confirmado', this)">
@@ -141,7 +140,7 @@
         <span style="color:#ccc;">|</span>
         <span id="contadorConfirmado">0 selecionado(s)</span>
     </div>
-{% endif %}
+    {% endif %}
 
 <table class="lc-table">
     <thead>
@@ -194,12 +193,13 @@
 {% if is_secretaria and filtro_confirmado != "1" %}
     <div class="action-bar confirm-mode" id="barConfirmar">
         <span class="count-badge" id="badgePendente">0 selecionado(s)</span>
-        <button type="submit" class="btn-confirmar" id="btnConfirmar" disabled onclick="prepararForm('pendente')">
+        <button type="submit" class="btn-confirmar" id="btnConfirmar" disabled 
+            formaction="{% url 'conteudo_confirmar' %}"
+            onclick="prepararForm('pendente')">
             ✅ Confirmar Selecionados
         </button>
         <span style="font-size:12px; color:#666;">Após confirmar, professores não poderão editar ou excluir estes lançamentos.</span>
     </div>
-</form>
 {% endif %}
 
 {# ─── Barra de ação — DESCONFIRMAR ─── #}
@@ -207,13 +207,14 @@
     <div class="action-bar deconfirm-mode" id="barDesconfirmar">
         <span class="count-badge" id="badgeConfirmado">0 selecionado(s)</span>
         <button type="submit" class="btn-desconfirmar" id="btnDesconfirmar" disabled
+            formaction="{% url 'conteudo_desconfirmar_varios' %}"
             onclick="return prepararForm('confirmado') && confirm('Desconfirmar os lançamentos selecionados? Professores poderão editá-los novamente.')">
             ↩ Desconfirmar Selecionados
         </button>
         <span style="font-size:12px; color:#888;">Devolve os lançamentos para edição pelo professor.</span>
     </div>
-</form>
 {% endif %}
+</form>
 
 <div style="margin-top:12px; font-size:12px; color:#888;">{{ grupos|length }} grupo(s) de lançamento encontrado(s).</div>
 

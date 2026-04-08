@@ -275,40 +275,50 @@
 {% if prof.cargo != 'INSPETOR' %}
 <div id="tab-conteudos" class="tab-pane {% if request.GET.tab == 'conteudos' %}active{% endif %}" {% if request.GET.tab != 'conteudos' %}style="display:none;" {% else %}style="display:block;"{% endif %}>
 
-    {% if prof.cargo == 'PROFESSOR' or prof.pode_editar_tudo %}
-    <button class="btn-primary" onclick="toggleSectionConteudo('normal')">+ Lançar Conteúdo Programático</button>
-    <button class="btn-extra-class" onclick="toggleSectionConteudo('extra')">⚡ + Aula Extra</button>
-    {% endif %}
+    <div class="dashboard-actions-row">
+        {% if prof.cargo == 'PROFESSOR' or prof.pode_editar_tudo %}
+        <button class="btn-action btn-blue" onclick="toggleSectionConteudo('normal')">➕ Lançar Conteúdo Programático</button>
+        <button class="btn-action btn-teal" onclick="toggleSectionConteudo('extra')">⚡ + Aula Extra</button>
+        {% endif %}
 
-    {% if prof.pode_ver_tudo or prof.cargo == 'PROFESSOR' %}
-    <a href="{% url 'relatorio_pendencias' %}" class="btn-gray"
-        style="text-decoration: none; padding: 10px 15px; display: inline-block;">📊 Relatório de Pendências</a>
-    {% endif %}
+        {% if prof.pode_ver_tudo or prof.cargo == 'PROFESSOR' %}
+        <a href="{% url 'relatorio_pendencias' %}" class="btn-action btn-gray" style="text-decoration:none;">📊 Relatório de Pendências</a>
+        {% endif %}
 
-    {% if prof.pode_gerar_relatorios %}
-    <a href="{% url 'exportar_conteudos_csv' %}" class="btn-export">📥 CSV (Completo)</a>
-    <a href="{% url 'exportar_conteudos_pdf' %}" class="btn-export btn-pdf" style="margin-left: 5px;"
-        download="conteudos_completo.pdf">📄 PDF (Completo)</a>
-    {% endif %}
+        {% if prof.pode_gerar_relatorios and prof.cargo != 'ADMIN' %}
+        <a href="{% url 'exportar_conteudos_csv' %}" class="btn-action btn-navy">📥 CSV (Completo)</a>
+        <a href="{% url 'exportar_conteudos_pdf' %}" class="btn-action btn-red" download="conteudos_completo.pdf">📄 PDF (Completo)</a>
+        {% endif %}
 
-    {% if prof.cargo == 'SECRETARIA' or prof.cargo == 'ADMIN' or prof.cargo == 'DIRETOR' %}
-    <a href="{% url 'lancamentos_coletivos' %}" class="btn-extra-class"
-        style="background:#1a7a4a; text-decoration:none; padding:10px 15px; display:inline-block; margin-left:5px;">
-        ✅ Confirmar Lançamentos
-    </a>
-    {% endif %}
+        {% if prof.cargo == 'SECRETARIA' or prof.cargo == 'ADMIN' or prof.cargo == 'DIRETOR' %}
+        <a href="{% url 'lancamentos_coletivos' %}" class="btn-action btn-green" style="text-decoration:none;">✅ Confirmar Lançamentos</a>
+        {% endif %}
 
-    {% if prof.cargo == 'ADMIN' or user.is_superuser %}
-    {% if config_pk %}
-    <a href="{% url 'admin:core_configuracao_change' config_pk %}" class="btn-extra-class"
-        style="background: #8e44ad; text-decoration: none; padding: 10px 15px; display: inline-block; margin-left: 5px;">⚙️
-        Configurar Período Letivo</a>
-    {% else %}
-    <a href="{% url 'admin:core_configuracao_add' %}" class="btn-extra-class"
-        style="background: #8e44ad; text-decoration: none; padding: 10px 15px; display: inline-block; margin-left: 5px;">⚙️
-        Criar Configuração</a>
-    {% endif %}
-    {% endif %}
+        {% if prof.cargo == 'ADMIN' or user.is_superuser %}
+            {% if config_pk %}
+            <a href="{% url 'admin:core_configuracao_change' config_pk %}" class="btn-action btn-purple" style="text-decoration:none;">⚙️ Configurar Período Letivo</a>
+            {% else %}
+            <a href="{% url 'admin:core_configuracao_add' %}" class="btn-action btn-purple" style="text-decoration:none;">⚙️ Criar Configuração</a>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    <style>
+        .dashboard-actions-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; align-items: stretch; }
+        .btn-action { 
+            flex: 1; min-width: 180px; padding: 12px 15px; border-radius: 8px; font-size: 14px; font-weight: 700; 
+            text-align: center; border: none; cursor: pointer; transition: all 0.2s; color: #fff;
+            display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .btn-action:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); filter: brightness(1.1); }
+        .btn-blue   { background: #003366; }
+        .btn-teal   { background: #16a085; }
+        .btn-gray   { background: #6c757d; }
+        .btn-navy   { background: #001f3f; }
+        .btn-red    { background: #c0392b; }
+        .btn-green  { background: #1a7a4a; }
+        .btn-purple { background: #8e44ad; }
+    </style>
 
     <!-- Formulário novo conteúdo -->
     <div id="formConteudo" class="collapsible" style="display:none;">
