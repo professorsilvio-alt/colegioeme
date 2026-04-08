@@ -36,6 +36,7 @@ urlpatterns = [
     path('conteudo/excluir-varios/', views.conteudo_excluir_varios, name='conteudo_excluir_varios'),
     path('conteudo/confirmar/', views.conteudo_confirmar, name='conteudo_confirmar'),
     path('conteudo/<int:pk>/desconfirmar/', views.conteudo_desconfirmar, name='conteudo_desconfirmar'),
+    path('conteudo/desconfirmar-varios/', views.conteudo_desconfirmar_varios, name='conteudo_desconfirmar_varios'),
     path('lancamentos/coletivos/', views.lancamentos_coletivos, name='lancamentos_coletivos'),
 
     # Exportar

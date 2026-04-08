@@ -1465,6 +1465,38 @@ def conteudo_desconfirmar(request, pk):
     return redirect('lancamentos_coletivos')
 
 
+@login_required
+@require_POST
+def conteudo_desconfirmar_varios(request):
+    """
+    Admin ou Diretor desconfirma vários lançamentos de uma vez (via checkboxes).
+    """
+    prof = get_professor(request.user)
+
+    if not prof or not prof.pode_editar_tudo:
+        messages.error(request, 'Apenas Admin ou Diretor podem desconfirmar lançamentos.')
+        return redirect('lancamentos_coletivos')
+
+    ids_raw = request.POST.get('ids_desconfirmacao', '')
+    if not ids_raw:
+        messages.warning(request, 'Nenhum lançamento selecionado.')
+        return redirect('lancamentos_coletivos')
+
+    ids = [int(i.strip()) for i in ids_raw.split(',') if i.strip().isdigit()]
+
+    count = ConteudoProgramatico.objects.filter(
+        pk__in=ids,
+        confirmado_secretaria=True,
+    ).update(
+        confirmado_secretaria=False,
+        confirmado_em=None,
+        confirmado_por=None,
+    )
+
+    messages.success(request, f'↩ {count} lançamento(s) desconfirmado(s). Professores podem editar novamente.')
+    return redirect('lancamentos_coletivos')
+
+
 # ──────────────────────────────────────────────
 # EXPORTAR CSV
 # ──────────────────────────────────────────────
@@ -1551,22 +1583,27 @@ class EllipticalImage(Image):
         self.canv.restoreState()
 
 
-def _get_logo_element():
-    """Helper to return the standardized elliptical logo for PDFs."""
-    # Try different possible paths for the logo
+def _get_logo_path():
+    """Retorna o caminho absoluto para a logo do Capelum (ou logo do sistema como fallback)."""
     possible_paths = [
+        # Logo Capelum (principal)
+        os.path.join(settings.BASE_DIR, 'core', 'static', 'core', 'capelum_logo_transparent.png'),
+        os.path.join(settings.BASE_DIR, 'core', 'static', 'core', 'capelum_logo.png'),
+        # Logo escola (fallback)
         os.path.join(settings.BASE_DIR, 'core', 'static', 'core', 'logo.jpg'),
         os.path.join(settings.BASE_DIR, 'core', 'static', 'core', 'logo.png'),
         os.path.join(settings.BASE_DIR, 'static', 'core', 'img', 'logo.png'),
     ]
-    
-    logo_path = None
     for p in possible_paths:
         if os.path.exists(p):
-            logo_path = p
-            break
+            return p
+    return None
 
-    if logo_path and os.path.exists(logo_path):
+
+def _get_logo_element():
+    """Helper to return the standardized elliptical logo for PDFs (cabeçalho)."""
+    logo_path = _get_logo_path()
+    if logo_path:
         # 4cm x 2cm maintains the 2:1 ratio used in the web dashboard (200x100px)
         logo = EllipticalImage(logo_path, width=4*cm, height=2*cm)
         logo.hAlign = 'LEFT'
@@ -1624,36 +1661,58 @@ def exportar_ocorrencias_pdf(request):
     return _pdf_response(buf, 'ocorrencias.pdf')
 
 
-def _add_signature_footer(canvas, doc):
-    """Adds signature lines for Professor and Secretary at the bottom of the page."""
+def _add_signature_footer(canvas, doc, data_confirmacao=None):
+    """Adds signature lines for Professor and Secretary at the bottom of the page,
+    and draws the Capelum logo centered near the signatures."""
     canvas.saveState()
-    canvas.setFont('Helvetica', 9)
-    
+
     # Configuration
     page_width, page_height = doc.pagesize
     margin = 1.5 * cm
     line_width = 7 * cm
-    line_y = 2.5 * cm
-    text_y = 2.1 * cm
-    
-    # Professor Signature (Left)
+    line_y  = 3.2 * cm   # raised to leave room for logo below
+    text_y  = 2.8 * cm
+    small_y = 2.4 * cm
+
+    # ── Logo Capelum centralizado no rodapé ────────────────────
+    logo_path = _get_logo_path()
+    if logo_path:
+        logo_w, logo_h = 3.5 * cm, 1.75 * cm
+        logo_x = (page_width - logo_w) / 2
+        logo_y = 0.5 * cm
+        try:
+            canvas.drawImage(logo_path, logo_x, logo_y, width=logo_w, height=logo_h,
+                             preserveAspectRatio=True, mask='auto')
+        except Exception:
+            pass  # ignora se a imagem não carregar
+
+    # ── Linha de assinatura Professor (esquerda) ─────────────────
+    canvas.setFont('Helvetica', 9)
     canvas.line(margin, line_y, margin + line_width, line_y)
-    canvas.drawCentredString(margin + (line_width / 2), text_y, "Assinatura do Professor")
-    
-    # Electronic signature info
+    canvas.drawCentredString(margin + (line_width / 2), text_y, 'Assinatura do Professor')
+
+    # ── Data da assinatura ────────────────────────────────────────
     from datetime import datetime as dt
-    now_str = dt.now().strftime('%d/%m/%Y %H:%M')
-    sig_info = f"Assinado eletronicamente na data de sua geração: {now_str}"
+    if data_confirmacao:
+        # Usa a data/hora da última confirmação da secretaria
+        import django.utils.timezone as tz
+        if hasattr(data_confirmacao, 'tzinfo') and data_confirmacao.tzinfo is not None:
+            data_confirmacao = data_confirmacao.astimezone()
+        sig_date_str = data_confirmacao.strftime('%d/%m/%Y %H:%M')
+        sig_info = f'Confirmado pela Secretaria em: {sig_date_str}'
+    else:
+        sig_info = f'Assinado eletronicamente em: {dt.now().strftime("%d/%m/%Y %H:%M")}'
+
     canvas.setFont('Helvetica-Oblique', 7)
-    canvas.drawCentredString(margin + (line_width / 2), text_y - 0.4*cm, sig_info)
-    
-    # Secretary Signature (Right)
+    canvas.drawCentredString(margin + (line_width / 2), small_y, sig_info)
+
+    # ── Linha de assinatura Secretaria (direita) ─────────────────
     canvas.setFont('Helvetica', 9)
     canvas.line(page_width - margin - line_width, line_y, page_width - margin, line_y)
-    canvas.drawCentredString(page_width - margin - (line_width / 2), text_y, "Assinatura da Secretaria")
+    canvas.drawCentredString(page_width - margin - (line_width / 2), text_y, 'Assinatura da Secretaria')
     canvas.setFont('Helvetica-Oblique', 7)
-    canvas.drawCentredString(page_width - margin - (line_width / 2), text_y - 0.4*cm, sig_info)
-    
+    canvas.drawCentredString(page_width - margin - (line_width / 2), small_y, sig_info)
+
     canvas.restoreState()
 
 
@@ -1701,7 +1760,14 @@ def exportar_conteudos_pdf(request):
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
     ]))
     elems.append(t)
-    doc.build(elems, onFirstPage=_add_signature_footer, onLaterPages=_add_signature_footer)
+
+    # Data da última confirmação no queryset (para assinatura)
+    from functools import partial
+    from django.db.models import Max
+    max_confirmado = qs.aggregate(max_conf=Max('confirmado_em'))['max_conf']
+    footer_fn = partial(_add_signature_footer, data_confirmacao=max_confirmado) if max_confirmado else _add_signature_footer
+
+    doc.build(elems, onFirstPage=footer_fn, onLaterPages=footer_fn)
     return _pdf_response(buf, 'conteudos.pdf')
 
 

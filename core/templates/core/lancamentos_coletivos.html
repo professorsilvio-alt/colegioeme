@@ -29,11 +29,19 @@
     .btn-confirmar:hover { transform:translateY(-1px); box-shadow:0 4px 16px rgba(26,122,74,.3); }
     .btn-confirmar:disabled { background:#aaa; cursor:not-allowed; transform:none; box-shadow:none; }
 
+    .btn-desconfirmar { display:inline-block; padding:10px 24px; background:linear-gradient(135deg,#c0392b,#922b21); color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; transition:all .2s; }
+    .btn-desconfirmar:hover { transform:translateY(-1px); box-shadow:0 4px 16px rgba(192,57,43,.3); }
+    .btn-desconfirmar:disabled { background:#aaa; cursor:not-allowed; transform:none; box-shadow:none; }
+
     .selall-bar { display:flex; align-items:center; gap:14px; padding:10px 14px; background:#eef4ff; border:1px solid #c5d8f7; border-radius:8px; margin-bottom:12px; font-size:13px; }
     .selall-bar label { cursor:pointer; display:flex; align-items:center; gap:6px; }
 
-    .confirmation-bar { position:sticky; bottom:16px; background:#fff; border:2px solid #003366; border-radius:12px; padding:14px 20px; display:flex; align-items:center; gap:16px; box-shadow:0 8px 32px rgba(0,51,102,.18); margin-top:20px; flex-wrap:wrap; }
-    .confirmation-bar .count-badge { background:#003366; color:#fff; border-radius:20px; padding:4px 14px; font-size:13px; font-weight:700; white-space:nowrap; }
+    .action-bar { position:sticky; bottom:16px; background:#fff; border:2px solid; border-radius:12px; padding:14px 20px; display:flex; align-items:center; gap:16px; box-shadow:0 8px 32px rgba(0,0,0,.18); margin-top:20px; flex-wrap:wrap; }
+    .action-bar.confirm-mode { border-color:#003366; }
+    .action-bar.deconfirm-mode { border-color:#c0392b; }
+    .action-bar .count-badge { border-radius:20px; padding:4px 14px; font-size:13px; font-weight:700; white-space:nowrap; }
+    .action-bar.confirm-mode .count-badge  { background:#003366; color:#fff; }
+    .action-bar.deconfirm-mode .count-badge { background:#c0392b; color:#fff; }
 
     .empty-state { text-align:center; padding:60px 20px; color:#8899aa; }
     .empty-state .icon { font-size:48px; margin-bottom:12px; display:block; }
@@ -105,25 +113,40 @@
 
 {% if grupos %}
 
+{# ─── MODO CONFIRMAÇÃO (itens pendentes) ─── #}
 {% if is_secretaria and filtro_confirmado != "1" %}
 <form method="post" action="{% url 'conteudo_confirmar' %}" id="formConfirmar">
     {% csrf_token %}
-    <input type="hidden" name="ids_confirmacao" id="hiddenIds" value="">
-
-    <div class="selall-bar" id="selallBar">
+    <input type="hidden" name="ids_confirmacao" id="hiddenIdsConfirmar" value="">
+    <div class="selall-bar" id="selallBarConfirmar">
         <label>
-            <input type="checkbox" id="checkAll" onchange="toggleTudo(this)">
-            <strong>Selecionar todos</strong>
+            <input type="checkbox" id="checkAllPendentes" onchange="toggleTudo('pendente', this)">
+            <strong>Selecionar todos pendentes</strong>
         </label>
         <span style="color:#ccc;">|</span>
-        <span id="contadorSel">0 selecionado(s)</span>
+        <span id="contadorPendente">0 selecionado(s)</span>
+    </div>
+{% endif %}
+
+{# ─── MODO DESCONFIRMAÇÃO (itens confirmados — somente admin/diretor) ─── #}
+{% if prof.pode_editar_tudo and filtro_confirmado != "0" %}
+<form method="post" action="{% url 'conteudo_desconfirmar_varios' %}" id="formDesconfirmar">
+    {% csrf_token %}
+    <input type="hidden" name="ids_desconfirmacao" id="hiddenIdsDesconfirmar" value="">
+    <div class="selall-bar" id="selallBarDesconf" style="background:#fff5f5; border-color:#f5c6cb;">
+        <label>
+            <input type="checkbox" id="checkAllConfirmados" onchange="toggleTudo('confirmado', this)">
+            <strong style="color:#c0392b;">Selecionar todos confirmados</strong>
+        </label>
+        <span style="color:#ccc;">|</span>
+        <span id="contadorConfirmado">0 selecionado(s)</span>
     </div>
 {% endif %}
 
 <table class="lc-table">
     <thead>
         <tr>
-            {% if is_secretaria and filtro_confirmado != "1" %}<th style="width:36px;"></th>{% endif %}
+            <th style="width:36px;"></th>
             <th>Data</th>
             <th>Professor</th>
             <th>Disciplina</th>
@@ -134,14 +157,14 @@
     </thead>
     <tbody>
         {% for g in grupos %}
-        <tr>
-            {% if is_secretaria and filtro_confirmado != "1" %}
+        <tr {% if g.confirmado %}style="background:#f8fff8;"{% endif %}>
             <td style="text-align:center;">
-                {% if not g.confirmado %}
-                <input type="checkbox" class="row-check" data-ids="{{ g.ids_str }}" onchange="atualizarSelecao()">
+                {% if not g.confirmado and is_secretaria and filtro_confirmado != "1" %}
+                <input type="checkbox" class="check-pendente" data-ids="{{ g.ids_str }}" onchange="atualizarContador('pendente')">
+                {% elif g.confirmado and prof.pode_editar_tudo and filtro_confirmado != "0" %}
+                <input type="checkbox" class="check-confirmado" data-ids="{{ g.ids_str }}" onchange="atualizarContador('confirmado')">
                 {% endif %}
             </td>
-            {% endif %}
             <td><strong>{{ g.obj.data|date:"d/m/Y" }}</strong></td>
             <td>{{ g.obj.professor.nome|default:"—" }}</td>
             <td>{{ g.obj.disciplina.nome|default:"—" }}</td>
@@ -158,15 +181,6 @@
                     {% if g.confirmado_em %}{{ g.confirmado_em|date:"d/m/Y H:i" }}{% endif %}
                     {% if g.confirmado_por %}<br>por {{ g.confirmado_por.username }}{% endif %}
                 </div>
-                {% if prof.pode_editar_tudo %}
-                <form method="post" action="{% url 'conteudo_desconfirmar' g.ids.0 %}" style="margin-top:5px;">
-                    {% csrf_token %}
-                    <button type="submit" onclick="return confirm('Desconfirmar este lançamento?')"
-                        style="padding:3px 10px; font-size:11px; background:#e74c3c; color:#fff; border:none; border-radius:4px; cursor:pointer;">
-                        ↩ Desconfirmar
-                    </button>
-                </form>
-                {% endif %}
                 {% else %}
                 <span class="badge-pendente">⏳ Pendente</span>
                 {% endif %}
@@ -176,14 +190,27 @@
     </tbody>
 </table>
 
+{# ─── Barra de ação — CONFIRMAR ─── #}
 {% if is_secretaria and filtro_confirmado != "1" %}
-    <div class="confirmation-bar" id="confirmationBar">
-        <span class="count-badge" id="confirmBar">0 selecionado(s)</span>
-        <button type="submit" class="btn-confirmar" id="btnConfirmar" disabled
-            onclick="prepararConfirmacao()">
-            ✅ Confirmar Lançamentos Selecionados
+    <div class="action-bar confirm-mode" id="barConfirmar">
+        <span class="count-badge" id="badgePendente">0 selecionado(s)</span>
+        <button type="submit" class="btn-confirmar" id="btnConfirmar" disabled onclick="prepararForm('pendente')">
+            ✅ Confirmar Selecionados
         </button>
-        <span style="font-size:12px; color:#666;">Após confirmar, os professores não poderão mais editar ou excluir estes lançamentos.</span>
+        <span style="font-size:12px; color:#666;">Após confirmar, professores não poderão editar ou excluir estes lançamentos.</span>
+    </div>
+</form>
+{% endif %}
+
+{# ─── Barra de ação — DESCONFIRMAR ─── #}
+{% if prof.pode_editar_tudo and filtro_confirmado != "0" %}
+    <div class="action-bar deconfirm-mode" id="barDesconfirmar">
+        <span class="count-badge" id="badgeConfirmado">0 selecionado(s)</span>
+        <button type="submit" class="btn-desconfirmar" id="btnDesconfirmar" disabled
+            onclick="return prepararForm('confirmado') && confirm('Desconfirmar os lançamentos selecionados? Professores poderão editá-los novamente.')">
+            ↩ Desconfirmar Selecionados
+        </button>
+        <span style="font-size:12px; color:#888;">Devolve os lançamentos para edição pelo professor.</span>
     </div>
 </form>
 {% endif %}
@@ -202,54 +229,73 @@
 
 {% block extra_js %}
 <script>
-    // Ao carregar, verificar se existem checkboxes disponíveis
-    document.addEventListener('DOMContentLoaded', function () {
-        const bar = document.getElementById('selallBar');
-        const confBar = document.getElementById('confirmationBar');
-        const checks = document.querySelectorAll('.row-check');
+    function atualizarContador(tipo) {
+        const selector   = tipo === 'pendente' ? '.check-pendente' : '.check-confirmado';
+        const selChecked = document.querySelectorAll(selector + ':checked').length;
+        const selTotal   = document.querySelectorAll(selector).length;
 
-        if (bar && checks.length === 0) {
-            // Não há itens pendentes para selecionar
-            bar.innerHTML = '<span style="color:#888; font-size:13px;">ℹ️ Todos os lançamentos visíveis já foram confirmados. Use o filtro <strong>Pendentes</strong> para ver itens a confirmar.</span>';
-            if (confBar) confBar.style.display = 'none';
+        if (tipo === 'pendente') {
+            const el = document.getElementById('contadorPendente');
+            const badge = document.getElementById('badgePendente');
+            const btn = document.getElementById('btnConfirmar');
+            const master = document.getElementById('checkAllPendentes');
+            if (el)      el.textContent   = selChecked + ' selecionado(s)';
+            if (badge)   badge.textContent = selChecked + ' selecionado(s)';
+            if (btn)     btn.disabled = selChecked === 0;
+            if (master) {
+                master.indeterminate = selChecked > 0 && selChecked < selTotal;
+                master.checked = selChecked > 0 && selChecked === selTotal;
+            }
+        } else {
+            const el = document.getElementById('contadorConfirmado');
+            const badge = document.getElementById('badgeConfirmado');
+            const btn = document.getElementById('btnDesconfirmar');
+            const master = document.getElementById('checkAllConfirmados');
+            if (el)      el.textContent   = selChecked + ' selecionado(s)';
+            if (badge)   badge.textContent = selChecked + ' selecionado(s)';
+            if (btn)     btn.disabled = selChecked === 0;
+            if (master) {
+                master.indeterminate = selChecked > 0 && selChecked < selTotal;
+                master.checked = selChecked > 0 && selChecked === selTotal;
+            }
+        }
+    }
+
+    function toggleTudo(tipo, master) {
+        const selector = tipo === 'pendente' ? '.check-pendente' : '.check-confirmado';
+        document.querySelectorAll(selector).forEach(cb => cb.checked = master.checked);
+        atualizarContador(tipo);
+    }
+
+    function prepararForm(tipo) {
+        if (tipo === 'pendente') {
+            const checks = document.querySelectorAll('.check-pendente:checked');
+            const ids = [];
+            checks.forEach(cb => cb.getAttribute('data-ids').split(',').forEach(id => { if(id.trim()) ids.push(id.trim()); }));
+            document.getElementById('hiddenIdsConfirmar').value = ids.join(',');
+            return ids.length > 0;
+        } else {
+            const checks = document.querySelectorAll('.check-confirmado:checked');
+            const ids = [];
+            checks.forEach(cb => cb.getAttribute('data-ids').split(',').forEach(id => { if(id.trim()) ids.push(id.trim()); }));
+            document.getElementById('hiddenIdsDesconfirmar').value = ids.join(',');
+            return ids.length > 0;
+        }
+    }
+
+    // Ao carregar: ocultar barras se não há itens disponíveis
+    document.addEventListener('DOMContentLoaded', function () {
+        const pendentes = document.querySelectorAll('.check-pendente').length;
+        const confirmados = document.querySelectorAll('.check-confirmado').length;
+
+        if (pendentes === 0) {
+            const bar = document.getElementById('selallBarConfirmar');
+            if (bar) bar.innerHTML = '<span style="color:#888;font-size:13px;">ℹ️ Nenhum item pendente nesta visualização. Use o filtro <strong>Pendentes</strong> para confirmar.</span>';
+        }
+        if (confirmados === 0) {
+            const bar = document.getElementById('selallBarDesconf');
+            if (bar) bar.innerHTML = '<span style="color:#888;font-size:13px;">ℹ️ Nenhum item confirmado nesta visualização. Use o filtro <strong>Confirmados</strong> para desconfirmar.</span>';
         }
     });
-
-    function atualizarSelecao() {
-        const checks   = document.querySelectorAll('.row-check:checked');
-        const total    = checks.length;
-        const disponiveis = document.querySelectorAll('.row-check').length;
-
-        const contEl = document.getElementById('contadorSel');
-        const barEl  = document.getElementById('confirmBar');
-        const btn    = document.getElementById('btnConfirmar');
-        const master = document.getElementById('checkAll');
-
-        if (contEl) contEl.textContent  = total + ' selecionado(s)';
-        if (barEl)  barEl.textContent   = total + ' selecionado(s)';
-        if (btn)    btn.disabled        = total === 0;
-
-        if (master) {
-            master.indeterminate = total > 0 && total < disponiveis;
-            master.checked       = total > 0 && total === disponiveis;
-        }
-    }
-
-    function toggleTudo(master) {
-        document.querySelectorAll('.row-check').forEach(cb => cb.checked = master.checked);
-        atualizarSelecao();
-    }
-
-    function prepararConfirmacao() {
-        const checks = document.querySelectorAll('.row-check:checked');
-        const allIds = [];
-        checks.forEach(cb => {
-            cb.getAttribute('data-ids').split(',').forEach(id => {
-                if (id.trim()) allIds.push(id.trim());
-            });
-        });
-        document.getElementById('hiddenIds').value = allIds.join(',');
-        return allIds.length > 0;
-    }
 </script>
 {% endblock %}
