@@ -1128,7 +1128,7 @@ def api_sugestoes_conteudo(request):
     disciplina_id = request.GET.get('disciplina')
     
     from django.db.models import Q
-    qs = SugestaoConteudo.objects.filter(disciplina_id=disciplina_id)
+    qs = SugestaoConteudo.objects.filter(disciplina_id=disciplina_id).order_by('texto')
     if turma_cod:
         qs = qs.filter(Q(turmas__codigo=turma_cod) | Q(turmas__isnull=True))
     

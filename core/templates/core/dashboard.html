@@ -349,7 +349,19 @@
                 onchange="document.getElementById('dataConteudo').value=this.value; document.getElementById('dataConteudo').dispatchEvent(new Event('change'));">
 
             <label>Conteúdo Ministrado</label>
-            <div id="sugestoesContainer" style="margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 5px;"></div>
+            <div id="sugestoesWrapper" style="display:none; margin-bottom:10px;">
+                <label style="font-size:12px; color:#555; font-weight:600; margin-bottom:5px; display:block;">📋 Sugestões de Conteúdo — selecione uma ou mais:</label>
+                <select id="sugestoesSelect" multiple size="6"
+                    style="width:100%; border:1px solid #c5d5e8; border-radius:6px; padding:4px 6px; font-size:13px; background:#f8fafc; color:#1a1a2e; line-height:1.7;">
+                </select>
+                <div style="display:flex; gap:8px; margin-top:6px; align-items:center;">
+                    <button type="button" onclick="usarSugestoesSelecionadas()"
+                        style="padding:7px 18px; background:#4a90d9; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600;">
+                        ✔ Usar Selecionadas
+                    </button>
+                    <span style="font-size:11px; color:#888;">Ctrl+clique para selecionar múltiplas</span>
+                </div>
+            </div>
             <textarea name="descricao" id="descConteudo" required></textarea>
 
             <button type="submit" id="btnSalvarCont" onclick="return validarFormCont()">Salvar Conteúdo</button>
@@ -791,8 +803,11 @@
 
     function carregarSugestoes(turmaCod, profId) {
         const discId = document.getElementById('discSelectCont').value;
-        const container = document.getElementById('sugestoesContainer');
-        container.innerHTML = '';
+        const wrapper = document.getElementById('sugestoesWrapper');
+        const select = document.getElementById('sugestoesSelect');
+
+        if (wrapper) wrapper.style.display = 'none';
+        if (select) select.innerHTML = '';
 
         if (!discId) return;
 
@@ -801,21 +816,33 @@
             .then(sugestoes => {
                 if (!sugestoes.length) return;
 
-                container.innerHTML = '<div style="width:100%; font-size:12px; color:#666; margin-bottom:5px;">Sugestões (clique para adicionar):</div>';
-                sugestoes.forEach(s => {
-                    const badge = document.createElement('span');
-                    badge.className = 'badge-suggestion';
-                    badge.innerText = '+ ' + s.texto;
-                    badge.onclick = () => adicionarSugestao(s.texto);
-                    container.appendChild(badge);
-                });
+                // Ordenar alfabeticamente (API já ordena, mas garante no front também)
+                sugestoes.sort((a, b) => a.texto.localeCompare(b.texto, 'pt-BR', { sensitivity: 'base' }));
+
+                select.innerHTML = sugestoes.map(s =>
+                    `<option value="${s.id}" data-texto="${s.texto.replace(/"/g, '&quot;')}">${s.texto}</option>`
+                ).join('');
+
+                if (wrapper) wrapper.style.display = 'block';
             });
     }
 
-    function adicionarSugestao(texto) {
+    function usarSugestoesSelecionadas() {
+        const select = document.getElementById('sugestoesSelect');
         const txt = document.getElementById('descConteudo');
+        const selecionados = Array.from(select.selectedOptions).map(o => o.getAttribute('data-texto'));
+
+        if (!selecionados.length) {
+            alert('Selecione pelo menos uma sugestão na lista.');
+            return;
+        }
+
+        const textoAdicional = selecionados.join('\n');
         if (txt.value && !txt.value.endsWith('\n')) txt.value += '\n';
-        txt.value += texto;
+        txt.value += textoAdicional;
+
+        // Desmarcar após uso
+        Array.from(select.options).forEach(o => o.selected = false);
     }
 
     // ── VALIDAÇÃO FORM CONTEÚDO ──
