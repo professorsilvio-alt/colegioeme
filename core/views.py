@@ -1334,15 +1334,21 @@ def lancamentos_coletivos(request):
         return redirect('dashboard')
 
     # Filtros opcionais
-    filtro_prof    = request.GET.get('filtro_prof', '')
-    filtro_data_ini = request.GET.get('data_ini', '')
-    filtro_data_fim = request.GET.get('data_fim', '')
+    filtro_prof      = request.GET.get('filtro_prof', '')
+    filtro_turma     = request.GET.get('filtro_turma', '')
+    filtro_disc      = request.GET.get('filtro_disc', '')
+    filtro_data_ini  = request.GET.get('data_ini', '')
+    filtro_data_fim  = request.GET.get('data_fim', '')
     filtro_confirmado = request.GET.get('confirmado', '0')  # '0'=pendentes '1'=confirmados 'todos'
 
     qs = ConteudoProgramatico.objects.select_related('professor', 'disciplina').prefetch_related('turmas')
 
     if filtro_prof:
         qs = qs.filter(professor_id=filtro_prof)
+    if filtro_turma:
+        qs = qs.filter(turmas__codigo=filtro_turma)
+    if filtro_disc:
+        qs = qs.filter(disciplina_id=filtro_disc)
     if filtro_data_ini:
         qs = qs.filter(data__gte=filtro_data_ini)
     if filtro_data_fim:
@@ -1381,12 +1387,18 @@ def lancamentos_coletivos(request):
     grupos_lista = list(grupos.values())
 
     professores = Professor.objects.filter(cargo='PROFESSOR').order_by('nome')
+    turmas      = Turma.objects.all()
+    disciplinas = Disciplina.objects.all()
 
     return render(request, 'core/lancamentos_coletivos.html', {
         'grupos': grupos_lista,
         'professores': professores,
+        'turmas': turmas,
+        'disciplinas': disciplinas,
         'prof': prof,
         'filtro_prof': filtro_prof,
+        'filtro_turma': filtro_turma,
+        'filtro_disc': filtro_disc,
         'filtro_data_ini': filtro_data_ini,
         'filtro_data_fim': filtro_data_fim,
         'filtro_confirmado': filtro_confirmado,

@@ -10,7 +10,7 @@
     .lc-filters form { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; }
     .lc-filters .fgroup { display:flex; flex-direction:column; gap:4px; }
     .lc-filters label { font-size:12px; font-weight:600; color:#555; }
-    .lc-filters select, .lc-filters input[type=date] { border:1px solid #ccd8ea; border-radius:6px; padding:6px 10px; font-size:13px; background:#fff; }
+    .lc-filters select, .lc-filters input[type=date] { border:1px solid #ccd8ea; border-radius:6px; padding:6px 10px; font-size:13px; background:#fff; min-width:130px; }
     .lc-filters button { padding:7px 18px; background:#003366; color:#fff; border:none; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; }
     .lc-filters a.btn-limpar { padding:7px 14px; background:#8e9aaa; color:#fff; border-radius:6px; font-size:13px; font-weight:600; text-decoration:none; }
 
@@ -23,17 +23,17 @@
     .lc-table td.turmas { white-space:nowrap; }
 
     .badge-confirmado { display:inline-block; background:#e6f9ef; color:#1a7a4a; border:1px solid #9ee8c4; border-radius:20px; padding:3px 10px; font-size:11px; font-weight:700; }
-    .badge-pendente { display:inline-block; background:#fff7ea; color:#b45309; border:1px solid #fcd498; border-radius:20px; padding:3px 10px; font-size:11px; font-weight:700; }
+    .badge-pendente   { display:inline-block; background:#fff7ea; color:#b45309; border:1px solid #fcd498; border-radius:20px; padding:3px 10px; font-size:11px; font-weight:700; }
 
     .btn-confirmar { display:inline-block; padding:10px 24px; background:linear-gradient(135deg,#1a7a4a,#12593a); color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; transition:all .2s; }
     .btn-confirmar:hover { transform:translateY(-1px); box-shadow:0 4px 16px rgba(26,122,74,.3); }
-    .btn-confirmar:disabled { background:#aaa; cursor:not-allowed; transform:none; }
+    .btn-confirmar:disabled { background:#aaa; cursor:not-allowed; transform:none; box-shadow:none; }
 
     .selall-bar { display:flex; align-items:center; gap:14px; padding:10px 14px; background:#eef4ff; border:1px solid #c5d8f7; border-radius:8px; margin-bottom:12px; font-size:13px; }
-    .selall-bar label { cursor:pointer; }
+    .selall-bar label { cursor:pointer; display:flex; align-items:center; gap:6px; }
 
-    .confirmation-bar { position:sticky; bottom:16px; background:#fff; border:2px solid #003366; border-radius:12px; padding:14px 20px; display:flex; align-items:center; gap:16px; box-shadow:0 8px 32px rgba(0,51,102,.18); margin-top:20px; }
-    .confirmation-bar .count-badge { background:#003366; color:#fff; border-radius:20px; padding:4px 14px; font-size:13px; font-weight:700; }
+    .confirmation-bar { position:sticky; bottom:16px; background:#fff; border:2px solid #003366; border-radius:12px; padding:14px 20px; display:flex; align-items:center; gap:16px; box-shadow:0 8px 32px rgba(0,51,102,.18); margin-top:20px; flex-wrap:wrap; }
+    .confirmation-bar .count-badge { background:#003366; color:#fff; border-radius:20px; padding:4px 14px; font-size:13px; font-weight:700; white-space:nowrap; }
 
     .empty-state { text-align:center; padding:60px 20px; color:#8899aa; }
     .empty-state .icon { font-size:48px; margin-bottom:12px; display:block; }
@@ -57,6 +57,24 @@
             </select>
         </div>
         <div class="fgroup">
+            <label>Turma</label>
+            <select name="filtro_turma">
+                <option value="">Todas</option>
+                {% for t in turmas %}
+                <option value="{{ t.codigo }}" {% if filtro_turma == t.codigo %}selected{% endif %}>{{ t.codigo }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="fgroup">
+            <label>Disciplina</label>
+            <select name="filtro_disc">
+                <option value="">Todas</option>
+                {% for d in disciplinas %}
+                <option value="{{ d.pk }}" {% if filtro_disc == d.pk|stringformat:"d" %}selected{% endif %}>{{ d.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="fgroup">
             <label>Data Inicial</label>
             <input type="date" name="data_ini" value="{{ filtro_data_ini }}">
         </div>
@@ -67,9 +85,9 @@
         <div class="fgroup">
             <label>Status</label>
             <select name="confirmado">
-                <option value="0" {% if filtro_confirmado == "0" %}selected{% endif %}>⏳ Pendentes</option>
-                <option value="1" {% if filtro_confirmado == "1" %}selected{% endif %}>✅ Confirmados</option>
-                <option value="todos" {% if filtro_confirmado == "todos" %}selected{% endif %}>Todos</option>
+                <option value="0"    {% if filtro_confirmado == "0"    %}selected{% endif %}>⏳ Pendentes</option>
+                <option value="1"    {% if filtro_confirmado == "1"    %}selected{% endif %}>✅ Confirmados</option>
+                <option value="todos"{% if filtro_confirmado == "todos" %}selected{% endif %}>Todos</option>
             </select>
         </div>
         <button type="submit">Filtrar</button>
@@ -79,10 +97,7 @@
 
 {% if messages %}
 {% for m in messages %}
-<div style="padding:10px 16px; margin-bottom:12px; border-radius:8px;
-    background:{% if 'confirmado' in m.message or '✅' in m.message %}#e6f9ef{% elif 'Nenhum' in m.message or '⛔' in m.message %}#fff0f0{% else %}#fff7ea{% endif %};
-    border:1px solid {% if 'confirmado' in m.message or '✅' in m.message %}#9ee8c4{% elif 'Nenhum' in m.message %}#f5c6cb{% else %}#fcd498{% endif %};
-    color:#333; font-size:13px; font-weight:600;">
+<div style="padding:10px 16px; margin-bottom:12px; border-radius:8px; background:#f0fff8; border:1px solid #9ee8c4; color:#1a4a34; font-size:13px; font-weight:600;">
     {{ m }}
 </div>
 {% endfor %}
@@ -95,13 +110,13 @@
     {% csrf_token %}
     <input type="hidden" name="ids_confirmacao" id="hiddenIds" value="">
 
-    <div class="selall-bar">
+    <div class="selall-bar" id="selallBar">
         <label>
             <input type="checkbox" id="checkAll" onchange="toggleTudo(this)">
             <strong>Selecionar todos</strong>
         </label>
-        <span style="color:#888;">|</span>
-        <span id="contadorSel">0 selecionados</span>
+        <span style="color:#ccc;">|</span>
+        <span id="contadorSel">0 selecionado(s)</span>
     </div>
 {% endif %}
 
@@ -162,8 +177,8 @@
 </table>
 
 {% if is_secretaria and filtro_confirmado != "1" %}
-    <div class="confirmation-bar">
-        <span class="count-badge" id="confirmBar">0 selecionados</span>
+    <div class="confirmation-bar" id="confirmationBar">
+        <span class="count-badge" id="confirmBar">0 selecionado(s)</span>
         <button type="submit" class="btn-confirmar" id="btnConfirmar" disabled
             onclick="prepararConfirmacao()">
             ✅ Confirmar Lançamentos Selecionados
@@ -187,17 +202,37 @@
 
 {% block extra_js %}
 <script>
-    function atualizarSelecao() {
-        const checks = document.querySelectorAll('.row-check:checked');
-        const total = checks.length;
-        document.getElementById('contadorSel').textContent = total + ' selecionado(s)';
-        document.getElementById('confirmBar').textContent = total + ' selecionado(s)';
-        document.getElementById('btnConfirmar').disabled = total === 0;
+    // Ao carregar, verificar se existem checkboxes disponíveis
+    document.addEventListener('DOMContentLoaded', function () {
+        const bar = document.getElementById('selallBar');
+        const confBar = document.getElementById('confirmationBar');
+        const checks = document.querySelectorAll('.row-check');
 
-        // Atualizar check-all
-        const todos = document.querySelectorAll('.row-check');
-        document.getElementById('checkAll').indeterminate = total > 0 && total < todos.length;
-        document.getElementById('checkAll').checked = total === todos.length && todos.length > 0;
+        if (bar && checks.length === 0) {
+            // Não há itens pendentes para selecionar
+            bar.innerHTML = '<span style="color:#888; font-size:13px;">ℹ️ Todos os lançamentos visíveis já foram confirmados. Use o filtro <strong>Pendentes</strong> para ver itens a confirmar.</span>';
+            if (confBar) confBar.style.display = 'none';
+        }
+    });
+
+    function atualizarSelecao() {
+        const checks   = document.querySelectorAll('.row-check:checked');
+        const total    = checks.length;
+        const disponiveis = document.querySelectorAll('.row-check').length;
+
+        const contEl = document.getElementById('contadorSel');
+        const barEl  = document.getElementById('confirmBar');
+        const btn    = document.getElementById('btnConfirmar');
+        const master = document.getElementById('checkAll');
+
+        if (contEl) contEl.textContent  = total + ' selecionado(s)';
+        if (barEl)  barEl.textContent   = total + ' selecionado(s)';
+        if (btn)    btn.disabled        = total === 0;
+
+        if (master) {
+            master.indeterminate = total > 0 && total < disponiveis;
+            master.checked       = total > 0 && total === disponiveis;
+        }
     }
 
     function toggleTudo(master) {
@@ -206,14 +241,15 @@
     }
 
     function prepararConfirmacao() {
-        // Coleta todos os IDs de todos os grupos selecionados
         const checks = document.querySelectorAll('.row-check:checked');
         const allIds = [];
         checks.forEach(cb => {
-            const ids = cb.getAttribute('data-ids').split(',');
-            ids.forEach(id => { if (id.trim()) allIds.push(id.trim()); });
+            cb.getAttribute('data-ids').split(',').forEach(id => {
+                if (id.trim()) allIds.push(id.trim());
+            });
         });
         document.getElementById('hiddenIds').value = allIds.join(',');
+        return allIds.length > 0;
     }
 </script>
 {% endblock %}
