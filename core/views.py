@@ -1904,7 +1904,9 @@ def recuperar_senha(request):
                 Q(email_contato__iexact=email) | Q(user__email__iexact=email)
             ).first()
 
-            if prof and prof.email_contato:
+            # Aceita email_contato OU user.email como destino válido
+            email_destino = (prof.email_contato or prof.user.email) if prof else None
+            if prof and email_destino:
                 import secrets
                 import string
 
@@ -1940,8 +1942,10 @@ def _enviar_email_senha_temporaria(prof, senha_temp, request):
     from django.core.mail import send_mail
     from django.conf import settings
 
-    destino = prof.email_contato or prof.user.email
+    destino = prof.email_contato or getattr(prof.user, 'email', None)
     if not destino:
+        import logging
+        logging.getLogger(__name__).warning(f'Nenhum e-mail cadastrado para o professor {prof.nome}. E-mail não enviado.')
         return
 
     assunto = 'Capelum — Sua senha temporária de acesso'
