@@ -137,6 +137,9 @@ LOGOUT_REDIRECT_URL = '/login/'
 
 # Only enable these in production (when DEBUG is False and SSL is available)
 if not DEBUG:
+    # Proxy SSL Header (Necessário para PythonAnywhere/NGINX reconhecer HTTPS)
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    
     # HSTS
     SECURE_HSTS_SECONDS = 31536000  # 1 year
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
