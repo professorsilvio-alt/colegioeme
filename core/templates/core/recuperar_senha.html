@@ -187,7 +187,7 @@
         }
 
         .owl-mascot {
-            width: 80px;
+            width: 75px;
             height: auto;
             display: block;
         }
@@ -195,31 +195,24 @@
         .brand-text-wrapper {
             display: flex;
             flex-direction: column;
-            align-items: flex-start;
-            text-align: left;
+            align-items: center;
+            text-align: center;
         }
 
         .brand-name-text {
             font-family: 'Cinzel', serif;
-            font-size: 58px;
+            font-size: 64px;
             font-weight: 700;
-            line-height: 0.85;
+            line-height: 0.8;
             color: #ffffff;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
             margin: 0;
             padding: 0;
-            -webkit-text-stroke: 1.1px #d4af37;
-            text-shadow: 0 0 20px rgba(212, 175, 55, 0.35);
+            -webkit-text-stroke: 1.3px #d4af37;
+            text-shadow: 0 0 25px rgba(212, 175, 55, 0.4);
         }
 
-        .brand-subname-text {
-            font-size: 13px;
-            font-weight: 400;
-            color: rgba(212, 175, 55, 0.8);
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            margin-top: 5px;
-        }
+        .brand-subname-text { display: none; }
 
         @keyframes logoEntry {
             from {
@@ -442,14 +435,8 @@
                 margin-bottom: 20px;
             }
 
-            .owl-mascot {
-                width: 50px;
-            }
-
-            .brand-name-text {
-                font-size: 38px;
-                -webkit-text-stroke: 0.8px #d4af37;
-            }
+            .owl-mascot { width: 55px; }
+            .brand-name-text { font-size: 42px; -webkit-text-stroke: 1px #d4af37; }
 
             .brand-subname-text {
                 font-size: 10px;
@@ -485,13 +472,12 @@
         </div>
         <div class="brand-content">
             <div class="brand-logo-container">
-                <img src="{% static 'core/owl_mascot.png' %}?v=2" alt="Capelum Mascot" class="owl-mascot">
-                <div class="brand-text-wrapper">
-                    <h1 class="brand-name-text">CAPELUM</h1>
-                    <span class="brand-subname-text">Controle Acadêmico</span>
-                </div>
+            <img src="{% static 'core/owl_head.png' %}?v=3" alt="Capelum Mascot" class="owl-mascot">
+            <div class="brand-text-wrapper">
+                <h1 class="brand-name-text">CAPELUM</h1>
             </div>
-            <div class="brand-product">SCA — Sistema de Controle Acadêmico</div>
+        </div>
+        <div class="brand-product">SCA — Controle Acadêmico</div>
             <p class="brand-tagline">Gestão escolar inteligente, moderna e segura para sua instituição de ensino.</p>
         </div>
     </div>
