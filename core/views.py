@@ -54,7 +54,9 @@ def get_feriados():
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 from django.shortcuts import get_object_or_404, redirect, render
 from django.http import FileResponse, HttpResponse, JsonResponse
 from django.views.decorators.http import require_POST
@@ -2260,8 +2262,6 @@ def cadastrar_email(request):
 # RECUPERAÇÃO DE SENHA (SENHA TEMPORÁRIA)
 # ──────────────────────────────────────────────
 
-from django.contrib.auth import views as auth_views
-
 class CustomPasswordResetView(auth_views.PasswordResetView):
     template_name = 'core/recuperar_senha.html'
     email_template_name = 'registration/password_reset_email.html'
@@ -2273,10 +2273,9 @@ class CustomPasswordResetDoneView(auth_views.PasswordResetDoneView):
 
 class CustomPasswordResetConfirmView(auth_views.PasswordResetConfirmView):
     template_name = 'registration/password_reset_confirm.html'
-    success_url = '/login/' # Redireciona para login após trocar
+    success_url = '/login/'
 
     def form_valid(self, form):
-        # Quando a senha é resetada com sucesso, desmarca a flag de troca obrigatória se existir
         user = form.save()
         prof = getattr(user, 'professor', None)
         if prof:
