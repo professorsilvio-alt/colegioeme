@@ -302,14 +302,20 @@ class SugestaoConteudoAdmin(admin.ModelAdmin):
 
 @admin.register(Professor)
 class ProfessorAdmin(admin.ModelAdmin):
-    list_display = ['nome', 'cargo_badge', 'cpf', 'todas_turmas', 'todas_disciplinas']
-    list_filter = ['cargo']
-    search_fields = ['nome', 'cpf']
+    list_display = ['nome', 'cargo_badge', 'cpf', 'email_contato', 'deve_trocar_senha', 'todas_turmas', 'todas_disciplinas']
+    list_filter = ['cargo', 'deve_trocar_senha']
+    search_fields = ['nome', 'cpf', 'email_contato']
     ordering = ['cargo', 'nome']
     filter_horizontal = ['turmas', 'turmas_inspetor', 'disciplinas']
+    # Permite editar deve_trocar_senha diretamente na listagem
+    list_editable = ['deve_trocar_senha']
     fieldsets = [
         ('Dados Pessoais', {
-            'fields': ['user', 'nome', 'cpf', 'cargo']
+            'fields': ['user', 'nome', 'cpf', 'email_contato', 'cargo']
+        }),
+        ('Acesso ao Sistema', {
+            'fields': ['deve_trocar_senha'],
+            'description': 'Marque esta opção para forçar o usuário a criar uma nova senha no próximo login.',
         }),
         ('Permissões', {
             'fields': ['todas_turmas', 'todas_disciplinas']
