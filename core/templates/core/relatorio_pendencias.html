@@ -71,7 +71,7 @@
                 </div>
 
                 <div style="text-align: right;">
-                    <button type="submit" class="btn-primary" style="background: #e67e22; border: none; padding: 8px 20px;" onclick="return confirm('Confirmar lançamento para as turmas selecionadas?')">Realizar Lançamento</button>
+                    <button type="submit" class="btn-primary" style="background: #e67e22; border: none; padding: 8px 20px;">Realizar Lançamento</button>
                 </div>
             </form>
         </div>
@@ -252,4 +252,98 @@
     .text-danger { color: #e74c3c; }
     .text-success { color: #27ae60; }
 </style>
+<script>
+    // ── INTERCEPTADOR DE SUBMIT PARA DUPLICIDADE (COLETIVO) ──
+    const formColetivoEl = document.querySelector('form[action*="lancamento_coletivo"]');
+    if (formColetivoEl) {
+        formColetivoEl.addEventListener('submit', async function(e) {
+            // Se já tem resoluções injetadas (segunda tentativa), deixa passar
+            if (this.querySelector('.res-input')) return;
+
+            e.preventDefault();
+            const dataVal = this.querySelector('input[name="data"]').value;
+            const checks = this.querySelectorAll('input[name="turmas_coletivo"]:checked');
+            const turmaIds = Array.from(checks).map(cb => cb.value);
+
+            if (!dataVal || turmaIds.length === 0) {
+                alert("Selecione a data e as turmas.");
+                return;
+            }
+
+            const p = new URLSearchParams();
+            p.append('data', dataVal);
+            turmaIds.forEach(id => p.append('turmas[]', id));
+
+            try {
+                const r = await fetch(`/api/conteudo/precheck-coletivo/?${p.toString()}`);
+                const res = await r.json();
+                
+                if (res.conflicts && res.conflicts.length > 0) {
+                    abrirModalConflitosColetivo(res.conflicts, this);
+                } else {
+                    // Sem conflitos, confirmação normal
+                    if (confirm('Confirmar lançamento para as turmas selecionadas?')) {
+                        this.submit();
+                    }
+                }
+            } catch (err) {
+                console.error("API error:", err);
+                this.submit();
+            }
+        });
+    }
+
+    let formPendente = null;
+
+    function abrirModalConflitosColetivo(conflicts, form) {
+        formPendente = form;
+        const container = document.getElementById('listaConflitos');
+        container.innerHTML = '';
+
+        conflicts.forEach(c => {
+            const item = document.createElement('div');
+            item.className = 'conflict-item';
+            item.innerHTML = `
+                <div class="conflict-info">
+                    <strong>Turma ${c.turma_cod}</strong><br>
+                    <span style="font-weight: normal; color: #666; font-size: 11px;">${c.prof_nome} - ${c.disc_nome}</span>
+                </div>
+                <div class="conflict-actions">
+                    <button type="button" class="conflict-btn active" data-res="pular" onclick="selecionarResolucao(this)">Pular</button>
+                    <button type="button" class="conflict-btn" data-res="mesclar" onclick="selecionarResolucao(this)">Mesclar</button>
+                </div>
+                <input type="hidden" name="resolucao_${c.turma_id}" value="pular" class="res-input">
+            `;
+            container.appendChild(item);
+        });
+
+        document.getElementById('modalConflito').style.display = 'flex';
+    }
+
+    function selecionarResolucao(btn) {
+        const parent = btn.parentElement;
+        parent.querySelectorAll('.conflict-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        const res = btn.getAttribute('data-res');
+        const hidden = btn.closest('.conflict-item').querySelector('.res-input');
+        if (hidden) hidden.value = res;
+    }
+
+    function fecharModalConflito() {
+        document.getElementById('modalConflito').style.display = 'none';
+        formPendente = null;
+    }
+
+    function confirmarResolucao() {
+        if (formPendente) {
+            const inputs = document.querySelectorAll('#listaConflitos .res-input');
+            inputs.forEach(inp => {
+                const clone = inp.cloneNode();
+                formPendente.appendChild(clone);
+            });
+            formPendente.submit();
+        }
+    }
+</script>
 {% endblock %}

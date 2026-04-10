@@ -381,7 +381,7 @@
             </div>
             <textarea name="descricao" id="descConteudo" required></textarea>
 
-            <button type="submit" id="btnSalvarCont" onclick="return validarFormCont()">Salvar Conteúdo</button>
+            <button type="submit" id="btnSalvarCont">Salvar Conteúdo</button>
             <button type="button" class="btn-cancel" onclick="toggleSection('formConteudo')">Cancelar</button>
         </form>
     </div>
@@ -870,11 +870,104 @@
     // ── VALIDAÇÃO FORM CONTEÚDO ──
     function validarFormCont() {
         const data = document.getElementById('dataConteudo') && document.getElementById('dataConteudo').value;
+        const desc = document.getElementById('descConteudo') && document.getElementById('descConteudo').value.trim();
         if (!data) {
             alert('Selecione a data da aula antes de salvar.');
             return false;
         }
+        if (!desc) {
+            alert('A descrição do conteúdo é obrigatória.');
+            return false;
+        }
         return true;
+    }
+
+    // ── INTERCEPTADOR DE SUBMIT PARA DUPLICIDADE ──
+    const formConteudoEl = document.querySelector('#formConteudo form');
+    if (formConteudoEl) {
+        formConteudoEl.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if (!validarFormCont()) return;
+
+            const dataVal = document.getElementById('dataConteudo').value;
+            const profId = document.getElementById('profSelectCont').value;
+            const discId = document.getElementById('discSelectCont').value;
+            
+            const turmaPrincipal = document.getElementById('turmaSelectCont').value;
+            const checks = document.querySelectorAll('.companion-check:checked');
+            const todasTurmas = [turmaPrincipal, ...Array.from(checks).map(cb => cb.value)];
+
+            const p = new URLSearchParams();
+            p.append('data', dataVal);
+            p.append('professor', profId);
+            p.append('disciplina', discId);
+            todasTurmas.forEach(t => p.append('turmas[]', t));
+
+            try {
+                const r = await fetch(`/api/conteudo/verificar-duplicidade/?${p.toString()}`);
+                const res = await r.json();
+                
+                if (res.conflicts && res.conflicts.length > 0) {
+                    abrirModalConflitos(res.conflicts, this);
+                } else {
+                    this.submit();
+                }
+            } catch (err) {
+                console.error("API error:", err);
+                this.submit();
+            }
+        });
+    }
+
+    let formPendente = null;
+
+    function abrirModalConflitos(conflicts, form) {
+        formPendente = form;
+        const container = document.getElementById('listaConflitos');
+        container.innerHTML = '';
+
+        conflicts.forEach(tCod => {
+            const item = document.createElement('div');
+            item.className = 'conflict-item';
+            item.innerHTML = `
+                <div class="conflict-info">Turma ${tCod}</div>
+                <div class="conflict-actions">
+                    <button type="button" class="conflict-btn active" data-res="pular" onclick="selecionarResolucao(this, '${tCod}')">Pular</button>
+                    <button type="button" class="conflict-btn" data-res="mesclar" onclick="selecionarResolucao(this, '${tCod}')">Mesclar</button>
+                </div>
+                <input type="hidden" name="resolucao_${tCod}" value="pular" class="res-input">
+            `;
+            container.appendChild(item);
+        });
+
+        document.getElementById('modalConflito').style.display = 'flex';
+    }
+
+    function selecionarResolucao(btn, tCod) {
+        const parent = btn.parentElement;
+        parent.querySelectorAll('.conflict-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        const res = btn.getAttribute('data-res');
+        const hidden = btn.closest('.conflict-item').querySelector('.res-input');
+        if (hidden) hidden.value = res;
+    }
+
+    function fecharModalConflito() {
+        document.getElementById('modalConflito').style.display = 'none';
+        formPendente = null;
+    }
+
+    function confirmarResolucao() {
+        if (formPendente) {
+            // Clona os inputs de resolução para o formulário principal
+            const inputs = document.querySelectorAll('#listaConflitos .res-input');
+            inputs.forEach(inp => {
+                const clone = inp.cloneNode();
+                formPendente.appendChild(clone);
+            });
+            formPendente.submit();
+        }
     }
 
     // ── AUTO-LANÇAR DAS PENDÊNCIAS ──
@@ -985,23 +1078,4 @@
 
     document.addEventListener('DOMContentLoaded', handleAutoLancar);
 </script>
-
-<style>
-    .badge-suggestion {
-        background: #e1f5fe;
-        color: #01579b;
-        border: 1px solid #b3e5fc;
-        padding: 4px 10px;
-        border-radius: 15px;
-        font-size: 13px;
-        cursor: pointer;
-        transition: all 0.2s;
-        user-select: none;
-    }
-
-    .badge-suggestion:hover {
-        background: #b3e5fc;
-        transform: translateY(-1px);
-    }
-</style>
 {% endblock %}

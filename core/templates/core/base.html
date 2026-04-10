@@ -59,6 +59,54 @@
 <div class="container">
 {% block content %}{% endblock %}
 </div>
+
+<!-- Modal de Resolução de Conflitos (Duplicidade) - Global -->
+<div id="modalConflito" class="custom-modal" style="display:none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>⚠️ Lançamento já existente</h3>
+            <button type="button" class="close-modal" onclick="fecharModalConflito()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size: 14px; margin-bottom: 10px;">O sistema identificou que já existem lançamentos para os seguintes itens nesta data:</p>
+            <div id="listaConflitos" class="conflict-list"></div>
+            <p style="margin-top: 15px; font-size: 13px; color: #666;">Como deseja prosseguir com estes registros?</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-primary" onclick="confirmarResolucao()" style="padding: 10px 20px;">Confirmar e Salvar</button>
+            <button type="button" class="btn-cancel" onclick="fecharModalConflito()" style="padding: 10px 20px;">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Estilos para o Modal Customizado (Global) */
+.custom-modal {
+    position: fixed; z-index: 99999; left: 0; top: 0; width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center;
+}
+.modal-content {
+    background: white; padding: 0; border-radius: 12px; width: 95%; max-width: 500px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.3); overflow: hidden; animation: modalIn 0.3s ease-out;
+}
+@keyframes modalIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.modal-header { background: #f8fafc; padding: 18px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+.modal-header h3 { margin: 0; color: #c53030; font-size: 18px; font-weight: 700; }
+.close-modal { background: none; border: none; font-size: 28px; cursor: pointer; color: #999; line-height: 1; }
+.modal-body { padding: 24px; color: #4a5568; line-height: 1.5; }
+.conflict-list { background: #fff5f5; border: 1px solid #fed7d7; border-radius: 8px; padding: 15px; margin-top: 10px; max-height: 250px; overflow-y: auto; }
+.conflict-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #feb2b2; }
+.conflict-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+.conflict-info { font-weight: 700; color: #c53030; font-size: 13px; flex-grow: 1; margin-right: 10px; }
+.conflict-actions { display: flex; gap: 6px; }
+.conflict-btn { 
+    padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; 
+    border: 1px solid #cbd5e0; background: #fff; color: #4a5568; transition: all 0.2s; white-space: nowrap;
+}
+.conflict-btn:hover { background: #f7fafc; }
+.conflict-btn.active { background: #003366; color: white; border-color: #003366; }
+.modal-footer { padding: 15px 24px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px; background: #f8fafc; }
+</style>
 {% endblock %}
 
 {% block extra_js %}{% endblock %}

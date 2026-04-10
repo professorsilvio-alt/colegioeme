@@ -82,3 +82,49 @@ class SecurityTests(TestCase):
         # Should redirect back to dashboard because it's missing fields, not access denied
         self.assertEqual(response.status_code, 302)
         # Note: In our views.py, failure to provide fields redirects to dashboard with error message
+
+class DuplicateProtectionTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.turma = Turma.objects.create(codigo='93')
+        self.disc = Disciplina.objects.create(nome='História')
+        self.u_prof = User.objects.create_user(username='prof93', password='pass')
+        self.prof = Professor.objects.create(user=self.u_prof, nome='Silvio', cargo='PROFESSOR')
+        self.prof.turmas.add(self.turma)
+        self.prof.disciplinas.add(self.disc)
+        self.data = datetime.date(2026, 4, 10)
+        
+        # Create initial record
+        self.cont = ConteudoProgramatico.objects.create(
+            data=self.data, professor=self.prof, disciplina=self.disc, descricao='Aula 1'
+        )
+        self.cont.turmas.add(self.turma)
+
+    def test_skip_resolution(self):
+        self.client.login(username='prof93', password='pass')
+        # Attempt to create duplicate with 'pular' resolution
+        response = self.client.post(reverse('conteudo_criar'), {
+            'data': self.data.isoformat(),
+            'turmas': ['93'],
+            'disciplina': self.disc.id,
+            'descricao': 'Aula 1 Duplicate',
+            'resolucao_93': 'pular'
+        })
+        self.assertEqual(ConteudoProgramatico.objects.filter(data=self.data, turmas=self.turma).count(), 1)
+        self.assertEqual(ConteudoProgramatico.objects.get(id=self.cont.id).descricao, 'Aula 1')
+
+    def test_merge_resolution(self):
+        self.client.login(username='prof93', password='pass')
+        # Attempt to create duplicate with 'mesclar' resolution
+        response = self.client.post(reverse('conteudo_criar'), {
+            'data': self.data.isoformat(),
+            'turmas': ['93'],
+            'disciplina': self.disc.id,
+            'descricao': 'Novo Conteúdo',
+            'resolucao_93': 'mesclar'
+        })
+        self.cont.refresh_from_db()
+        self.assertIn('Aula 1', self.cont.descricao)
+        self.assertIn('[MESCLADO EM', self.cont.descricao)
+        self.assertIn('Novo Conteúdo', self.cont.descricao)
+        self.assertEqual(ConteudoProgramatico.objects.filter(data=self.data, turmas=self.turma).count(), 1)
