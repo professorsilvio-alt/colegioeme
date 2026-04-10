@@ -27,10 +27,12 @@ class SecurityHeadersMiddleware:
         # CSP básica: permite apenas mesma origem e estilos inline seguros
         csp = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline'; "
+            "script-src 'self' 'unsafe-inline' https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/; "
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data:; "
+            "frame-src https://www.google.com/recaptcha/; "
+            "connect-src 'self'; "
             "frame-ancestors 'none';"
         )
         response['Content-Security-Policy'] = csp

@@ -76,12 +76,42 @@ from .models import (Aluno, ConteudoProgramatico, Disciplina, Ocorrencia,
 # AUTH
 # ──────────────────────────────────────────────
 
+def _verificar_recaptcha(token):
+    """Verifica o token reCAPTCHA v3 com os servidores do Google. Retorna True se válido."""
+    import urllib.request
+    import urllib.parse
+    import json
+    secret = settings.RECAPTCHA_SECRET_KEY
+    if not secret or not token:
+        # Se não configurado, permite a requisição (modo de desenvolvimento)
+        return True
+    data = urllib.parse.urlencode({
+        'secret': secret,
+        'response': token,
+    }).encode()
+    try:
+        req = urllib.request.Request('https://www.google.com/recaptcha/api/siteverify', data=data)
+        with urllib.request.urlopen(req, timeout=5) as response:
+            result = json.loads(response.read().decode())
+        return result.get('success', False) and result.get('score', 0) >= settings.RECAPTCHA_MIN_SCORE
+    except Exception:
+        # Em caso de falha de rede, permite (não bloqueia usuários legítimos)
+        return True
+
+
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
     if request.method == 'POST':
         usuario = request.POST.get('usuario', '').strip()
         senha = request.POST.get('senha', '')
+        token = request.POST.get('g-recaptcha-response', '')
+
+        # Verifica reCAPTCHA antes de autenticar
+        if not _verificar_recaptcha(token):
+            messages.error(request, 'Verificação de segurança falhou. Tente novamente.')
+            return render(request, 'core/login.html')
+
         user = authenticate(request, username=usuario, password=senha)
         if user:
             login(request, user)
@@ -96,7 +126,7 @@ def login_view(request):
             attempts = cache.get(cache_key, 0)
             cache.set(cache_key, attempts + 1, 300) # Expira em 5 min
             messages.error(request, 'Usuário ou senha incorretos!')
-    return render(request, 'core/login.html')
+    return render(request, 'core/login.html', {'recaptcha_site_key': settings.RECAPTCHA_SITE_KEY})
 
 
 def logout_view(request):
