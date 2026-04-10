@@ -83,8 +83,17 @@ def login_view(request):
         user = authenticate(request, username=usuario, password=senha)
         if user:
             login(request, user)
+            # Limpa tentativas em caso de sucesso
+            ip = request.META.get('REMOTE_ADDR')
+            cache.delete(f'login_attempts_{ip}')
             return redirect('dashboard')
-        messages.error(request, 'Usuário ou senha incorretos!')
+        else:
+            # Incrementa tentativas em caso de falha
+            ip = request.META.get('REMOTE_ADDR')
+            cache_key = f'login_attempts_{ip}'
+            attempts = cache.get(cache_key, 0)
+            cache.set(cache_key, attempts + 1, 300) # Expira em 5 min
+            messages.error(request, 'Usuário ou senha incorretos!')
     return render(request, 'core/login.html')
 
 
@@ -472,6 +481,91 @@ def api_professor_grades(request, prof_id):
         mapping[g['turma__codigo']].append(g['dia_semana'])
     
     return JsonResponse(dict(mapping), safe=False)
+    
+
+@login_required
+def api_verificar_duplicidade(request):
+    """
+    Verifica se já existem registros de conteúdo para as turmas na data e disciplina informadas.
+    Retorna uma lista de códigos de turmas que já possuem lançamento.
+    """
+    data_str = request.GET.get('data')
+    prof_id = request.GET.get('professor')
+    disc_id = request.GET.get('disciplina')
+    turma_cods = request.GET.getlist('turmas[]')
+
+    if not all([data_str, prof_id, disc_id, turma_cods]):
+        return JsonResponse({'conflicts': []})
+
+    from .models import ConteudoProgramatico
+    conflicts = []
+    
+    for t_cod in turma_cods:
+        # Verifica se já existe um registro para este professor, nesta data, nesta disciplina contendo esta turma
+        exists = ConteudoProgramatico.objects.filter(
+            data=data_str,
+            professor_id=prof_id,
+            disciplina_id=disc_id,
+            turmas__codigo=t_cod
+        ).exists()
+        if exists:
+            conflicts.append(t_cod)
+            
+    return JsonResponse({'conflicts': conflicts})
+
+
+@login_required
+def api_precheck_coletivo(request):
+    """
+    Pre-check para lançamento coletivo: identifica conflitos para múltiplos professores/turmas.
+    """
+    data_str = request.GET.get('data')
+    turma_ids = request.GET.getlist('turmas[]')
+
+    if not data_str or not turma_ids:
+        return JsonResponse({'conflicts': []})
+
+    try:
+        data_obj = datetime.datetime.strptime(data_str, '%Y-%m-%d').date()
+    except ValueError:
+        return JsonResponse({'conflicts': []})
+
+    wd = data_obj.weekday()
+    if wd > 4: return JsonResponse({'conflicts': []})
+    dia_semana_str = str(wd + 1)
+
+    from .models import GradeHoraria, ConteudoProgramatico
+    # Busca todas as aulas para as turmas selecionadas no dia da semana correspondente
+    grades = GradeHoraria.objects.filter(
+        dia_semana=dia_semana_str,
+        turma_id__in=turma_ids
+    ).select_related('professor', 'disciplina', 'turma')
+
+    conflicts = []
+    seen = set() # Evita duplicatas na lista de conflitos caso haja múltiplas grades idênticas
+
+    for g in grades:
+        key = (g.professor_id, g.disciplina_id, g.turma_id)
+        if key in seen: continue
+
+        # Verifica se já existe um registro para este professor, nesta data, nesta disciplina contendo esta turma
+        exists = ConteudoProgramatico.objects.filter(
+            data=data_obj,
+            professor_id=g.professor_id,
+            disciplina_id=g.disciplina_id,
+            turmas__id=g.turma_id
+        ).exists()
+
+        if exists:
+            conflicts.append({
+                'turma_id': g.turma_id,
+                'turma_cod': g.turma.codigo,
+                'prof_nome': g.professor.nome,
+                'disc_nome': g.disciplina.nome
+            })
+            seen.add(key)
+
+    return JsonResponse({'conflicts': conflicts})
 
 
 def calcular_stats_conteudo(prof, data_ini=None, data_fim=None, feriados=None):
@@ -798,29 +892,38 @@ def lancamento_coletivo(request):
 
         with transaction.atomic():
             for g in grades:
-                # Check if already exists for this date+prof+disc+turma
-                # Note: ConteudoProgramatico.turmas is ManyToMany. 
-                # Our simple check: does any Conteudo exist for this date, prof, disc AND contains this turma?
-                exists = ConteudoProgramatico.objects.filter(
+                t_id = g['turma_id']
+                # Busca resolução específica enviada pelo form (se houver conflito detectado no front)
+                res = request.POST.get(f'resolucao_{t_id}')
+                
+                if res == 'pular':
+                    ja_existiam += 1
+                    continue
+
+                existing = ConteudoProgramatico.objects.filter(
                     data=data_obj,
                     professor_id=g['professor_id'],
                     disciplina_id=g['disciplina_id'],
-                    turmas__id=g['turma_id']
-                ).exists()
+                    turmas__id=t_id
+                ).first()
 
-                if not exists:
+                if res == 'mesclar' and existing:
+                    existing.descricao += f"\n\n[MESCLADO EM {datetime.date.today().strftime('%d/%m/%Y')}]: {descricao}"
+                    existing.save()
+                    criados += 1
+                elif not existing:
                     cp = ConteudoProgramatico.objects.create(
                         data=data_obj,
                         professor_id=g['professor_id'],
                         disciplina_id=g['disciplina_id'],
                         descricao=descricao
                     )
-                    cp.turmas.add(g['turma_id'])
+                    cp.turmas.add(t_id)
                     criados += 1
                 else:
                     ja_existiam += 1
 
-        messages.success(request, f"Lançamento coletivo concluído: {criados} novos registros criados. ({ja_existiam} já existiam)")
+        messages.success(request, f"Lançamento coletivo concluído: {criados} registros processados. ({ja_existiam} pulados ou já existiam)")
         return redirect('relatorio_pendencias')
 
     return redirect('relatorio_pendencias')
@@ -1159,13 +1262,33 @@ def conteudo_criar(request):
     else:
         professor = prof_logado
 
-    turmas = Turma.objects.filter(codigo__in=turmas_cods)
-    
-    for turma in turmas:
-        cont = ConteudoProgramatico.objects.create(
-            data=data, professor=professor, disciplina=disciplina, descricao=descricao
-        )
-        cont.turmas.add(turma)
+    from django.db import transaction
+    with transaction.atomic():
+        for t_cod in turmas_cods:
+            res = request.POST.get(f'resolucao_{t_cod}')
+            
+            if res == 'pular':
+                continue
+            
+            # Busca registro existente para possível mesclagem
+            existing = ConteudoProgramatico.objects.filter(
+                data=data,
+                professor=professor,
+                disciplina=disciplina,
+                turmas__codigo=t_cod
+            ).first()
+
+            if res == 'mesclar' and existing:
+                existing.descricao += f"\n\n[MESCLADO EM {datetime.date.today().strftime('%d/%m/%Y')}]: {descricao}"
+                existing.save()
+            elif not existing or not res:
+                # Se não existe ou não foi solicitada resolução (lançamento normal), cria novo.
+                # Nota: se já existia e res não veio, o comportamento antigo era duplicar. 
+                # Agora o JS deve sempre enviar res se houver conflito.
+                cont = ConteudoProgramatico.objects.create(
+                    data=data, professor=professor, disciplina=disciplina, descricao=descricao
+                )
+                cont.turmas.add(Turma.objects.get(codigo=t_cod))
 
     messages.success(request, 'Conteúdo(s) lançado(s) com sucesso!')
     return redirect('/?tab=conteudos')
@@ -2137,102 +2260,27 @@ def cadastrar_email(request):
 # RECUPERAÇÃO DE SENHA (SENHA TEMPORÁRIA)
 # ──────────────────────────────────────────────
 
-def recuperar_senha(request):
-    """
-    Fluxo customizado de recuperação de senha:
-    1. Professor informa seu e-mail de contato
-    2. Sistema gera uma senha temporária
-    3. Envia por e-mail
-    4. Define deve_trocar_senha=True → professor é forçado a definir nova senha no próximo login
-    """
-    if request.method == 'POST':
-        email = request.POST.get('email', '').strip().lower()
+from django.contrib.auth import views as auth_views
 
-        if email:
-            from .models import Professor
-            from django.db.models import Q
+class CustomPasswordResetView(auth_views.PasswordResetView):
+    template_name = 'core/recuperar_senha.html'
+    email_template_name = 'registration/password_reset_email.html'
+    subject_template_name = 'registration/password_reset_subject.txt'
+    success_url = '/recuperar-senha/enviado/'
 
-            # Busca professor pelo e-mail de contato OU e-mail do User
-            prof = Professor.objects.filter(
-                Q(email_contato__iexact=email) | Q(user__email__iexact=email)
-            ).first()
+class CustomPasswordResetDoneView(auth_views.PasswordResetDoneView):
+    template_name = 'core/recuperar_senha_enviada.html'
 
-            # Aceita email_contato OU user.email como destino válido
-            email_destino = (prof.email_contato or prof.user.email) if prof else None
-            if prof and email_destino:
-                import secrets
-                import string
+class CustomPasswordResetConfirmView(auth_views.PasswordResetConfirmView):
+    template_name = 'registration/password_reset_confirm.html'
+    success_url = '/login/' # Redireciona para login após trocar
 
-                # Gera senha temporária: 4 letras + 4 dígitos (fácil de digitar)
-                letras = ''.join(secrets.choice(string.ascii_lowercase) for _ in range(4))
-                nums   = ''.join(secrets.choice(string.digits) for _ in range(4))
-                senha_temp = letras + nums  # ex: xkqb7423
-
-                # Aplica a senha temporária
-                prof.user.set_password(senha_temp)
-                prof.user.save()
-
-                # Marca para troca obrigatória no próximo login
-                prof.deve_trocar_senha = True
-                prof.save(update_fields=['deve_trocar_senha'])
-
-                # Monta e envia o e-mail
-                _enviar_email_senha_temporaria(prof, senha_temp, request)
-
-        # Sempre redireciona (não revela se e-mail existe ou não — segurança)
-        return redirect('recuperar_senha_enviada')
-
-    return render(request, 'core/recuperar_senha.html')
-
-
-def recuperar_senha_enviada(request):
-    """Confirmação de envio — exibida independentemente de o e-mail existir."""
-    return render(request, 'core/recuperar_senha_enviada.html')
-
-
-def _enviar_email_senha_temporaria(prof, senha_temp, request):
-    """Envia e-mail com senha temporária. Em DEBUG, imprime no console."""
-    from django.core.mail import send_mail
-    from django.conf import settings
-
-    destino = prof.email_contato or getattr(prof.user, 'email', None)
-    if not destino:
-        import logging
-        logging.getLogger(__name__).warning(f'Nenhum e-mail cadastrado para o professor {prof.nome}. E-mail não enviado.')
-        return
-
-    assunto = 'Capelum — Sua senha temporária de acesso'
-    corpo = f"""Olá, {prof.nome}!
-
-Recebemos uma solicitação de redefinição de senha para sua conta no Capelum — Sistema de Controle Acadêmico.
-
-Sua senha temporária é:
-
-    {senha_temp}
-
-Acesse o sistema em: https://capelum.com/login/
-
-Ao entrar com essa senha, você será solicitado a criar uma nova senha pessoal.
-
-Se você não solicitou a redefinição, ignore este e-mail. Sua conta permanece segura.
-
----
-Capelum — Controle Acadêmico
-https://capelum.com
-(Mensagem automática — não responda a este e-mail)
-"""
-
-    try:
-        send_mail(
-            subject=assunto,
-            message=corpo,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[destino],
-            fail_silently=False,
-        )
-    except Exception as e:
-        # Em desenvolvimento (ConsoleBackend) vai imprimir no terminal
-        # Em produção sem SMTP configurado, registra o erro silenciosamente
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.warning(f'Falha ao enviar e-mail de senha temporária para {destino}: {e}')
+    def form_valid(self, form):
+        # Quando a senha é resetada com sucesso, desmarca a flag de troca obrigatória se existir
+        user = form.save()
+        prof = getattr(user, 'professor', None)
+        if prof:
+            prof.deve_trocar_senha = False
+            prof.save(update_fields=['deve_trocar_senha'])
+        messages.success(self.request, 'Senha redefinida com sucesso! Você já pode entrar.')
+        return super().form_valid(form)

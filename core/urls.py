@@ -4,8 +4,9 @@ from . import views
 urlpatterns = [
     path('trocar-senha/', views.forcar_troca_senha, name='forcar_troca_senha'),
     path('cadastrar-email/', views.cadastrar_email, name='cadastrar_email'),
-    path('recuperar-senha/', views.recuperar_senha, name='password_reset'),
-    path('recuperar-senha/enviado/', views.recuperar_senha_enviada, name='recuperar_senha_enviada'),
+    path('recuperar-senha/', views.CustomPasswordResetView.as_view(), name='password_reset'),
+    path('recuperar-senha/enviado/', views.CustomPasswordResetDoneView.as_view(), name='recuperar_senha_enviada'),
+    path('reset/<uidb64>/<token>/', views.CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('', views.dashboard, name='dashboard'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
@@ -18,6 +19,8 @@ urlpatterns = [
     path('api/turma/<str:codigo>/professor/<int:prof_id>/datas/', views.api_datas_validas, name='api_datas_validas'),
     path('api/professor/<int:prof_id>/grades/', views.api_professor_grades, name='api_professor_grades'),
     path('api/sugestoes/', views.api_sugestoes_conteudo, name='api_sugestoes_conteudo'),
+    path('api/conteudo/verificar-duplicidade/', views.api_verificar_duplicidade, name='api_verificar_duplicidade'),
+    path('api/conteudo/precheck-coletivo/', views.api_precheck_coletivo, name='api_precheck_coletivo'),
 
     # Ocorrências
     path('ocorrencia/criar/', views.ocorrencia_criar, name='ocorrencia_criar'),

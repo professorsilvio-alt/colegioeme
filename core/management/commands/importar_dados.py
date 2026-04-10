@@ -72,15 +72,15 @@ class Command(BaseCommand):
             senha = p['senha']
             todas_turmas = p['turmas'] == 'TODAS'
             todas_disciplinas = p['disciplinas'] == 'TODAS'
-            is_admin = usuario == 'admin'
+            is_admin = usuario in ['admin', 'master']
 
             user, created = User.objects.get_or_create(username=usuario)
             if created or not user.has_usable_password():
                 user.set_password(senha)
             user.first_name = nome
-            if is_admin:
-                user.is_staff = True
-                user.is_superuser = True
+            # Update permissions regardless of creation to ensure integrity
+            user.is_staff = is_admin
+            user.is_superuser = is_admin
             user.save()
 
             prof, _ = Professor.objects.get_or_create(user=user, defaults={'nome': nome, 'todas_turmas': todas_turmas, 'todas_disciplinas': todas_disciplinas})

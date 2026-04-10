@@ -39,6 +39,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'core.middleware.SecurityHeadersMiddleware',
+    'core.middleware.LoginRateLimitMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -46,7 +48,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # Força troca de senha no primeiro acesso
     'core.middleware.ForcarTrocaSenhaMiddleware',
 ]
 
@@ -135,6 +136,12 @@ LOGOUT_REDIRECT_URL = '/login/'
 # SECURITY SETTINGS (PRODUCTION)
 # ──────────────────────────────────────────────
 
+# Security Headers (Global)
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_REFERRER_POLICY = 'same-origin'
+
 # Only enable these in production (when DEBUG is False and SSL is available)
 if not DEBUG:
     # Proxy SSL Header (Necessário para PythonAnywhere/NGINX reconhecer HTTPS)
@@ -151,14 +158,6 @@ if not DEBUG:
     # Secure Cookies
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    
-    # Referrer Policy
-    SECURE_REFERRER_POLICY = 'same-origin'
-
-# Security Headers
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'DENY'
 
 # ──────────────────────────────────────────────
 # SESSION
