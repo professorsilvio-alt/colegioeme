@@ -55,49 +55,44 @@
         </form>
     </div>
 
-    <!-- Filtros e Ações em Massa -->
-    <div style="display: flex; gap: 20px; align-items: stretch; margin-bottom: 15px;">
-        <!-- Filtros -->
-        <div style="background: white; padding: 15px; border-radius: 8px; flex: 2; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-            <form method="get" action="{% url 'gerenciar_sugestoes' %}" style="display: flex; gap: 15px; align-items: flex-end;">
-                <div style="flex: 1;">
-                    <label style="font-size: 13px; font-weight: bold; color: #555; display: block; margin-bottom: 5px;">Filtrar por Disciplina</label>
-                    <select name="disciplina" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
-                        <option value="">Todas as disciplinas</option>
-                        {% for d in disciplinas %}
-                        <option value="{{ d.pk }}" {% if filtro_disciplina == d.pk|stringformat:"s" %}selected{% endif %}>{{ d.nome }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div style="flex: 1;">
-                    <label style="font-size: 13px; font-weight: bold; color: #555; display: block; margin-bottom: 5px;">Filtrar por Turma</label>
-                    <select name="turma" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
-                        <option value="">Todas as turmas</option>
-                        {% for t in turmas %}
-                        <option value="{{ t.pk }}" {% if filtro_turma == t.pk|stringformat:"s" %}selected{% endif %}>{{ t.codigo }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div>
-                    <button type="submit" class="btn-primary" style="padding: 8px 15px; height: 35px;">🔍 Filtrar</button>
-                    {% if filtro_disciplina or filtro_turma %}
-                    <a href="{% url 'gerenciar_sugestoes' %}" class="btn-gray" style="padding: 8px 15px; height: 35px; display: inline-block; text-decoration: none;">Limpar</a>
-                    {% endif %}
-                </div>
-            </form>
-        </div>
+    <!-- Filtros -->
+    <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+        <form method="get" action="{% url 'gerenciar_sugestoes' %}" style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
+                <label style="font-size: 13px; font-weight: bold; color: #555; display: block; margin-bottom: 5px;">Filtrar por Disciplina</label>
+                <select name="disciplina" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+                    <option value="">Todas as disciplinas</option>
+                    {% for d in disciplinas %}
+                    <option value="{{ d.pk }}" {% if filtro_disciplina == d.pk|stringformat:"s" %}selected{% endif %}>{{ d.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+                <label style="font-size: 13px; font-weight: bold; color: #555; display: block; margin-bottom: 5px;">Filtrar por Turma</label>
+                <select name="turma" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+                    <option value="">Todas as turmas</option>
+                    {% for t in turmas %}
+                    <option value="{{ t.pk }}" {% if filtro_turma == t.pk|stringformat:"s" %}selected{% endif %}>{{ t.codigo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <button type="submit" class="btn-primary" style="padding: 8px 15px; height: 35px;">🔍 Filtrar</button>
+                {% if filtro_disciplina or filtro_turma %}
+                <a href="{% url 'gerenciar_sugestoes' %}" class="btn-gray" style="padding: 8px 15px; height: 35px; display: inline-block; text-decoration: none;">Limpar</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
 
-        <!-- Ações em Massa -->
-        <div style="background: white; padding: 15px; border-radius: 8px; flex: 1; display: flex; align-items: flex-end; gap: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-            <div style="flex: 1;">
-                <label style="font-size: 13px; font-weight: bold; color: #555; display: block; margin-bottom: 5px;">Ações Selecionadas</label>
-                <select id="acaoMassaSelect" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+    <!-- Ações em Massa -->
+    <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+        <select id="acaoMassaSelect" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc; min-width: 250px;">
             <option value="">Ações em massa...</option>
             <option value="excluir">🗑️ Excluir Selecionadas</option>
             <option value="editar">✏️ Editar Disciplina/Turmas em Massa</option>
         </select>
         <button type="button" class="btn-primary" onclick="executarAcaoMassa()" style="padding: 8px 15px; height: 35px;">Aplicar</button>
-        </div>
     </div>
 
     <!-- Lista de Sugestões Existentes (Opcional, mas útil) -->
