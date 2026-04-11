@@ -972,11 +972,27 @@ def gerenciar_sugestoes(request):
             messages.error(request, "Acesso restrito.")
             return redirect('dashboard')
     
+    qs = SugestaoConteudo.objects.all().select_related('disciplina').prefetch_related('turmas').order_by('disciplina__nome', 'texto')
+    
+    filtro_disciplina = request.GET.get('disciplina', '')
+    filtro_turma = request.GET.get('turma', '')
+    
+    if filtro_disciplina:
+        qs = qs.filter(disciplina_id=filtro_disciplina)
+    if filtro_turma:
+        qs = qs.filter(turmas__id=filtro_turma)
+        
+    # O distinct é importante pois o filter em turmas (ManyToTany) pode duplicar resultados
+    if filtro_turma:
+        qs = qs.distinct()
+
     context = {
         'prof': prof,
-        'sugestoes': SugestaoConteudo.objects.all().select_related('disciplina').prefetch_related('turmas').order_by('disciplina__nome', 'texto'),
+        'sugestoes': qs,
         'disciplinas': Disciplina.objects.all().order_by('nome'),
         'turmas': Turma.objects.all().order_by('ordem_exibicao', 'codigo'),
+        'filtro_disciplina': filtro_disciplina,
+        'filtro_turma': filtro_turma,
     }
     return render(request, 'core/gerenciar_sugestoes.html', context)
 
