@@ -516,12 +516,12 @@ def build_content():
     d = [
         ['Lançamentos Totais', 'Número total de aulas previstas para o ano letivo, conforme a grade horária.'],
         ['Já Preenchidos', 'Quantidade de aulas cujo conteúdo programático já foi registrado.'],
-        ['Faltam Preencher', 'Aulas até a data atual que ainda não possuem registro de conteúdo.'],
+        ['Em Atraso (até hoje)', 'Aulas que já deveriam ter sido lançadas (até a data atual) e ainda não possuem registro de conteúdo. Aulas futuras não são contabilizadas.'],
     ]
     story.append(tabela_dados(h, d, [5*cm, None]))
     story.append(Spacer(1, 0.3*cm))
     story.append(caixa_dica(
-        'Mantenha o indicador "Faltam Preencher" sempre zerado. Isso garante que o '
+        'Mantenha o indicador "Em Atraso (até hoje)" sempre zerado. Isso garante que o '
         'diário de classe esteja permanentemente atualizado.'
     ))
     story.append(Spacer(1, 0.3*cm))
