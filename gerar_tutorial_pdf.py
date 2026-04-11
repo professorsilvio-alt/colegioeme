@@ -215,7 +215,7 @@ def cabecalho_secao(numero, titulo):
     """Retorna uma tabela que representa o cabeçalho de seção estilizado."""
     num_cell = Paragraph(f'<font color="white"><b>{numero}</b></font>', ST['titulo_secao'])
     txt_cell = Paragraph(f'<font color="white"><b>{titulo}</b></font>', ST['titulo_secao'])
-    t = Table([[num_cell, txt_cell]], colWidths=[1.2*cm, None])
+    t = Table([[num_cell, txt_cell]], colWidths=[1.6*cm, None])
     t.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, -1), AZUL_MEDIO),
         ('LEFTPADDING', (0, 0), (0, 0), 10),
@@ -379,7 +379,7 @@ def _draw_header_footer(canvas, doc):
     canvas.drawRightString(
         PAGE_W - MARGIN,
         PAGE_H - HEADER_H + 0.55 * cm,
-        'Manual do Usuário — Capelum Controle Academico'
+        'Manual do Usuário — Capelum Controle Acadêmico'
     )
 
     # ── RODAPÉ ──
@@ -471,19 +471,33 @@ def build_content():
     story.append(Spacer(1, 0.3*cm))
 
     story.append(Paragraph('<b>Como realizar o login</b>', ST['subtitulo']))
+    story.append(Paragraph(
+        'A tela de login é dividida em dois painéis: à esquerda, o painel de identidade visual '
+        'do Capelum; à direita, o formulário de acesso com os campos de usuário e senha.',
+        ST['corpo']
+    ))
     story.extend(passos([
         f'Abra o navegador e acesse: <b><font color="#1a3a6b">{URL_SISTEMA}</font></b>',
-        'Na tela de login, informe seu <b>usuário</b> e <b>senha</b> fornecidos pela coordenação.',
+        'No painel direito, informe seu <b>usuário</b> (geralmente seu e-mail ou nome fornecido '
+        'pela coordenação) e a <b>senha</b> provisória recebida.',
         'Clique em <b>Entrar</b>. Você será direcionado ao Painel Principal.',
     ]))
-    story.extend(insert_screenshot('login', 'Figura 1 — Tela de login do Capelum: painel de marca à esquerda e formulário de acesso à direita.', max_h=6*cm))
+    story.extend(insert_screenshot('login', 'Figura 1 — Tela de login do Capelum: painel de identidade visual à esquerda e formulário de acesso à direita.', max_h=6*cm))
     story.append(Spacer(1, 0.3*cm))
 
-    story.append(Paragraph('<b>Primeiro acesso — troca de senha obrigatória</b>', ST['subtitulo']))
+    story.append(Paragraph('<b>Primeiro acesso — troca de senha e cadastro de e-mail</b>', ST['subtitulo']))
     story.append(Paragraph(
-        'No primeiro acesso, o sistema solicitará obrigatoriamente a criação de uma nova senha pessoal. '
-        'A senha deve ter no mínimo 6 caracteres. Após a troca, você será redirecionado ao painel '
-        'principal automaticamente.',
+        'No primeiro acesso, o sistema realizará dois procedimentos obrigatórios:',
+        ST['corpo']
+    ))
+    story.extend(bullets([
+        '<b>Cadastro de e-mail de contato:</b> você informará um endereço de e-mail pessoal '
+        'que será utilizado para recuperação de senha e comunicações do sistema.',
+        '<b>Criação de nova senha:</b> a senha provisória fornecida pela coordenação deverá '
+        'ser substituída por uma senha pessoal com no mínimo 6 caracteres.',
+    ]))
+    story.append(Paragraph(
+        'Após concluir ambos os passos, você será redirecionado ao Painel Principal automaticamente.',
         ST['corpo']
     ))
     story.append(Spacer(1, 0.2*cm))
@@ -547,10 +561,19 @@ def build_content():
     story.append(cabecalho_secao('3', 'Registrando uma Ocorrência'))
     story.append(Spacer(1, 0.4*cm))
     story.append(Paragraph(
-        'Uma ocorrência constitui o registro formal de acontecimentos disciplinares ou situações '
+        'Uma ocorrência constitui o registro de acontecimentos disciplinares ou situações '
         'relevantes que envolvam um ou mais alunos em contexto escolar. '
         'Todos os registros ficam disponíveis para consulta da equipe gestora.',
         ST['corpo']
+    ))
+    story.append(Spacer(1, 0.2*cm))
+    story.append(caixa_aviso(
+        'IMPORTANTE: O módulo de Ocorrências do Capelum NÃO substitui os instrumentos '
+        'oficiais já utilizados no dia a dia da escola (livros de ocorrência, fichas '
+        'disciplinares, comunicados impressos, etc.). Ele funciona como uma ferramenta '
+        'complementar de anotações digitais, permitindo que o professor registre rapidamente '
+        'observações comportamentais diárias e as compartilhe com a equipe gestora de forma '
+        'ágil e organizada.'
     ))
     story.append(Spacer(1, 0.3*cm))
 
@@ -621,7 +644,10 @@ def build_content():
         '<b>Disciplina:</b> O sistema carregará automaticamente as disciplinas pertinentes àquela turma conforme a grade horária.',
         '<b>Professor:</b> Seu nome será selecionado automaticamente.',
         '<b>Data da Aula:</b> O sistema listará todas as datas válidas do ano letivo (excluindo feriados e fins de semana). Datas já registradas são identificadas com o símbolo <b>✓ já lançado</b>. Selecione a data desejada.',
-        '<b>Conteúdo Ministrado:</b> O sistema sugerirá conteúdos pré-cadastrados para a disciplina e turma. Clique na sugestão para utilizá-la ou redija o conteúdo livremente.',
+        '<b>Conteúdo Ministrado:</b> O sistema exibirá sugestões de conteúdo pré-cadastradas '
+        'para a disciplina e turma selecionadas, baseadas no material disponibilizado pela '
+        'editora <b>Bernoulli</b>. Clique na sugestão para utilizá-la ou redija o conteúdo livremente '  
+        '— as sugestões são um ponto de partida, não uma obrigação.',
         'Clique em <b>Salvar Conteúdo</b>.',
     ]))
     story.append(Spacer(1, 0.3*cm))
