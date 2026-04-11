@@ -200,3 +200,107 @@ RECAPTCHA_SITE_KEY   = os.environ.get('RECAPTCHA_SITE_KEY', '')
 RECAPTCHA_SECRET_KEY = os.environ.get('RECAPTCHA_SECRET_KEY', '')
 # Score mínimo aceitável (0.0 = bot certo, 1.0 = humano certo). 0.5 é o padrão Google.
 RECAPTCHA_MIN_SCORE = 0.5
+
+# ──────────────────────────────────────────────
+# ADMINS — alertas automáticos por e-mail em erros 500
+# ──────────────────────────────────────────────
+# Django envia e-mail para cada endereço listado aqui sempre que
+# ocorrer uma exceção não tratada (erro 500) em produção.
+# Requer DEBUG=False e SERVER_EMAIL configurado corretamente.
+ADMINS = [
+    ('Capelum Admin', os.environ.get('ADMIN_EMAIL', 'suporte@capelum.com')),
+]
+MANAGERS = ADMINS  # também recebe notificações de links quebrados (404 recorrentes)
+
+# ──────────────────────────────────────────────
+# LOGGING — registro estruturado de eventos
+# ──────────────────────────────────────────────
+# Em desenvolvimento (DEBUG=True): apenas console, nível INFO
+# Em produção (DEBUG=False):
+#   • Arquivo rotativo diário em /var/log/capelum/app.log (30 dias de histórico)
+#   • Erros Django também disparam e-mail via ADMINS (handler 'mail_admins')
+#   • Nível WARNING no arquivo para reduzir ruído; ERROR no e-mail
+LOG_DIR = os.environ.get('LOG_DIR', str(Path.home() / 'logs' / 'capelum'))
+os.makedirs(LOG_DIR, exist_ok=True)  # cria automaticamente se não existir
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+
+    'formatters': {
+        'verbose': {
+            'format': '{asctime} [{levelname}] {name} — {message}',
+            'style': '{',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+        'simple': {
+            'format': '[{levelname}] {message}',
+            'style': '{',
+        },
+    },
+
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+    },
+
+    'handlers': {
+        # Console — ativo apenas em desenvolvimento
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+            'filters': ['require_debug_true'],
+        },
+        # Arquivo rotativo diário — ativo apenas em produção
+        'file': {
+            'level': 'WARNING',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(LOG_DIR, 'app.log'),
+            'when': 'midnight',
+            'backupCount': 30,        # mantém 30 dias de logs
+            'encoding': 'utf-8',
+            'formatter': 'verbose',
+            'filters': ['require_debug_false'],
+        },
+        # E-mail para ADMINS — apenas erros críticos em produção
+        'mail_admins': {
+            'level': 'ERROR',
+            'class': 'django.utils.log.AdminEmailHandler',
+            'formatter': 'verbose',
+            'filters': ['require_debug_false'],
+            'include_html': True,
+        },
+    },
+
+    'loggers': {
+        # Logger raiz da aplicação Capelum/EME
+        'core': {
+            'handlers': ['console', 'file', 'mail_admins'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        # Erros do Django (500, templates, etc.)
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        # Requests HTTP — apenas em produção, nível WARNING
+        'django.request': {
+            'handlers': ['file', 'mail_admins'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        # Queries SQL lentas (>300ms) — apenas em produção
+        'django.db.backends': {
+            'handlers': ['file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+    },
+}
