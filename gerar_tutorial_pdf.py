@@ -213,13 +213,11 @@ ST = make_styles()
 
 def cabecalho_secao(numero, titulo):
     """Retorna uma tabela que representa o cabeçalho de seção estilizado."""
-    num_cell = Paragraph(f'<font color="white"><b>{numero}</b></font>', ST['titulo_secao'])
-    txt_cell = Paragraph(f'<font color="white"><b>{titulo}</b></font>', ST['titulo_secao'])
-    t = Table([[num_cell, txt_cell]], colWidths=[1.6*cm, None])
+    cell = Paragraph(f'<font color="white"><b>{numero} {titulo}</b></font>', ST['titulo_secao'])
+    t = Table([[cell]], colWidths=[None])
     t.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, -1), AZUL_MEDIO),
-        ('LEFTPADDING', (0, 0), (0, 0), 10),
-        ('LEFTPADDING', (1, 0), (1, 0), 6),
+        ('LEFTPADDING', (0, 0), (-1, -1), 10),
         ('RIGHTPADDING', (0, 0), (-1, -1), 10),
         ('TOPPADDING', (0, 0), (-1, -1), 7),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 7),
@@ -464,7 +462,7 @@ def build_content():
 
     story.append(Paragraph(
         'O Capelum é acessado exclusivamente por navegador de internet (Google Chrome, '
-        'Firefox ou Microsoft Edge). Não é necessário instalar nenhum aplicativo no '
+        'Firefox ou <nobr>Microsoft Edge</nobr>). Não é necessário instalar nenhum aplicativo no '
         'computador ou celular.',
         ST['corpo']
     ))
@@ -530,12 +528,12 @@ def build_content():
     d = [
         ['Lançamentos Totais', 'Número total de aulas previstas para o ano letivo, conforme a grade horária.'],
         ['Já Preenchidos', 'Quantidade de aulas cujo conteúdo programático já foi registrado.'],
-        ['Em Atraso (até hoje)', 'Aulas que já deveriam ter sido lançadas (até a data atual) e ainda não possuem registro de conteúdo. Aulas futuras não são contabilizadas.'],
+        ['Falta Preencher:', 'Aulas que já deveriam ter sido lançadas (até a data atual) e ainda não possuem registro de conteúdo. Aulas futuras não são contabilizadas.'],
     ]
     story.append(tabela_dados(h, d, [5*cm, None]))
     story.append(Spacer(1, 0.3*cm))
     story.append(caixa_dica(
-        'Mantenha o indicador "Em Atraso (até hoje)" sempre zerado. Isso garante que o '
+        'Mantenha o indicador "Falta Preencher:" sempre zerado. Isso garante que o '
         'diário de classe esteja permanentemente atualizado.'
     ))
     story.append(Spacer(1, 0.3*cm))
