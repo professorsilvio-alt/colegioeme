@@ -693,6 +693,9 @@
 
                 // Carregar sugestões de conteúdo
                 carregarSugestoes(codigo, profId); // Aqui passamos o que for preciso, ou pegamos da disc
+                
+                // Dispara a revalidação pois a data acabou de ser recarregada
+                validarDatasCompanheiras();
             });
     }
 
@@ -1001,7 +1004,7 @@
         document.getElementById('profSelectCont').value = professor;
 
         // 6. Agora que temos o professor, carregamos as turmas da mesma série
-        carregarTurmasMesmaSerie(turma);
+        await carregarTurmasMesmaSerie(turma);
 
         // 7. Carregar Datas e selecionar a correta
         await carregarDatasValidasAsync();
@@ -1011,6 +1014,9 @@
             dataSel.value = data;
             document.getElementById('dataConteudo').value = data;
         }
+
+        // Revalida as turmas companheiras após definir todas as caixas.
+        validarDatasCompanheiras();
 
         // Scroll até o formulário
         setTimeout(() => {
