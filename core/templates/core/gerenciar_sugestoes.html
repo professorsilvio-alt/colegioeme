@@ -138,7 +138,19 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" style="padding: 30px; text-align: center; color: #999;">Nenhuma sugestão cadastrada ainda. Use o formulário acima para importar.</td>
+                    <td colspan="5" style="padding: 40px; text-align: center;">
+                        {% if filtro_aplicado %}
+                        <div style="color: #999; font-size: 14px;">
+                            🔍 Nenhuma sugestão encontrada para os filtros selecionados.
+                        </div>
+                        {% else %}
+                        <div style="background: #eef2ff; border: 1px dashed #003366; border-radius: 10px; padding: 30px; display: inline-block; max-width: 480px;">
+                            <div style="font-size: 32px; margin-bottom: 10px;">🔍</div>
+                            <p style="color: #003366; font-size: 16px; font-weight: bold; margin: 0 0 8px;">Selecione um filtro para visualizar as sugestões</p>
+                            <p style="color: #555; font-size: 13px; margin: 0;">Escolha uma <strong>Disciplina</strong> e/ou uma <strong>Turma</strong> acima e clique em <strong>Filtrar</strong> para carregar os conteúdos.</p>
+                        </div>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

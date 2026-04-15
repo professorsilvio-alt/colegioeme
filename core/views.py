@@ -972,23 +972,26 @@ def gerenciar_sugestoes(request):
             messages.error(request, "Acesso restrito.")
             return redirect('dashboard')
     
-    qs = SugestaoConteudo.objects.all().select_related('disciplina').prefetch_related('turmas').order_by('disciplina__nome', 'texto')
-    
     filtro_disciplina = request.GET.get('disciplina', '')
     filtro_turma = request.GET.get('turma', '')
-    
-    if filtro_disciplina:
-        qs = qs.filter(disciplina_id=filtro_disciplina)
-    if filtro_turma:
-        qs = qs.filter(turmas__id=filtro_turma)
-        
-    # O distinct é importante pois o filter em turmas (ManyToTany) pode duplicar resultados
-    if filtro_turma:
-        qs = qs.distinct()
+    filtro_aplicado = bool(filtro_disciplina or filtro_turma)
+
+    # Só carrega os dados do banco quando pelo menos um filtro foi aplicado.
+    # Isso evita carregar milhares de sugestões desnecessariamente na abertura da página.
+    if filtro_aplicado:
+        qs = SugestaoConteudo.objects.all().select_related('disciplina').prefetch_related('turmas').order_by('disciplina__nome', 'texto')
+        if filtro_disciplina:
+            qs = qs.filter(disciplina_id=filtro_disciplina)
+        if filtro_turma:
+            qs = qs.filter(turmas__id=filtro_turma)
+            qs = qs.distinct()  # evita duplicatas por ManyToMany
+    else:
+        qs = SugestaoConteudo.objects.none()
 
     context = {
         'prof': prof,
         'sugestoes': qs,
+        'filtro_aplicado': filtro_aplicado,
         'disciplinas': Disciplina.objects.all().order_by('nome'),
         'turmas': Turma.objects.all().order_by('ordem_exibicao', 'codigo'),
         'filtro_disciplina': filtro_disciplina,
