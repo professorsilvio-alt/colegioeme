@@ -86,3 +86,60 @@
     .btn-primary:hover { background: #0055aa; }
 </style>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+    const dataInput = document.querySelector('input[name="data"]');
+    const professorSelect = document.querySelector('select[name="professor"]');
+    const professorInputHidden = document.querySelector('input[name="professor"]');
+    const checkboxes = document.querySelectorAll('input[name="turmas"]');
+    
+    let professorGrades = {};
+
+    async function validarDatas() {
+        const dataValue = dataInput.value;
+        const profId = professorSelect ? professorSelect.value : (professorInputHidden ? professorInputHidden.value : null);
+        
+        if (!dataValue || !profId) return;
+
+        if (!professorGrades[profId]) {
+            try {
+                const r = await fetch(`/api/professor/${profId}/grades/`);
+                if (r.ok) {
+                    professorGrades[profId] = await r.json();
+                }
+            } catch (e) {
+                console.error("Erro ao carregar grades:", e);
+                return;
+            }
+        }
+
+        const dateObj = new Date(dataValue + 'T12:00:00');
+        const jsWeekday = dateObj.getDay();
+        const systemWeekday = jsWeekday.toString(); // 0=Dom, 1=Seg, 5=Sex
+
+        checkboxes.forEach(cb => {
+            const tCod = cb.value;
+            const allowedDays = professorGrades[profId][tCod] || [];
+            
+            const isCompatible = allowedDays.includes(systemWeekday);
+
+            if (!isCompatible) {
+                cb.checked = false;
+                cb.disabled = true;
+                cb.parentElement.style.opacity = '0.5';
+                cb.parentElement.title = 'Sem aula nesta data para esta turma';
+            } else {
+                cb.disabled = false;
+                cb.parentElement.style.opacity = '1';
+                cb.parentElement.title = '';
+            }
+        });
+    }
+
+    if (dataInput) dataInput.addEventListener('change', validarDatas);
+    if (professorSelect) professorSelect.addEventListener('change', validarDatas);
+    
+    validarDatas();
+</script>
+{% endblock %}

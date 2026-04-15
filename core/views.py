@@ -654,16 +654,16 @@ def calcular_stats_conteudo(prof, data_ini=None, data_fim=None, feriados=None):
             'total_ate_hoje': 0, 'preenchidos_ate_hoje': 0, 'faltam_ate_hoje': 0
         }
 
-    # Agrupa dias da semana por tríade (prof, turma, disc) em memória
+    # Agrupa dias da semana por tríade (prof, turma, disc) em memória.
+    # Usa set de weekdays (não contagem): garante que múltiplos horários no mesmo
+    # dia da semana não inflam o total — igual à lógica do relatório de pendências.
     DIA_TO_WEEKDAY = {'1': 0, '2': 1, '3': 2, '4': 3, '5': 4}
-    slots_map = defaultdict(lambda: defaultdict(int)) # key -> weekday -> número de aulas no dia
-    triades_por_prof = defaultdict(set) # prof_id -> set of (turma_cod, disc_id)
-    
+    slots_map = defaultdict(set)  # key -> set of weekdays com aula
+
     for g in grades:
         key = (g.professor_id, g.turma.codigo, g.disciplina_id)
         if g.dia_semana in DIA_TO_WEEKDAY:
-            slots_map[key][DIA_TO_WEEKDAY[g.dia_semana]] += 1
-            triades_por_prof[g.professor_id].add((g.turma.codigo, g.disciplina_id))
+            slots_map[key].add(DIA_TO_WEEKDAY[g.dia_semana])
 
     # 2. Busca todos os conteúdos lançados no período de uma vez
     cp_qs = ConteudoProgramatico.objects.filter(data__gte=inicio, data__lte=fim).prefetch_related('turmas')
@@ -700,27 +700,23 @@ def calcular_stats_conteudo(prof, data_ini=None, data_fim=None, feriados=None):
     preenchidos = extras_adicionais
     preenchidos_ate_hoje = extras_adicionais_ate_hoje
 
-    for key, weekdays_counts in slots_map.items():
-        # Cálculo de esperado (Total)
+    for key, weekdays in slots_map.items():
+        # Cálculo de esperado (Total): 1 por data de aula no período
         cur = inicio
         while cur <= fim:
-            weekday = cur.weekday()
-            if weekday in weekdays_counts and cur not in feriados:
-                count = weekdays_counts[weekday]
-                total += count
+            if cur.weekday() in weekdays and cur not in feriados:
+                total += 1
                 if cur <= hoje:
-                    total_ate_hoje += count
+                    total_ate_hoje += 1
             cur += datetime.timedelta(days=1)
-        
-        # Cálculo de realizado (Preenchidos) multiplicando pelo número de aulas do dia
+
+        # Cálculo de realizado (Preenchidos): 1 por data efetivamente lançada
         dates_lancadas = lancados_map.get(key, set())
         for d in dates_lancadas:
-            weekday = d.weekday()
-            if weekday in weekdays_counts:
-                count = weekdays_counts[weekday]
-                preenchidos += count
+            if d.weekday() in weekdays and d not in feriados:
+                preenchidos += 1
                 if d <= hoje:
-                    preenchidos_ate_hoje += count
+                    preenchidos_ate_hoje += 1
 
     return {
         'total_conteudo': total,
@@ -1421,8 +1417,30 @@ def conteudo_editar(request, pk):
         messages.success(request, 'Conteúdo atualizado com sucesso!')
         return redirect('/?tab=conteudos')
 
-    # Data needed for the form
-    turmas_qs = prof.get_turmas() if prof else Turma.objects.all()
+    # Filtra turmas da mesma série
+    primeira_turma = cont.turmas.first()
+    todas_do_prof = prof.get_turmas() if prof else Turma.objects.all()
+    
+    if primeira_turma:
+        import re
+        m = re.search(r'\d', primeira_turma.codigo)
+        serie = m.group() if m else primeira_turma.codigo[0]
+        
+        turmas_comp = set()
+        for t in todas_do_prof:
+            t_m = re.search(r'\d', t.codigo)
+            t_serie = t_m.group() if t_m else t.codigo[0]
+            if t_serie == serie:
+                turmas_comp.add(t)
+        
+        # Garante que as turmas atuais vinculadas ao conteúdo apareçam sempre
+        for t in cont.turmas.all():
+            turmas_comp.add(t)
+            
+        turmas_qs = sorted(list(turmas_comp), key=lambda x: str(x.codigo))
+    else:
+        turmas_qs = todas_do_prof
+
     disciplinas_qs = prof.get_disciplinas() if prof else Disciplina.objects.all()
     
     # Garantia de que a disciplina de origem (como aula extra) apareça no dropdown da edição
