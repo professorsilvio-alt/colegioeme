@@ -448,14 +448,20 @@ def api_datas_validas(request, codigo, prof_id):
     from .models import GradeHoraria, ConteudoProgramatico
     import datetime
 
+    disc_id = request.GET.get('disciplina')
+
     # Weekday numbers in GradeHoraria: '1'=Segunda=Monday(0), ..., '5'=Sexta=Friday(4)
     DIA_TO_WEEKDAY = {'1': 0, '2': 1, '3': 2, '4': 3, '5': 4}
 
     # Find which days of week this professor teaches this turma
-    dias = GradeHoraria.objects.filter(
+    query = GradeHoraria.objects.filter(
         turma__codigo=codigo,
         professor__pk=prof_id
-    ).values_list('dia_semana', flat=True).distinct()
+    )
+    if disc_id:
+        query = query.filter(disciplina__pk=disc_id)
+        
+    dias = query.values_list('dia_semana', flat=True).distinct()
 
     if not dias:
         return JsonResponse([], safe=False)
@@ -482,11 +488,15 @@ def api_datas_validas(request, codigo, prof_id):
         cur += datetime.timedelta(days=1)
 
     # Find which dates already have a content entry for this professor+turma
+    query_lancados = ConteudoProgramatico.objects.filter(
+        professor__pk=prof_id,
+        turmas__codigo=codigo
+    )
+    if disc_id:
+        query_lancados = query_lancados.filter(disciplina__pk=disc_id)
+        
     lancados = set(
-        ConteudoProgramatico.objects.filter(
-            professor__pk=prof_id,
-            turmas__codigo=codigo
-        ).values_list('data', flat=True)
+        query_lancados.values_list('data', flat=True)
     )
 
     result = [
@@ -506,7 +516,13 @@ def api_datas_validas(request, codigo, prof_id):
 def api_professor_grades(request, prof_id):
     """Return all turmas and their weekdays for a given professor."""
     from .models import GradeHoraria
-    grades = GradeHoraria.objects.filter(professor_id=prof_id).values('turma__codigo', 'dia_semana').distinct()
+    
+    disc_id = request.GET.get('disciplina')
+    query = GradeHoraria.objects.filter(professor_id=prof_id)
+    if disc_id:
+        query = query.filter(disciplina_id=disc_id)
+        
+    grades = query.values('turma__codigo', 'dia_semana').distinct()
     
     mapping = defaultdict(list)
     for g in grades:

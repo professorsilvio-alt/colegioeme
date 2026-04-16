@@ -672,7 +672,8 @@
         }
 
         wrapper.innerHTML = '<em style="color:#999; font-size:13px;">Carregando datas...</em>';
-        fetch('/api/turma/' + codigo + '/professor/' + profId + '/datas/')
+        const discId = document.getElementById('discSelectCont').value;
+        fetch('/api/turma/' + codigo + '/professor/' + profId + '/datas/?disciplina=' + discId)
             .then(r => r.json())
             .then(datas => {
                 if (!datas.length) {
@@ -722,11 +723,14 @@
         }
 
         try {
+            const discSelect = document.getElementById('discSelectCont');
+            const discId = discSelect ? discSelect.value : '';
+            const cacheKey = `${profId}_${discId}`;
             // Carregar grades do professor se ainda não tivermos
-            if (!professorGrades[profId]) {
-                const r = await fetch(`/api/professor/${profId}/grades/`);
+            if (!professorGrades[cacheKey]) {
+                const r = await fetch(`/api/professor/${profId}/grades/?disciplina=${discId}`);
                 if (!r.ok) throw new Error("Erro na API de grades");
-                professorGrades[profId] = await r.json();
+                professorGrades[cacheKey] = await r.json();
             }
 
             const codigoLimpo = codigoPrincipal.trim();
@@ -802,7 +806,9 @@
 
         const dataValue = document.getElementById('dataConteudo').value;
         const profId = document.getElementById('profSelectCont').value;
-        if (!dataValue || !profId || !professorGrades[profId]) return;
+        const discId = document.getElementById('discSelectCont').value;
+        const cacheKey = `${profId}_${discId}`;
+        if (!dataValue || !profId || !professorGrades[cacheKey]) return;
 
         const dateObj = new Date(dataValue + 'T12:00:00'); // Meio-dia para evitar problemas de timezone
         const jsWeekday = dateObj.getDay(); // 0=Dom, 1=Seg, ..., 6=Sab
@@ -810,7 +816,7 @@
 
         document.querySelectorAll('.companion-check').forEach(cb => {
             const tCod = cb.getAttribute('data-turma');
-            const allowedDays = professorGrades[profId][tCod] || [];
+            const allowedDays = professorGrades[cacheKey][tCod] || [];
             const isCompatible = allowedDays.includes(systemWeekday);
 
             if (!isCompatible) {
@@ -1062,7 +1068,8 @@
         if (modoConteudo === 'extra') return;
 
         wrapper.innerHTML = '<em style="color:#999; font-size:13px;">Carregando datas...</em>';
-        const r = await fetch('/api/turma/' + codigo + '/professor/' + profId + '/datas/');
+        const discId = document.getElementById('discSelectCont').value;
+        const r = await fetch('/api/turma/' + codigo + '/professor/' + profId + '/datas/?disciplina=' + discId);
         const datas = await r.json();
 
         if (!datas.length) {
