@@ -585,9 +585,16 @@
             .then(r => r.json())
             .then(alunos => {
                 if (!alunos.length) { container.innerHTML = '<em>Nenhum aluno encontrado.</em>'; return; }
-                container.innerHTML = alunos.map(a =>
-                    `<label class="checkbox-label"><input type="checkbox" name="alunos" value="${a.id}"> ${a.nome}</label>`
-                ).join('');
+                container.innerHTML = alunos.map(a => {
+                    const avatar = a.foto_url
+                        ? `<img src="${a.foto_url}" alt="${a.nome}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #ddd;flex-shrink:0;">`
+                        : `<span style="display:inline-flex;align-items:center;justify-content:center;width:80px;height:80px;border-radius:50%;background:#e9ecef;border:2px solid #ddd;color:#aaa;font-size:34px;flex-shrink:0;">&#128100;</span>`;
+                    return `<label class="checkbox-label" style="display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:6px;cursor:pointer;">
+                        <input type="checkbox" name="alunos" value="${a.id}" style="margin:0;">
+                        ${avatar}
+                        <span style="font-size:13px;">${a.nome}</span>
+                    </label>`;
+                }).join('');
             });
     }
 

@@ -99,12 +99,40 @@ class Aluno(models.Model):
     nome = models.CharField(max_length=200)
     turma = models.ForeignKey(Turma, on_delete=models.CASCADE, related_name='alunos')
     email_responsavel = models.EmailField(blank=True, null=True, verbose_name='E-mail do Responsável')
+    foto = models.ImageField(
+        upload_to='alunos/fotos/',
+        blank=True,
+        null=True,
+        verbose_name='Foto',
+        help_text='Foto do aluno (será redimensionada automaticamente para 200×200 px).'
+    )
 
     class Meta:
         ordering = ['turma__ordem_exibicao', 'turma__codigo', 'nome']
 
     def __str__(self):
         return f'{self.nome} ({self.turma.codigo})'
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Redimensiona a foto ao salvar para economizar espaço
+        if self.foto:
+            self._redimensionar_foto()
+
+    def _redimensionar_foto(self):
+        from PIL import Image
+        import os
+        try:
+            caminho = self.foto.path
+            with Image.open(caminho) as img:
+                # Converte para RGB se necessário (ex.: PNG com alfa)
+                if img.mode in ('RGBA', 'P', 'LA'):
+                    img = img.convert('RGB')
+                # Redimensiona mantendo proporção, encaixado em 200x200
+                img.thumbnail((200, 200), Image.LANCZOS)
+                img.save(caminho, 'JPEG', quality=85, optimize=True)
+        except Exception:
+            pass  # Não interrompe o fluxo se a imagem falhar
 
 
 class Ocorrencia(models.Model):
