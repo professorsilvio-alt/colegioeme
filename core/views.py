@@ -299,8 +299,12 @@ def dashboard(request):
 
 @login_required
 def api_alunos_turma(request, codigo):
-    alunos = Aluno.objects.filter(turma__codigo=codigo).values('id', 'nome')
-    return JsonResponse(list(alunos), safe=False)
+    alunos = Aluno.objects.filter(turma__codigo=codigo).order_by('nome')
+    data = []
+    for a in alunos:
+        foto_url = a.foto.url if a.foto else None
+        data.append({'id': a.id, 'nome': a.nome, 'foto_url': foto_url})
+    return JsonResponse(data, safe=False)
 
 
 @login_required

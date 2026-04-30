@@ -349,10 +349,59 @@ class ProfessorAdmin(admin.ModelAdmin):
 
 @admin.register(Aluno)
 class AlunoAdmin(admin.ModelAdmin):
-    list_display = ['nome', 'turma', 'email_responsavel']
+    list_display = ['foto_thumb', 'nome', 'turma', 'email_responsavel']
     list_filter = ['turma']
     search_fields = ['nome', 'email_responsavel']
-    fields = ['nome', 'turma', 'email_responsavel']
+    ordering = ['turma__ordem_exibicao', 'turma__codigo', 'nome']
+    readonly_fields = ['foto_preview']
+    fieldsets = [
+        ('Dados do Aluno', {
+            'fields': ['nome', 'turma', 'email_responsavel'],
+        }),
+        ('Foto', {
+            'fields': ['foto_preview', 'foto'],
+            'description': (
+                'A foto atual é exibida abaixo. Para substituí-la, selecione um novo arquivo. '
+                'Para remover sem substituir, marque "Limpar" ao lado do campo.'
+            ),
+        }),
+    ]
+
+    def foto_thumb(self, obj):
+        """Thumbnail circular na listagem."""
+        if obj.foto:
+            return format_html(
+                '<img src="{}" style="width:40px;height:40px;object-fit:cover;'
+                'border-radius:50%;border:2px solid #ddd;" />',
+                obj.foto.url
+            )
+        return format_html(
+            '<span style="display:inline-block;width:40px;height:40px;border-radius:50%;'
+            'background:#e9ecef;border:2px solid #ddd;text-align:center;line-height:40px;'
+            'color:#aaa;font-size:18px;">&#128100;</span>'
+        )
+    foto_thumb.short_description = 'Foto'
+
+    def foto_preview(self, obj):
+        """Prévia grande da foto no formulário de edição."""
+        if obj.foto:
+            return format_html(
+                '<div style="margin:8px 0;">'
+                '<img src="{}" style="width:150px;height:150px;object-fit:cover;'
+                'border-radius:12px;border:3px solid #ddd;box-shadow:0 2px 8px rgba(0,0,0,0.15);" />'
+                '<br><small style="color:#666;margin-top:4px;display:block;">'
+                'Arquivo: {}</small>'
+                '</div>',
+                obj.foto.url,
+                obj.foto.name.split('/')[-1]
+            )
+        return format_html(
+            '<div style="margin:8px 0;display:inline-flex;align-items:center;justify-content:center;'
+            'width:150px;height:150px;border-radius:12px;background:#f8f9fa;'
+            'border:3px dashed #dee2e6;color:#adb5bd;font-size:48px;">&#128100;</div>'
+            '<br><small style="color:#999;">Nenhuma foto cadastrada.</small>'
+        )
+    foto_preview.short_description = 'Foto Atual'
 
 
 @admin.register(Ocorrencia)
