@@ -43,28 +43,14 @@
             {% endif %}
             {% if prof.pode_editar_tudo or user.is_superuser %}
             <a href="{% url 'gerenciar_sugestoes' %}" class="nav-item">⚙ Sugestões</a>
+            <a href="{% url 'escola_professores_list' %}" class="nav-item" title="Gerenciar Professores">👥 Equipe</a>
+            <a href="{% url 'escola_configurar' %}" class="nav-item" title="Configurações da Escola">🎨 Escola</a>
             <a href="{% url 'migrar_alunos' %}" class="nav-item" title="Migrar alunos para novo ano">🚀 Migrar</a>
             {% endif %}
         </nav>
 
         <div class="header-right">
             {% if user.is_authenticated %}
-                {# Seletor de Escola #}
-                {% if escolas_disponiveis|length > 1 %}
-                <div style="display: flex; align-items: center; background: rgba(255,255,255,0.15); padding: 2px 8px; border-radius: 6px; margin-right: 15px;">
-                    <label style="font-size: 11px; margin-right: 5px; color: #eee; font-weight: bold;">ESCOLA:</label>
-                    <select onchange="window.location.href='?set_escola=' + this.value" style="background: transparent; color: white; border: none; font-weight: bold; cursor: pointer; outline: none; font-size: 13px; max-width: 150px;">
-                        {% for esc in escolas_disponiveis %}
-                        <option value="{{ esc.id }}" {% if escola.id == esc.id %}selected{% endif %} style="color: black;">{{ esc.nome }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                {% else %}
-                <span style="background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 4px; font-size: 12px; margin-right: 15px; font-weight: bold; color: #eee; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ escola.nome }}">
-                    🏫 {{ escola.nome }}
-                </span>
-                {% endif %}
-
                 {# Seletor de Ano #}
                 {% if anos_disponiveis|length > 1 %}
                 <div style="display: flex; align-items: center; background: rgba(255,255,255,0.15); padding: 2px 8px; border-radius: 6px; margin-right: 15px;">

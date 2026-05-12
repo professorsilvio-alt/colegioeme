@@ -2489,3 +2489,123 @@ def migrar_alunos(request):
         'ano_destino_id': int(ano_destino_id) if ano_destino_id else None,
     }
     return render(request, 'core/migrar_alunos.html', context)
+@login_required
+def escola_configurar(request):
+    """Permite ao administrador da escola alterar as cores e logo."""
+    prof_atual = get_professor(request.user)
+    if not prof_atual or not prof_atual.pode_editar_tudo:
+        messages.error(request, 'Você não tem permissão para acessar esta página.')
+        return redirect('dashboard')
+
+    from .forms import EscolaForm
+    escola = request.escola
+
+    if request.method == 'POST':
+        form = EscolaForm(request.POST, request.FILES, instance=escola)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Configurações da escola atualizadas com sucesso!')
+            return redirect('escola_configurar')
+    else:
+        form = EscolaForm(instance=escola)
+
+    return render(request, 'core/escola_configurar.html', {
+        'form': form,
+        'escola': escola
+    })
+
+
+@login_required
+def escola_professores_list(request):
+    """Lista professores da escola atual."""
+    prof_atual = get_professor(request.user)
+    if not prof_atual or not prof_atual.pode_editar_tudo:
+        messages.error(request, 'Acesso negado.')
+        return redirect('dashboard')
+    
+    professores = Professor.objects.filter(escolas=request.escola).order_by('nome')
+    return render(request, 'core/escola_professores_list.html', {
+        'professores': professores
+    })
+
+
+@login_required
+def escola_professor_edit(request, pk):
+    """Edita um professor (vínculo com a escola atual)."""
+    prof_atual = get_professor(request.user)
+    if not prof_atual or not prof_atual.pode_editar_tudo:
+        messages.error(request, 'Acesso negado.')
+        return redirect('dashboard')
+    
+    professor = get_object_or_404(Professor, pk=pk, escolas=request.escola)
+    from .forms import ProfessorForm
+    
+    if request.method == 'POST':
+        form = ProfessorForm(request.POST, instance=professor, escola=request.escola)
+        if form.is_valid():
+            # Precisamos manter as turmas de OUTRAS escolas
+            # O CheckboxSelectMultiple filtrado remove as outras
+            outras_turmas = list(professor.turmas.exclude(escola=request.escola))
+            professor = form.save(commit=False)
+            professor.save()
+            form.save_m2m() # Salva as turmas da escola atual
+            
+            # Re-adiciona as outras
+            for t in outras_turmas:
+                professor.turmas.add(t)
+                
+            messages.success(request, f'Professor {professor.nome} atualizado!')
+            return redirect('escola_professores_list')
+    else:
+        form = ProfessorForm(instance=professor, escola=request.escola)
+        
+    return render(request, 'core/escola_professor_form.html', {
+        'form': form,
+        'professor': professor,
+        'titulo': f'Editar: {professor.nome}'
+    })
+
+
+@login_required
+def escola_professor_novo(request):
+    """Cria um novo professor e seu respectivo User."""
+    prof_atual = get_professor(request.user)
+    if not prof_atual or not prof_atual.pode_editar_tudo:
+        messages.error(request, 'Acesso negado.')
+        return redirect('dashboard')
+    
+    from .forms import ProfessorForm
+    from django.contrib.auth.models import User
+    
+    if request.method == 'POST':
+        form = ProfessorForm(request.POST, escola=request.escola)
+        usuario_login = request.POST.get('username_login')
+        
+        if form.is_valid() and usuario_login:
+            if User.objects.filter(username=usuario_login).exists():
+                messages.error(request, 'Este nome de usuário já está em uso.')
+            else:
+                # 1. Cria o User
+                # Senha padrão é o próprio username no primeiro acesso
+                user = User.objects.create_user(username=usuario_login, password=usuario_login)
+                
+                # 2. Cria o Professor
+                professor = form.save(commit=False)
+                professor.user = user
+                professor.deve_trocar_senha = True # Força troca no primeiro login
+                professor.save()
+                form.save_m2m()
+                
+                # 3. Vincula à escola atual
+                professor.escolas.add(request.escola)
+                
+                messages.success(request, f'Professor {professor.nome} criado com sucesso! Login: {usuario_login}')
+                return redirect('escola_professores_list')
+    else:
+        form = ProfessorForm(escola=request.escola)
+        
+    return render(request, 'core/escola_professor_form.html', {
+        'form': form,
+        'titulo': 'Cadastrar Novo Professor',
+        'novo': True
+    })

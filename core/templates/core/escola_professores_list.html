@@ -1,0 +1,41 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Equipe Escolar - {{ escola.nome }}{% endblock %}
+
+{% block content %}
+<div class="collapsible">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin: 0;">👥 Gestão de Equipe ({{ escola.nome }})</h2>
+        <a href="{% url 'escola_professor_novo' %}" class="btn-primary" style="margin-top: 0;">+ Novo Professor</a>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Cargo</th>
+                <th>CPF</th>
+                <th>E-mail Contato</th>
+                <th style="text-align: center;">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in professores %}
+            <tr>
+                <td style="font-weight: 600;">{{ p.nome }}</td>
+                <td><span class="badge" style="background: #eef2ff; color: #4338ca; padding: 4px 8px; border-radius: 4px; font-size: 11px;">{{ p.get_cargo_display }}</span></td>
+                <td>{{ p.cpf|default:"---" }}</td>
+                <td>{{ p.email_contato|default:"---" }}</td>
+                <td style="text-align: center;">
+                    <a href="{% url 'escola_professor_edit' p.pk %}" class="btn-sm">✏️ Editar</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 30px; color: #666;">Nenhum professor vinculado a esta escola.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

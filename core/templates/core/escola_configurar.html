@@ -1,0 +1,84 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Configurações da Escola - {{ escola.nome }}{% endblock %}
+
+{% block content %}
+<div class="collapsible">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin: 0;">🎨 Configurações de Identidade Visual</h2>
+        <a href="{% url 'dashboard' %}" class="btn-gray">Voltar ao Dashboard</a>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="school-config-form">
+        {% csrf_token %}
+        
+        <div class="config-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+            <div class="config-section">
+                <h3>Dados Básicos</h3>
+                <div class="input-group">
+                    <label for="{{ form.nome.id_for_label }}">Nome da Instituição</label>
+                    {{ form.nome }}
+                    {% if form.nome.errors %}<div class="login-erro">{{ form.nome.errors }}</div>{% endif %}
+                </div>
+
+                <div class="input-group" style="margin-top: 20px;">
+                    <label for="{{ form.cor_primaria.id_for_label }}">Cor Primária do Sistema</label>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        {{ form.cor_primaria }}
+                        <span style="font-size: 14px; color: #666;">Esta cor será aplicada em botões, cabeçalhos e elementos principais.</span>
+                    </div>
+                    {% if form.cor_primaria.errors %}<div class="login-erro">{{ form.cor_primaria.errors }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h3>Logotipo</h3>
+                <div style="background: #f8fafc; padding: 20px; border-radius: 10px; border: 1px dashed #cbd5e0; text-align: center;">
+                    {% if escola.logo %}
+                        <img src="{{ escola.logo.url }}" alt="Logo Atual" style="max-height: 120px; margin-bottom: 15px; border-radius: 4px;">
+                        <p style="font-size: 12px; color: #64748b;">Logo atual: {{ escola.logo.name }}</p>
+                    {% else %}
+                        <div style="font-size: 48px; margin-bottom: 10px;">🏫</div>
+                        <p style="font-size: 12px; color: #64748b;">Nenhuma logo cadastrada.</p>
+                    {% endif %}
+                    
+                    <div style="margin-top: 15px;">
+                        <label style="cursor: pointer; display: inline-block; padding: 8px 16px; background: #e2e8f0; border-radius: 6px; font-size: 13px; font-weight: 600;">
+                            Alterar Logo
+                            <input type="file" name="logo" id="{{ form.logo.id_for_label }}" style="display: none;">
+                        </label>
+                    </div>
+                </div>
+                {% if form.logo.errors %}<div class="login-erro">{{ form.logo.errors }}</div>{% endif %}
+            </div>
+        </div>
+
+        <div style="margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 20px; text-align: right;">
+            <button type="submit" class="btn-primary" style="padding: 12px 30px; font-size: 16px;">Salvar Alterações</button>
+        </div>
+    </form>
+</div>
+
+<style>
+    .school-config-form h3 {
+        font-size: 16px;
+        color: var(--primary-color);
+        margin-bottom: 15px;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 8px;
+    }
+    .input-group label {
+        margin-top: 0;
+        margin-bottom: 5px;
+    }
+    input[type="color"] {
+        width: 60px;
+        height: 40px;
+        padding: 2px;
+        border: 1px solid #cbd5e0;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
