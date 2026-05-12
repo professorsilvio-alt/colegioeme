@@ -12,81 +12,216 @@ body {
 
 /* ──────────────────────────── HEADER ──────────────────────────── */
 header {
-    background: var(--primary-color, #003366);
-    color: #fff;
-    padding: 16px 24px;
+    background-color: var(--primary-color);
+    color: white;
+    padding: 15px 0;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: 1000;
 }
 
 .header-inner {
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
     max-width: 1400px;
-    margin: auto;
-    font-size: 16px; /* Reduced for nav usage */
+    margin: 0 auto;
+    padding: 0 20px;
+    gap: 40px;
 }
 
 .header-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    flex-shrink: 0;
+}
+
+.header-logo {
+    height: 180px;
+    width: auto;
+    border-radius: 20px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+    display: block;
 }
 
 .header-title {
-    font-size: 20px;
-    font-weight: 700;
+    font-size: 40px;
+    font-weight: 900;
+    letter-spacing: -1.5px;
+    white-space: nowrap;
 }
 
 .header-nav {
     display: flex;
+    flex-direction: column;
     gap: 15px;
-    margin: 0 20px;
+    flex-grow: 1;
+    align-items: stretch; /* Allow rows to fill width */
+    padding: 5px 0;
+}
+
+.nav-row {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    width: 100%;
 }
 
 .nav-item {
-    color: rgba(255, 255, 255, 0.85);
+    color: rgba(255, 255, 255, 0.95);
     text-decoration: none;
-    font-size: 14px;
-    font-weight: 600;
-    padding: 8px 12px;
-    border-radius: 6px;
-    transition: 0.2s;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 10px 15px;
+    border-radius: 10px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    flex: 1; /* Distribute space */
+    max-width: 220px; /* Prevent over-expansion */
+    min-width: 120px;
+    backdrop-filter: blur(5px);
 }
 
 .nav-item:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.25);
     color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    border-color: rgba(255,255,255,0.3);
+}
+
+.header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    flex-shrink: 0;
+    padding-left: 20px;
+    border-left: 1px solid rgba(255,255,255,0.15);
+}
+
+/* Dropdown para Gestão */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #fff;
+    min-width: 180px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    border-radius: 8px;
+    z-index: 1001;
+    top: 100%;
+    right: 0;
+    margin-top: 5px;
+    overflow: hidden;
+    border: 1px solid #eee;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.dropdown-item {
+    color: #333;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: 0.2s;
+}
+
+.dropdown-item:hover {
+    background-color: #f8fafc;
+    color: var(--primary-color);
 }
 
 .header-right {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.year-selector {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.12);
+    padding: 4px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.year-label {
+    font-size: 10px;
+    margin-right: 6px;
+    color: rgba(255,255,255,0.7);
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.year-select {
+    background: transparent !important;
+    color: white !important;
+    border: none;
+    font-weight: 700;
+    cursor: pointer;
+    outline: none;
+    font-size: 13px;
+    padding: 2px 0;
+}
+
+.year-select option {
+    background: #fff;
+    color: #333;
+}
+
+.header-user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 12px;
+    border-left: 1px solid rgba(255,255,255,0.15);
 }
 
 .header-user {
-    font-size: 14px;
-    font-weight: normal;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .btn-logout {
-    background: transparent;
-    border: 1px solid #fff;
+    background: #e74c3c;
+    border: none;
     color: #fff;
-    padding: 5px 12px;
-    border-radius: 5px;
+    padding: 6px 12px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 13px;
-    margin-top: 0;
+    font-size: 11px;
+    font-weight: 800;
+    transition: all 0.2s;
+    text-transform: uppercase;
 }
 
 .btn-logout:hover {
-    background: #ff4444;
-    border-color: #ff4444;
+    background: #c0392b;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
 /* ──────────────────────────── LOGIN ──────────────────────────── */

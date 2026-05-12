@@ -3,7 +3,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}Sistema EME{% endblock %}</title>
+    <title>{% block title %}SCA - Sistema de Controle Acadêmico{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{% static 'core/style.css' %}?v=6">
     <style>
@@ -18,61 +18,67 @@
 <header>
     <div class="header-inner">
         <div class="header-left">
-            <a href="{% url 'dashboard' %}" style="color: white; text-decoration: none; display: flex; align-items: center; gap: 10px;">
+            <a href="{% url 'dashboard' %}" style="color: white; text-decoration: none; display: flex; align-items: center; gap: 15px;">
                 {% if escola.logo %}
-                <img src="{{ escola.logo.url }}" alt="Logo" class="header-logo" style="height: 35px; width: auto; border-radius: 4px;">
+                <img src="{{ escola.logo.url }}" alt="Logo" class="header-logo">
                 {% else %}
                 <img src="{% static 'core/logo.jpg' %}" alt="Logo" class="header-logo">
                 {% endif %}
-                <span class="header-title">{{ escola.nome|default:"Sistema EME" }}</span>
+                <span class="header-title">{{ escola.nome|default:"SCA - Sistema de Controle Acadêmico" }}</span>
             </a>
         </div>
 
         {% if user.is_authenticated %}
         <nav class="header-nav">
-            <a href="{% url 'dashboard' %}" class="nav-item">🏠 Dashboard</a>
-            {% if not prof or prof.pode_ver_ocorrencias %}
-            <a href="{% url 'dashboard' %}?tab=ocorrencias" class="nav-item">📋 Ocorrências</a>
-            {% endif %}
-            {% if not prof or prof.cargo != 'INSPETOR' %}
-            <a href="{% url 'dashboard' %}?tab=conteudos" class="nav-item">📚 Diário</a>
-            {% endif %}
-            {% if prof.pode_ver_tudo or user.is_superuser %}
-            <a href="{% url 'relatorio_alocacao' %}" class="nav-item">👥 Alocação</a>
-            <a href="{% url 'relatorio_pendencias' %}" class="nav-item">📊 Pendências</a>
-            {% endif %}
+            {# Primeira Linha: Principais Ações #}
+            <div class="nav-row">
+                <a href="{% url 'dashboard' %}" class="nav-item">🏠 Dashboard</a>
+                {% if not prof or prof.pode_ver_ocorrencias %}
+                <a href="{% url 'dashboard' %}?tab=ocorrencias" class="nav-item">📋 Ocorrências</a>
+                {% endif %}
+                {% if not prof or prof.cargo != 'INSPETOR' %}
+                <a href="{% url 'dashboard' %}?tab=conteudos" class="nav-item">📚 Diário</a>
+                {% endif %}
+                {% if prof.pode_ver_tudo or user.is_superuser %}
+                <a href="{% url 'relatorio_alocacao' %}" class="nav-item">👥 Alocação</a>
+                <a href="{% url 'relatorio_pendencias' %}" class="nav-item">📊 Pendências</a>
+                {% endif %}
+            </div>
+
+            {# Segunda Linha: Gestão e Configurações #}
             {% if prof.pode_editar_tudo or user.is_superuser %}
-            <a href="{% url 'gerenciar_sugestoes' %}" class="nav-item">⚙ Sugestões</a>
-            <a href="{% url 'escola_professores_list' %}" class="nav-item" title="Gerenciar Professores">👥 Equipe</a>
-            <a href="{% url 'escola_configurar' %}" class="nav-item" title="Configurações da Escola">🎨 Escola</a>
-            <a href="{% url 'migrar_alunos' %}" class="nav-item" title="Migrar alunos para novo ano">🚀 Migrar</a>
+            <div class="nav-row">
+                <a href="{% url 'gerenciar_sugestoes' %}" class="nav-item">⚙️ Sugestões</a>
+                <a href="{% url 'escola_professores_list' %}" class="nav-item">👥 Equipe</a>
+                <a href="{% url 'escola_configurar' %}" class="nav-item">🎨 Escola</a>
+                <a href="{% url 'migrar_alunos' %}" class="nav-item">🚀 Migrar Alunos</a>
+            </div>
             {% endif %}
         </nav>
 
         <div class="header-right">
             {% if user.is_authenticated %}
-                {# Seletor de Ano #}
-                {% if anos_disponiveis|length > 1 %}
-                <div style="display: flex; align-items: center; background: rgba(255,255,255,0.15); padding: 2px 8px; border-radius: 6px; margin-right: 15px;">
-                    <label style="font-size: 11px; margin-right: 5px; color: #eee; font-weight: bold;">ANO:</label>
-                    <select onchange="window.location.href='?set_ano=' + this.value" style="background: transparent; color: white; border: none; font-weight: bold; cursor: pointer; outline: none; font-size: 14px;">
+                <div class="year-selector">
+                    <span class="year-label">Ano:</span>
+                    {% if anos_disponiveis|length > 1 %}
+                    <select onchange="window.location.href='?set_ano=' + this.value" class="year-select">
                         {% for ano in anos_disponiveis %}
                         <option value="{{ ano.ano }}" {% if ano_letivo.id == ano.id %}selected{% endif %} style="color: black;">{{ ano.ano }}</option>
                         {% endfor %}
                     </select>
+                    {% else %}
+                    <span class="year-select">{{ ano_letivo.ano }}</span>
+                    {% endif %}
                 </div>
-                {% else %}
-                <span style="background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 4px; font-size: 13px; margin-right: 15px; font-weight: bold; color: #eee;">
-                    📅 {{ ano_letivo.ano }}
-                </span>
-                {% endif %}
-            {% endif %}
 
-            <span class="header-user">👤 {{ user.get_full_name|default:user.username }}</span>
-            <form method="post" action="{% url 'logout' %}" style="display:inline">
-                {% csrf_token %}
-                <button type="submit" class="btn-logout">Sair</button>
-            </form>
+                <div class="header-user-info" style="border: none; padding: 0;">
+                    <span class="header-user" style="font-size: 11px; opacity: 0.8;">👤 {{ user.get_full_name|default:user.username }}</span>
+                    <form method="post" action="{% url 'logout' %}" style="display:inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-logout" style="padding: 4px 8px; font-size: 10px;">Sair</button>
+                    </form>
+                </div>
+            {% endif %}
         </div>
         {% endif %}
     </div>

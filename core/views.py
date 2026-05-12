@@ -1902,7 +1902,7 @@ def exportar_ocorrencias_pdf(request):
         elems.append(logo)
         elems.append(Spacer(1, 0.2*cm))
 
-    elems.append(Paragraph('Ocorrências - Sistema EME', styles['Title']))
+    elems.append(Paragraph('Ocorrências - SCA - Sistema de Controle Acadêmico', styles['Title']))
     
     qs, resumo_filtros = filtrar_ocorrencias(request, ocorrencias_do_usuario(request.user))
     if resumo_filtros:
@@ -2012,7 +2012,7 @@ def exportar_conteudos_pdf(request):
         elems.append(logo)
         elems.append(Spacer(1, 0.2*cm))
 
-    elems.append(Paragraph('Conteúdo Programático - Sistema EME', styles['Title']))
+    elems.append(Paragraph('Conteúdo Programático - SCA - Sistema de Controle Acadêmico', styles['Title']))
     
     qs, resumo_filtros = filtrar_conteudos(request, conteudos_do_usuario(request.user))
     if resumo_filtros:
