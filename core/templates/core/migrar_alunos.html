@@ -1,0 +1,139 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Migrar Alunos - Sistema EME{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1000px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+        <h1 style="color: #003366; margin: 0;">🚀 Migração de Alunos (Novo Ano Letivo)</h1>
+        <a href="{% url 'dashboard' %}" class="btn-gray">Voltar ao Dashboard</a>
+    </div>
+
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; margin-bottom: 30px;">
+        <h3 style="margin-top: 0; color: #4a5568; font-size: 18px; margin-bottom: 20px;">1. Selecione a Origem e o Destino</h3>
+        
+        <form method="get" id="filter-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px;">Ano de Origem (Ex: 2026)</label>
+                <select name="ano_origem" onchange="this.form.submit()" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e0;">
+                    <option value="">Selecione...</option>
+                    {% for ano in anos %}
+                    <option value="{{ ano.id }}" {% if ano_origem_id == ano.id %}selected{% endif %}>{{ ano.ano }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px;">Turma de Origem</label>
+                <select name="turma_origem" onchange="this.form.submit()" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e0;" {% if not ano_origem_id %}disabled{% endif %}>
+                    <option value="">Selecione...</option>
+                    {% for t in turmas_origem %}
+                    <option value="{{ t.id }}" {% if turma_origem_id == t.id %}selected{% endif %}>{{ t.codigo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px;">Ano de Destino (Ex: 2027)</label>
+                <select name="ano_destino" onchange="this.form.submit()" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e0;">
+                    <option value="">Selecione...</option>
+                    {% for ano in anos %}
+                    <option value="{{ ano.id }}" {% if ano_destino_id == ano.id %}selected{% endif %}>{{ ano.ano }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+    </div>
+
+    {% if alunos %}
+    <form method="post" action="{% url 'migrar_alunos' %}">
+        {% csrf_token %}
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <div style="padding: 20px; background: #003366; color: white; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 16px;">2. Selecione os Alunos e a Turma de Destino</h3>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <label style="font-size: 13px; font-weight: bold;">Turma de Destino:</label>
+                    <select name="turma_destino" required style="padding: 8px; border-radius: 4px; border: none; font-size: 13px; color: #333;">
+                        <option value="">Selecionar Turma...</option>
+                        {% for t in turmas_destino %}
+                        <option value="{{ t.id }}">{{ t.codigo }} ({{ t.ano_letivo.ano }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div style="padding: 0;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead style="background: #f1f5f9;">
+                        <tr>
+                            <th style="padding: 12px 20px; text-align: left; width: 40px;">
+                                <input type="checkbox" id="select-all" onclick="toggleSelectAll(this)">
+                            </th>
+                            <th style="padding: 12px 20px; text-align: left;">Nome do Aluno</th>
+                            <th style="padding: 12px 20px; text-align: center;">Responsável (E-mail)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in alunos %}
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 12px 20px;">
+                                <input type="checkbox" name="alunos_migrar" value="{{ a.id }}" class="aluno-check">
+                            </td>
+                            <td style="padding: 12px 20px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    {% if a.foto %}
+                                        <img src="{{ a.foto.url }}" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;">
+                                    {% else %}
+                                        <div style="width: 30px; height: 30px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #a0aec0;">👤</div>
+                                    {% endif %}
+                                    <strong>{{ a.nome }}</strong>
+                                </div>
+                            </td>
+                            <td style="padding: 12px 20px; text-align: center; color: #666; font-size: 13px;">
+                                {{ a.email_responsavel|default:"---" }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="padding: 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; text-align: right;">
+                <p style="float: left; font-size: 13px; color: #718096; margin-top: 10px;">
+                    Ao migrar, os registros de 2026 permanecerão intactos. <br>
+                    Os novos registros serão criados para o ano de destino selecionado.
+                </p>
+                <button type="submit" class="btn-primary" style="background: #27ae60; padding: 12px 30px; font-size: 15px;">🚀 Realizar Migração</button>
+            </div>
+        </div>
+    </form>
+    {% elif turma_origem_id %}
+    <div style="text-align: center; padding: 40px; background: #fff; border: 1px dashed #cbd5e0; border-radius: 12px; color: #718096;">
+        Nenhum aluno encontrado na turma selecionada.
+    </div>
+    {% endif %}
+
+</div>
+
+<script>
+function toggleSelectAll(source) {
+    checkboxes = document.getElementsByClassName('aluno-check');
+    for(var i=0, n=checkboxes.length;i<n;i++) {
+        checkboxes[i].checked = source.checked;
+    }
+}
+</script>
+
+<style>
+    .btn-primary {
+        background: #003366; color: white; border: none; padding: 10px 20px; border-radius: 6px;
+        cursor: pointer; font-weight: bold; transition: 0.3s;
+    }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-gray {
+        background: #6c757d; color: white; text-decoration: none; padding: 10px 20px; border-radius: 6px;
+        font-size: 14px; transition: 0.3s; display: inline-block;
+    }
+    .btn-gray:hover { background: #5a6268; }
+</style>
+{% endblock %}

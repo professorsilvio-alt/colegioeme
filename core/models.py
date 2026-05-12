@@ -3,15 +3,48 @@ from django.contrib.auth.models import User
 import datetime
 
 
+class Escola(models.Model):
+    nome = models.CharField(max_length=200, verbose_name="Nome da Escola")
+    codigo_inep = models.CharField(max_length=20, blank=True, null=True, verbose_name="Código INEP")
+    municipio = models.CharField(max_length=100, blank=True, null=True, verbose_name="Município")
+    logo = models.ImageField(upload_to='escolas/logos/', blank=True, null=True, verbose_name="Logo da Escola")
+    cor_primaria = models.CharField(max_length=7, default='#1e3a8a', verbose_name="Cor Primária (Hex)", help_text="Ex: #1e3a8a")
+
+    class Meta:
+        verbose_name = "Escola"
+        verbose_name_plural = "Escolas"
+        ordering = ['nome']
+
+    def __str__(self):
+        return self.nome
+
+
+class AnoLetivo(models.Model):
+    ano = models.IntegerField(unique=True, verbose_name="Ano")
+    atual = models.BooleanField(default=False, verbose_name="Ano Atual")
+
+    class Meta:
+        verbose_name = "Ano Letivo"
+        verbose_name_plural = "Anos Letivos"
+        ordering = ['-ano']
+
+    def __str__(self):
+        return str(self.ano)
+
+
 class Turma(models.Model):
-    codigo = models.CharField(max_length=10, unique=True)
+    escola = models.ForeignKey(Escola, on_delete=models.CASCADE, related_name='turmas', null=True, blank=True)
+    codigo = models.CharField(max_length=10)
+    ano_letivo = models.ForeignKey(AnoLetivo, on_delete=models.CASCADE, related_name='turmas', null=True, blank=True)
     ordem_exibicao = models.IntegerField(default=0)
 
     class Meta:
-        ordering = ['ordem_exibicao', 'codigo']
+        ordering = ['escola', 'ano_letivo__ano', 'ordem_exibicao', 'codigo']
+        unique_together = ('codigo', 'ano_letivo', 'escola')
 
     def __str__(self):
-        return f'Turma {self.codigo}'
+        ano_str = f" ({self.ano_letivo.ano})" if self.ano_letivo else ""
+        return f'Turma {self.codigo}{ano_str}'
 
 
 class Disciplina(models.Model):
@@ -38,6 +71,7 @@ class Professor(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='professor')
     nome = models.CharField(max_length=200)
+    escolas = models.ManyToManyField(Escola, blank=True, related_name='professores')
     cpf = models.CharField(max_length=14, blank=True, null=True, verbose_name='CPF', help_text='Formato: 000.000.000-00')
     cargo = models.CharField(max_length=20, choices=CARGO_CHOICES, default='PROFESSOR')
     turmas = models.ManyToManyField(Turma, blank=True, related_name='professores')
@@ -84,12 +118,20 @@ class Professor(models.Model):
     def pode_gerar_relatorios(self):
         return self.cargo in ['ADMIN', 'DIRETOR', 'COORDENADOR', 'AUX_COORD', 'ORIENTADOR', 'SECRETARIA', 'INSPETOR']
 
-    def get_turmas(self):
-        if self.todas_turmas or self.pode_ver_tudo:
-            return Turma.objects.all()
-        return self.turmas.all()
+    def get_turmas(self, ano_letivo=None, escola=None):
+        qs = Turma.objects.all()
+        if not (self.todas_turmas or self.pode_ver_tudo):
+            qs = self.turmas.all()
+        
+        if escola:
+            qs = qs.filter(escola=escola)
+        if ano_letivo:
+            qs = qs.filter(ano_letivo=ano_letivo)
+        return qs
 
-    def get_disciplinas(self):
+    def get_disciplinas(self, ano_letivo=None):
+        # Disciplinas are currently global, but we could filter them if needed.
+        # For now, let's just return all.
         if self.todas_disciplinas or self.pode_ver_tudo:
             return Disciplina.objects.all()
         return self.disciplinas.all()
@@ -108,7 +150,7 @@ class Aluno(models.Model):
     )
 
     class Meta:
-        ordering = ['turma__ordem_exibicao', 'turma__codigo', 'nome']
+        ordering = ['turma__ano_letivo__ano', 'turma__ordem_exibicao', 'turma__codigo', 'nome']
 
     def __str__(self):
         return f'{self.nome} ({self.turma.codigo})'
@@ -261,6 +303,8 @@ class SugestaoConteudo(models.Model):
 
 
 class Configuracao(models.Model):
+    escola = models.ForeignKey(Escola, on_delete=models.CASCADE, related_name='configuracoes', null=True, blank=True)
+    ano_letivo = models.ForeignKey(AnoLetivo, on_delete=models.CASCADE, related_name='configuracoes', null=True, blank=True)
     inicio_periodo_letivo = models.DateField(verbose_name="Início do Período Letivo", default=datetime.date(datetime.date.today().year, 2, 3))
     fim_periodo_letivo = models.DateField(verbose_name="Fim do Período Letivo", default=datetime.date(datetime.date.today().year, 12, 18))
     feriados = models.TextField(
@@ -276,9 +320,11 @@ class Configuracao(models.Model):
     class Meta:
         verbose_name = "Configuração"
         verbose_name_plural = "Configurações"
+        unique_together = ('escola', 'ano_letivo')
 
     def __str__(self):
-        return f"Configuração do Ano Letivo ({self.inicio_periodo_letivo.year})"
+        ano = self.ano_letivo.ano if self.ano_letivo else self.inicio_periodo_letivo.year
+        return f"Configuração do Ano Letivo ({ano})"
 
     def get_feriados(self):
         """Retorna um set de datetime.date com os feriados configurados."""

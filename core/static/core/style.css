@@ -12,7 +12,7 @@ body {
 
 /* ──────────────────────────── HEADER ──────────────────────────── */
 header {
-    background: #003366;
+    background: var(--primary-color, #003366);
     color: #fff;
     padding: 16px 24px;
     position: sticky;
@@ -93,7 +93,7 @@ header {
 .login-screen {
     position: fixed;
     inset: 0;
-    background: #003366;
+    background: var(--primary-color, #003366);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -208,7 +208,7 @@ header {
 .card {
     flex: 1;
     min-width: 120px;
-    background: #003366;
+    background: var(--primary-color, #003366);
     padding: 6px 10px;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, .15);
@@ -279,7 +279,7 @@ header {
 }
 
 .tab-btn.active {
-    background: #003366;
+    background: var(--primary-color, #003366);
     color: #fff;
 }
 
@@ -287,7 +287,7 @@ header {
 button,
 .btn-primary {
     padding: 11px 18px;
-    background: #003366;
+    background: var(--primary-color, #003366);
     color: #fff;
     border: none;
     border-radius: 7px;
@@ -539,7 +539,7 @@ td {
 }
 
 th {
-    background: #003366;
+    background: var(--primary-color, #003366);
     color: #fff;
     font-size: 13px;
 }

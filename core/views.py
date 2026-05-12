@@ -36,20 +36,21 @@ FERIADOS_2026 = {
 }
 
 
-def get_feriados():
-    """Retorna o conjunto de datas de feriados a partir da Configuracao.
-    Faz fallback para FERIADOS_2026 se o campo estiver vazio ou a tabela inexistir.
-    """
+def get_feriados(ano_letivo=None, escola=None):
+    """Retorna o conjunto de datas de feriados a partir da Configuracao."""
     try:
         from .models import Configuracao
-        config = Configuracao.objects.first()
+        config = Configuracao.objects.filter(ano_letivo=ano_letivo, escola=escola).first()
         if config:
             feriados = config.get_feriados()
             if feriados:
                 return feriados
     except Exception:
         pass
-    return FERIADOS_2026  # fallback
+    # Fallback apenas para 2026 se o ano for compatível ou não informado
+    if not ano_letivo or ano_letivo.ano == 2026:
+        return FERIADOS_2026
+    return set()
 
 
 from django.contrib import messages
@@ -78,6 +79,8 @@ from .models import (Aluno, ConteudoProgramatico, Disciplina, Ocorrencia,
 
 def _verificar_recaptcha(token):
     """Verifica o token reCAPTCHA v3 com os servidores do Google. Retorna True se válido."""
+    if settings.DEBUG:
+        return True
     import urllib.request
     import urllib.parse
     import json
@@ -100,12 +103,14 @@ def _verificar_recaptcha(token):
 
 
 def login_view(request):
+    from .models import Escola
     if request.user.is_authenticated:
         return redirect('dashboard')
     if request.method == 'POST':
         usuario = request.POST.get('usuario', '').strip()
         senha = request.POST.get('senha', '')
         token = request.POST.get('g-recaptcha-response', '')
+        escola_id = request.POST.get('escola')
 
         # Verifica reCAPTCHA antes de autenticar
         if not _verificar_recaptcha(token):
@@ -115,6 +120,9 @@ def login_view(request):
         user = authenticate(request, username=usuario, password=senha)
         if user:
             login(request, user)
+            # Salva a escola selecionada na sessão
+            if escola_id:
+                request.session['escola_id'] = escola_id
             # Limpa tentativas em caso de sucesso
             ip = request.META.get('REMOTE_ADDR')
             cache.delete(f'login_attempts_{ip}')
@@ -126,7 +134,10 @@ def login_view(request):
             attempts = cache.get(cache_key, 0)
             cache.set(cache_key, attempts + 1, 300) # Expira em 5 min
             messages.error(request, 'Usuário ou senha incorretos!')
-    return render(request, 'core/login.html', {'recaptcha_site_key': settings.RECAPTCHA_SITE_KEY})
+    return render(request, 'core/login.html', {
+        'recaptcha_site_key': settings.RECAPTCHA_SITE_KEY,
+        'escolas': Escola.objects.all()
+    })
 
 
 def logout_view(request):
@@ -146,9 +157,18 @@ def get_professor(user):
         return None
 
 
-def ocorrencias_do_usuario(user):
+def ocorrencias_do_usuario(request):
+    user = request.user
     prof = get_professor(user)
+    ano_letivo = request.ano_letivo
+    escola = request.escola
     qs = Ocorrencia.objects.select_related('turma', 'professor', 'disciplina').prefetch_related('alunos')
+    
+    if escola:
+        qs = qs.filter(turma__escola=escola)
+    if ano_letivo:
+        qs = qs.filter(turma__ano_letivo=ano_letivo)
+    
     if not prof:
         return qs  # superuser/admin sem perfil: vê tudo
     
@@ -165,9 +185,18 @@ def ocorrencias_do_usuario(user):
     return qs
 
 
-def conteudos_do_usuario(user):
+def conteudos_do_usuario(request):
+    user = request.user
     prof = get_professor(user)
+    ano_letivo = request.ano_letivo
+    escola = request.escola
     qs = ConteudoProgramatico.objects.select_related('professor', 'disciplina').prefetch_related('turmas')
+    
+    if escola:
+        qs = qs.filter(turmas__escola=escola)
+    if ano_letivo:
+        qs = qs.filter(turmas__ano_letivo=ano_letivo).distinct()
+        
     if prof and not prof.pode_ver_tudo:
         qs = qs.filter(professor=prof)
     return qs
@@ -237,16 +266,16 @@ def filtrar_conteudos(request, qs, override_prof=None):
 @login_required
 def dashboard(request):
     prof = get_professor(request.user)
-    turmas_qs = prof.get_turmas() if prof else Turma.objects.all()
+    turmas_qs = prof.get_turmas(ano_letivo=request.ano_letivo, escola=request.escola) if prof else Turma.objects.filter(ano_letivo=request.ano_letivo, escola=request.escola)
     disciplinas_qs = prof.get_disciplinas() if prof else Disciplina.objects.all()
 
-    ocorrencias = ocorrencias_do_usuario(request.user)
+    ocorrencias = ocorrencias_do_usuario(request)
     total = ocorrencias.count()
     abertas = ocorrencias.filter(status='Aberta').count()
     resolvidas = ocorrencias.filter(status='Resolvida').count()
 
     oc_filtradas, _ = filtrar_ocorrencias(request, ocorrencias)
-    cont_qs = conteudos_do_usuario(request.user)
+    cont_qs = conteudos_do_usuario(request)
     
     filtro_turma_c = request.GET.get('filtro_turma_c', '')
     filtro_disc_c = request.GET.get('filtro_disc_c', '')
@@ -326,12 +355,13 @@ def dashboard(request):
         'filtro_data_ini_c': request.GET.get('data_ini', ''),
         'filtro_data_fim_c': request.GET.get('data_fim', ''),
         'today': date.today().isoformat(),
-        'config_pk': Configuracao.objects.values_list('pk', flat=True).first(),
+        'config_pk': Configuracao.objects.filter(ano_letivo=request.ano_letivo, escola=request.escola).values_list('pk', flat=True).first(),
     }
     # Merge content stats without overwriting ocorrência totals
     context.update(calcular_stats_conteudo(prof,
                                            data_ini=request.GET.get('data_ini', ''),
-                                           data_fim=request.GET.get('data_fim', '')))
+                                           data_fim=request.GET.get('data_fim', ''),
+                                           ano_letivo=request.ano_letivo))
     return render(request, 'core/dashboard.html', context)
 
 
@@ -341,7 +371,7 @@ def dashboard(request):
 
 @login_required
 def api_alunos_turma(request, codigo):
-    alunos = Aluno.objects.filter(turma__codigo=codigo).order_by('nome')
+    alunos = Aluno.objects.filter(turma__codigo=codigo, turma__ano_letivo=request.ano_letivo, turma__escola=request.escola).order_by('nome')
     data = []
     for a in alunos:
         foto_url = a.foto.url if a.foto else None
@@ -413,7 +443,7 @@ def api_disciplinas_turma(request, codigo):
                 
         return JsonResponse(lista_discs, safe=False)
     else:
-        qs = GradeHoraria.objects.filter(turma__codigo=codigo)
+        qs = GradeHoraria.objects.filter(turma__codigo=codigo, turma__ano_letivo=request.ano_letivo, turma__escola=request.escola)
         if prof_logado and not prof_logado.pode_ver_tudo:
             qs = qs.filter(professor=prof_logado)
         disc_ids = qs.values_list('disciplina_id', flat=True).distinct()
@@ -435,6 +465,8 @@ def api_professores_turma_disc(request, codigo, disc_id):
     else:
         prof_ids = GradeHoraria.objects.filter(
             turma__codigo=codigo,
+            turma__ano_letivo=request.ano_letivo,
+            turma__escola=request.escola,
             disciplina__pk=disc_id
         ).values_list('professor_id', flat=True).distinct()
         profs = Professor.objects.filter(pk__in=prof_ids).order_by('nome')
@@ -460,6 +492,8 @@ def api_datas_validas(request, codigo, prof_id):
     # Find which days of week this professor teaches this turma
     query = GradeHoraria.objects.filter(
         turma__codigo=codigo,
+        turma__ano_letivo=request.ano_letivo,
+        turma__escola=request.escola,
         professor__pk=prof_id
     )
     if disc_id:
@@ -473,7 +507,7 @@ def api_datas_validas(request, codigo, prof_id):
     weekdays = {DIA_TO_WEEKDAY[d] for d in dias if d in DIA_TO_WEEKDAY}
 
     # School year boundaries from configuration or defaults
-    config = Configuracao.objects.first()
+    config = Configuracao.objects.filter(ano_letivo=request.ano_letivo, escola=request.escola).first()
     if config:
         inicio = config.inicio_periodo_letivo
         fim = config.fim_periodo_letivo
@@ -483,7 +517,7 @@ def api_datas_validas(request, codigo, prof_id):
         fim = datetime.date(ano, 12, 20)
 
     # Generate all valid school dates (excluding holidays)
-    feriados = get_feriados()
+    feriados = get_feriados(ano_letivo=request.ano_letivo, escola=request.escola)
     datas_validas = []
     cur = inicio
     while cur <= fim:
@@ -494,7 +528,9 @@ def api_datas_validas(request, codigo, prof_id):
     # Find which dates already have a content entry for this professor+turma
     query_lancados = ConteudoProgramatico.objects.filter(
         professor__pk=prof_id,
-        turmas__codigo=codigo
+        turmas__codigo=codigo,
+        turmas__ano_letivo=request.ano_letivo,
+        turmas__escola=request.escola
     )
     if disc_id:
         query_lancados = query_lancados.filter(disciplina__pk=disc_id)
@@ -522,7 +558,7 @@ def api_professor_grades(request, prof_id):
     from .models import GradeHoraria
     
     disc_id = request.GET.get('disciplina')
-    query = GradeHoraria.objects.filter(professor_id=prof_id)
+    query = GradeHoraria.objects.filter(professor_id=prof_id, turma__ano_letivo=request.ano_letivo, turma__escola=request.escola)
     if disc_id:
         query = query.filter(disciplina_id=disc_id)
         
@@ -558,7 +594,9 @@ def api_verificar_duplicidade(request):
             data=data_str,
             professor_id=prof_id,
             disciplina_id=disc_id,
-            turmas__codigo=t_cod
+            turmas__codigo=t_cod,
+            turmas__ano_letivo=request.ano_letivo,
+            turmas__escola=request.escola
         ).exists()
         if exists:
             conflicts.append(t_cod)
@@ -570,39 +608,44 @@ def api_verificar_duplicidade(request):
 def api_precheck_coletivo(request):
     """
     Pre-check para lançamento coletivo: identifica conflitos para múltiplos professores/turmas.
+    Suporta busca por data única ou período.
     """
-    data_str = request.GET.get('data')
+    data_ini_str = request.GET.get('data')
+    data_fim_str = request.GET.get('data_fim')
     turma_ids = request.GET.getlist('turmas[]')
 
-    if not data_str or not turma_ids:
+    if not data_ini_str or not turma_ids:
         return JsonResponse({'conflicts': []})
 
     try:
-        data_obj = datetime.datetime.strptime(data_str, '%Y-%m-%d').date()
+        data_ini = datetime.datetime.strptime(data_ini_str, '%Y-%m-%d').date()
+        if data_fim_str:
+            data_fim = datetime.datetime.strptime(data_fim_str, '%Y-%m-%d').date()
+            if data_fim < data_ini:
+                data_ini, data_fim = data_fim, data_ini
+        else:
+            data_fim = data_ini
     except ValueError:
         return JsonResponse({'conflicts': []})
 
-    wd = data_obj.weekday()
-    if wd > 4: return JsonResponse({'conflicts': []})
-    dia_semana_str = str(wd + 1)
-
     from .models import GradeHoraria, ConteudoProgramatico
-    # Busca todas as aulas para as turmas selecionadas no dia da semana correspondente
+    
+    # Busca todas as grades para as turmas selecionadas
     grades = GradeHoraria.objects.filter(
-        dia_semana=dia_semana_str,
         turma_id__in=turma_ids
     ).select_related('professor', 'disciplina', 'turma')
 
     conflicts = []
-    seen = set() # Evita duplicatas na lista de conflitos caso haja múltiplas grades idênticas
+    seen = set() # Evita duplicatas na lista de conflitos
 
     for g in grades:
         key = (g.professor_id, g.disciplina_id, g.turma_id)
         if key in seen: continue
 
-        # Verifica se já existe um registro para este professor, nesta data, nesta disciplina contendo esta turma
+        # Verifica se já existe QUALQUER registro para este professor/disciplina/turma no período informado
         exists = ConteudoProgramatico.objects.filter(
-            data=data_obj,
+            data__gte=data_ini,
+            data__lte=data_fim,
             professor_id=g.professor_id,
             disciplina_id=g.disciplina_id,
             turmas__id=g.turma_id
@@ -620,13 +663,13 @@ def api_precheck_coletivo(request):
     return JsonResponse({'conflicts': conflicts})
 
 
-def calcular_stats_conteudo(prof, data_ini=None, data_fim=None, feriados=None):
+def calcular_stats_conteudo(prof, data_ini=None, data_fim=None, feriados=None, ano_letivo=None, escola=None):
     """
     Retorna estatísticas de total/preenchidos/faltam.
     Otimizado para evitar o problema N+1 queries.
     """
     if feriados is None:
-        feriados = get_feriados()
+        feriados = get_feriados(ano_letivo=ano_letivo, escola=escola)
     from .models import GradeHoraria, ConteudoProgramatico, Turma
     from django.db.models import Q
     import datetime
@@ -635,12 +678,12 @@ def calcular_stats_conteudo(prof, data_ini=None, data_fim=None, feriados=None):
     hoje = datetime.date.today()
     
     # Datas do período letivo
-    config = Configuracao.objects.first()
+    config = Configuracao.objects.filter(ano_letivo=ano_letivo, escola=escola).first()
     if config:
         config_ini = config.inicio_periodo_letivo
         config_fim = config.fim_periodo_letivo
     else:
-        ano = hoje.year
+        ano = ano_letivo.ano if ano_letivo else hoje.year
         config_ini = datetime.date(ano, 1, 1)
         config_fim = datetime.date(ano, 12, 20)
 
@@ -761,7 +804,7 @@ def relatorio_pendencias(request):
     from .models import Professor, GradeHoraria, ConteudoProgramatico
 
     # Only include active professors (those with GradeHoraria entries)
-    prof_ids_com_grade = GradeHoraria.objects.values_list('professor_id', flat=True).distinct()
+    prof_ids_com_grade = GradeHoraria.objects.filter(turma__ano_letivo=request.ano_letivo, turma__escola=request.escola).values_list('professor_id', flat=True).distinct()
     professores = Professor.objects.filter(pk__in=prof_ids_com_grade).order_by('nome')
 
     # Filtering
@@ -773,10 +816,10 @@ def relatorio_pendencias(request):
         professores = professores.filter(nome__icontains=nome_filtro)
 
     # Pre-fetch feriados once to avoid N+1 queries inside the loop
-    feriados_set = get_feriados()
+    feriados_set = get_feriados(ano_letivo=request.ano_letivo, escola=request.escola)
     relatorio = []
     for p in professores:
-        stats = calcular_stats_conteudo(p, data_ini=data_ini, data_fim=data_fim, feriados=feriados_set)
+        stats = calcular_stats_conteudo(p, data_ini=data_ini, data_fim=data_fim, feriados=feriados_set, ano_letivo=request.ano_letivo, escola=request.escola)
         if stats['total_conteudo'] > 0:
             p.stats = stats
             relatorio.append(p)
@@ -809,7 +852,7 @@ def relatorio_pendencias(request):
         'data_ini': data_ini,
         'data_fim': data_fim,
         'disciplina_extra_filtro': disciplina_extra_filtro,
-        'todas_turmas': Turma.objects.all(),
+        'todas_turmas': Turma.objects.filter(ano_letivo=request.ano_letivo, escola=request.escola),
         'aulas_extras_lancadas': extras_qs,
         'opcoes_extras': disciplinas_peso_2,
     }
@@ -832,20 +875,20 @@ def detalhe_pendencias_professor(request, prof_id):
 
     DIA_TO_WEEKDAY = {'1': 0, '2': 1, '3': 2, '4': 3, '5': 4}
     hoje = datetime.date.today()
-    config = Configuracao.objects.first()
+    config = Configuracao.objects.filter(ano_letivo=request.ano_letivo, escola=request.escola).first()
     if config:
         inicio = config.inicio_periodo_letivo
         config_fim = config.fim_periodo_letivo
     else:
-        ano = hoje.year
+        ano = request.ano_letivo.ano if request.ano_letivo else hoje.year
         inicio = datetime.date(ano, 2, 3)
         config_fim = datetime.date(ano, 12, 18)
     # Pendencies only count up to today
     fim = min(hoje, config_fim)
-    feriados = get_feriados()
+    feriados = get_feriados(ano_letivo=request.ano_letivo, escola=request.escola)
 
     # All (turma, disciplina) pairings for this professor
-    grades = GradeHoraria.objects.filter(professor=professor).select_related('turma', 'disciplina')
+    grades = GradeHoraria.objects.filter(professor=professor, turma__ano_letivo=request.ano_letivo, turma__escola=request.escola).select_related('turma', 'disciplina')
     
     # Group by turma+disciplina to find missing dates
     turma_disc_map = defaultdict(lambda: {'weekdays': set(), 'turma': None, 'disc': None})
@@ -891,87 +934,97 @@ def detalhe_pendencias_professor(request, prof_id):
 
 @login_required
 def lancamento_coletivo(request):
-    """Bulks create content for all classes on a specific date (Admin only, selected turmas)."""
+    """Bulks create content for selected turmas over a date range (Admin/Diretor only)."""
     prof_user = get_professor(request.user)
-    # Allows ADMIN and DIRETOR
     if not prof_user or prof_user.cargo not in ['ADMIN', 'DIRETOR']:
         messages.error(request, "Apenas administradores e diretores podem realizar lançamentos coletivos.")
         return redirect('dashboard')
 
     if request.method == 'POST':
-        data_str = request.POST.get('data')
+        data_ini_str = request.POST.get('data')
+        data_fim_str = request.POST.get('data_fim')
         descricao = request.POST.get('descricao')
         turma_ids = request.POST.getlist('turmas_coletivo')
 
-        if not data_str or not descricao or not turma_ids:
-            messages.error(request, "Data, descrição e pelo menos uma turma são obrigatórias.")
+        if not data_ini_str or not descricao or not turma_ids:
+            messages.error(request, "Início, descrição e pelo menos uma turma são obrigatórios.")
             return redirect('relatorio_pendencias')
 
         try:
-            data_obj = datetime.datetime.strptime(data_str, '%Y-%m-%d').date()
+            data_ini = datetime.datetime.strptime(data_ini_str, '%Y-%m-%d').date()
+            if data_fim_str:
+                data_fim = datetime.datetime.strptime(data_fim_str, '%Y-%m-%d').date()
+                if data_fim < data_ini:
+                    data_ini, data_fim = data_fim, data_ini
+            else:
+                data_fim = data_ini
         except ValueError:
             messages.error(request, "Formato de data inválido.")
             return redirect('relatorio_pendencias')
 
-        # Map weekday (0=Mon, 6=Sun) to GradeHoraria dia_semana ('1'=Mon, '5'=Fri)
-        # Weekday 0..4 = '1'..'5'
-        wd = data_obj.weekday()
-        if wd > 4:
-            messages.warning(request, "Não há aulas no fim de semana.")
-            return redirect('relatorio_pendencias')
-        
-        dia_semana_str = str(wd + 1)
-
         from .models import GradeHoraria, ConteudoProgramatico, Turma
         from django.db import transaction
 
-        # Find all unique (prof, turma, disc) for this day AND selected turmas
-        grades = GradeHoraria.objects.filter(
-            dia_semana=dia_semana_str,
-            turma_id__in=turma_ids
-        ).values('professor_id', 'turma_id', 'disciplina_id').distinct()
-
-        if not grades:
-            messages.info(request, "Não há aulas cadastradas para este dia da semana.")
+        # Gera a lista de datas letivas no período (segunda a sexta)
+        datas_letivas = []
+        curr = data_ini
+        while curr <= data_fim:
+            if curr.weekday() <= 4: # 0..4 = Seg..Sex
+                datas_letivas.append(curr)
+            curr += datetime.timedelta(days=1)
+        
+        if not datas_letivas:
+            messages.info(request, "Não há dias letivos (segunda a sexta) no período selecionado.")
             return redirect('relatorio_pendencias')
 
         criados = 0
         ja_existiam = 0
 
         with transaction.atomic():
-            for g in grades:
-                t_id = g['turma_id']
-                # Busca resolução específica enviada pelo form (se houver conflito detectado no front)
-                res = request.POST.get(f'resolucao_{t_id}')
-                
-                if res == 'pular':
-                    ja_existiam += 1
-                    continue
+            for data_obj in datas_letivas:
+                dia_semana_str = str(data_obj.weekday() + 1)
 
-                existing = ConteudoProgramatico.objects.filter(
-                    data=data_obj,
-                    professor_id=g['professor_id'],
-                    disciplina_id=g['disciplina_id'],
-                    turmas__id=t_id
-                ).first()
+                # Busca as grades vigentes para as turmas selecionadas no dia da semana atual
+                grades = GradeHoraria.objects.filter(
+                    dia_semana=dia_semana_str,
+                    turma_id__in=turma_ids
+                ).values('professor_id', 'turma_id', 'disciplina_id').distinct()
 
-                if res == 'mesclar' and existing:
-                    existing.descricao += f"\n\n[MESCLADO EM {datetime.date.today().strftime('%d/%m/%Y')}]: {descricao}"
-                    existing.save()
-                    criados += 1
-                elif not existing:
-                    cp = ConteudoProgramatico.objects.create(
+                for g in grades:
+                    t_id = g['turma_id']
+                    # Resolução global para conflitos daquela turma (enviada via modal de pre-check)
+                    res = request.POST.get(f'resolucao_{t_id}')
+                    
+                    if res == 'pular':
+                        ja_existiam += 1
+                        continue
+
+                    existing = ConteudoProgramatico.objects.filter(
                         data=data_obj,
                         professor_id=g['professor_id'],
                         disciplina_id=g['disciplina_id'],
-                        descricao=descricao
-                    )
-                    cp.turmas.add(t_id)
-                    criados += 1
-                else:
-                    ja_existiam += 1
+                        turmas__id=t_id
+                    ).first()
 
-        messages.success(request, f"Lançamento coletivo concluído: {criados} registros processados. ({ja_existiam} pulados ou já existiam)")
+                    if res == 'mesclar' and existing:
+                        # Evita duplicar exatamente o mesmo texto se já estiver lá
+                        if descricao not in existing.descricao:
+                            existing.descricao += f"\n\n[MESCLADO EM {datetime.date.today().strftime('%d/%m/%Y')}]: {descricao}"
+                            existing.save()
+                        criados += 1
+                    elif not existing:
+                        cp = ConteudoProgramatico.objects.create(
+                            data=data_obj,
+                            professor_id=g['professor_id'],
+                            disciplina_id=g['disciplina_id'],
+                            descricao=descricao
+                        )
+                        cp.turmas.add(t_id)
+                        criados += 1
+                    else:
+                        ja_existiam += 1
+
+        messages.success(request, f"Lançamento coletivo concluído: {criados} registros processados em {len(datas_letivas)} dias. ({ja_existiam} pulados ou já existiam)")
         return redirect('relatorio_pendencias')
 
     return redirect('relatorio_pendencias')
@@ -2370,3 +2423,69 @@ class CustomPasswordResetConfirmView(auth_views.PasswordResetConfirmView):
             prof.save(update_fields=['deve_trocar_senha'])
         messages.success(self.request, 'Senha redefinida com sucesso! Você já pode entrar.')
         return super().form_valid(form)
+
+
+@login_required
+def migrar_alunos(request):
+    """Ferramenta para migrar (copiar) alunos de um ano letivo para outro."""
+    prof = get_professor(request.user)
+    if not prof or not prof.pode_editar_tudo:
+        messages.error(request, "Acesso restrito à administração e direção.")
+        return redirect('dashboard')
+    
+    from .models import AnoLetivo, Turma, Aluno
+    anos = AnoLetivo.objects.all()
+    turmas_origem = []
+    alunos = []
+    turmas_destino = []
+    
+    ano_origem_id = request.GET.get('ano_origem')
+    turma_origem_id = request.GET.get('turma_origem')
+    ano_destino_id = request.GET.get('ano_destino')
+    
+    if ano_origem_id:
+        turmas_origem = Turma.objects.filter(ano_letivo_id=ano_origem_id, escola=request.escola)
+        
+    if turma_origem_id:
+        alunos = Aluno.objects.filter(turma_id=turma_origem_id)
+        
+    if ano_destino_id:
+        turmas_destino = Turma.objects.filter(ano_letivo_id=ano_destino_id, escola=request.escola)
+
+    if request.method == 'POST':
+        aluno_ids = request.POST.getlist('alunos_migrar')
+        turma_dest_id = request.POST.get('turma_destino')
+        
+        if not aluno_ids or not turma_dest_id:
+            messages.error(request, "Selecione os alunos e a turma de destino.")
+        else:
+            t_dest = get_object_or_404(Turma, pk=turma_dest_id)
+            sucesso = 0
+            for a_id in aluno_ids:
+                try:
+                    a_origem = Aluno.objects.get(pk=a_id)
+                    # Cria um NOVO registro de aluno vinculado à turma de destino
+                    # Preserva os dados básicos e a foto
+                    Aluno.objects.create(
+                        nome=a_origem.nome,
+                        turma=t_dest,
+                        email_responsavel=a_origem.email_responsavel,
+                        foto=a_origem.foto
+                    )
+                    sucesso += 1
+                except Aluno.DoesNotExist:
+                    continue
+            
+            messages.success(request, f"Migração concluída: {sucesso} alunos copiados para {t_dest}.")
+            return redirect('migrar_alunos')
+
+    context = {
+        'anos': anos,
+        'turmas_origem': turmas_origem,
+        'turmas_destino': turmas_destino,
+        'alunos': alunos,
+        'ano_origem_id': int(ano_origem_id) if ano_origem_id else None,
+        'turma_origem_id': int(turma_origem_id) if turma_origem_id else None,
+        'ano_destino_id': int(ano_destino_id) if ano_destino_id else None,
+    }
+    return render(request, 'core/migrar_alunos.html', context)

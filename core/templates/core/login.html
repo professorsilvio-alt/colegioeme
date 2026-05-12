@@ -397,6 +397,15 @@
             <input type="text" id="usuario" name="usuario" placeholder="Digite seu usuário" autocomplete="username" required>
         </div>
         <div class="input-group">
+            <label for="escola">Escola</label>
+            <select id="escola" name="escola" required style="width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 15px; font-family: 'Inter', sans-serif; color: #1a1a2e; background: #f8fafc; transition: all 0.3s ease; appearance: none; cursor: pointer;">
+                <option value="" disabled selected>Selecione sua escola</option>
+                {% for esc in escolas %}
+                <option value="{{ esc.id }}">{{ esc.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="input-group">
             <label for="senha">Senha</label>
             <input type="password" id="senha" name="senha" placeholder="Digite sua senha" autocomplete="current-password" required>
         </div>

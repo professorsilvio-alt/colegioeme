@@ -98,3 +98,109 @@ class ForcarTrocaSenhaMiddleware:
                 pass
 
         return self.get_response(request)
+class EscolaMiddleware:
+    """
+    Middleware que gerencia a Escola selecionada na sessão.
+    Permite trocar a escola via parâmetro GET ?set_escola=...
+    """
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if request.user.is_authenticated:
+            from .models import Escola
+            
+            # 1. Troca de escola via GET
+            set_escola = request.GET.get('set_escola')
+            if set_escola:
+                try:
+                    esc_obj = Escola.objects.get(id=set_escola)
+                    # Verifica se o usuário tem acesso a esta escola
+                    prof = getattr(request.user, 'professor', None)
+                    pode_ver = False
+                    if request.user.is_superuser:
+                        pode_ver = True
+                    elif prof and prof.escolas.filter(id=set_escola).exists():
+                        pode_ver = True
+                    
+                    if pode_ver:
+                        request.session['escola_id'] = esc_obj.id
+                except (Escola.DoesNotExist, ValueError):
+                    pass
+
+            # 2. Recupera a escola da sessão ou define o padrão
+            esc_id = request.session.get('escola_id')
+            esc_obj = None
+            if esc_id:
+                esc_obj = Escola.objects.filter(id=esc_id).first()
+            
+            if not esc_obj:
+                # Fallback para a primeira escola do professor
+                prof = getattr(request.user, 'professor', None)
+                if prof:
+                    esc_obj = prof.escolas.first()
+                elif request.user.is_superuser:
+                    esc_obj = Escola.objects.first()
+                
+                if esc_obj:
+                    request.session['escola_id'] = esc_obj.id
+            
+            request.escola = esc_obj
+        else:
+            request.escola = None
+
+        return self.get_response(request)
+
+
+class AnoLetivoMiddleware:
+    """
+    Middleware que gerencia o Ano Letivo selecionado na sessão.
+    Permite trocar o ano via parâmetro GET ?set_ano=...
+    """
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if request.user.is_authenticated:
+            from .models import AnoLetivo
+            
+            # 1. Troca de ano via GET
+            set_ano = request.GET.get('set_ano')
+            if set_ano:
+                try:
+                    ano_obj = AnoLetivo.objects.get(ano=set_ano)
+                    # Verifica se o usuário tem permissão para ver este ano
+                    prof = getattr(request.user, 'professor', None)
+                    pode_ver = True
+                    if prof and not prof.pode_editar_tudo:
+                        ano_atual = AnoLetivo.objects.filter(atual=True).first()
+                        if ano_atual:
+                            if not (ano_atual.ano - 1 <= int(set_ano) <= ano_atual.ano):
+                                pode_ver = False
+                    
+                    if pode_ver:
+                        request.session['ano_letivo_id'] = ano_obj.id
+                except (AnoLetivo.DoesNotExist, ValueError):
+                    pass
+
+            # 2. Recupera o ano da sessão ou define o padrão
+            ano_id = request.session.get('ano_letivo_id')
+            ano_obj = None
+            if ano_id:
+                ano_obj = AnoLetivo.objects.filter(id=ano_id).first()
+            
+            if not ano_obj:
+                # Fallback para o ano marcado como atual
+                ano_obj = AnoLetivo.objects.filter(atual=True).first()
+                if not ano_obj:
+                    # Fallback final para o ano mais recente
+                    ano_obj = AnoLetivo.objects.order_by('-ano').first()
+                
+                if ano_obj:
+                    request.session['ano_letivo_id'] = ano_obj.id
+            
+            request.ano_letivo = ano_obj
+        else:
+            request.ano_letivo = None
+
+        return self.get_response(request)

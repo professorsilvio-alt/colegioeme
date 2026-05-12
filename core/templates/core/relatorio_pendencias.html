@@ -52,8 +52,12 @@
                 {% csrf_token %}
                 <div style="display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px;">
                     <div style="flex-shrink: 0;">
-                        <label style="font-size: 11px; display: block; font-weight: bold;">Data</label>
+                        <label style="font-size: 11px; display: block; font-weight: bold;">Início</label>
                         <input type="date" name="data" required style="padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
+                    </div>
+                    <div style="flex-shrink: 0;">
+                        <label style="font-size: 11px; display: block; font-weight: bold;">Fim (Opcional)</label>
+                        <input type="date" name="data_fim" style="padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
                     </div>
                     <div style="flex-grow: 1;">
                         <label style="font-size: 11px; display: block; font-weight: bold;">Descrição do Conteúdo</label>
@@ -262,16 +266,18 @@
 
             e.preventDefault();
             const dataVal = this.querySelector('input[name="data"]').value;
+            const dataFimVal = this.querySelector('input[name="data_fim"]').value;
             const checks = this.querySelectorAll('input[name="turmas_coletivo"]:checked');
             const turmaIds = Array.from(checks).map(cb => cb.value);
 
             if (!dataVal || turmaIds.length === 0) {
-                alert("Selecione a data e as turmas.");
+                alert("Selecione a data inicial e as turmas.");
                 return;
             }
 
             const p = new URLSearchParams();
             p.append('data', dataVal);
+            if (dataFimVal) p.append('data_fim', dataFimVal);
             turmaIds.forEach(id => p.append('turmas[]', id));
 
             try {
