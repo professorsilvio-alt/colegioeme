@@ -115,7 +115,10 @@ def login_view(request):
         # Verifica reCAPTCHA antes de autenticar
         if not _verificar_recaptcha(token):
             messages.error(request, 'Verificação de segurança falhou. Tente novamente.')
-            return render(request, 'core/login.html')
+            return render(request, 'core/login.html', {
+                'recaptcha_site_key': settings.RECAPTCHA_SITE_KEY,
+                'escolas': Escola.objects.all()
+            })
 
         user = authenticate(request, username=usuario, password=senha)
         if user:
