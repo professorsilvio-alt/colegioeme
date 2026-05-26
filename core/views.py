@@ -79,7 +79,7 @@ from .models import (Aluno, ConteudoProgramatico, Disciplina, Ocorrencia,
 
 def _verificar_recaptcha(token):
     """Verifica o token reCAPTCHA v3 com os servidores do Google. Retorna True se válido."""
-    if settings.DEBUG:
+    if settings.DEBUG or getattr(settings, 'BYPASS_RECAPTCHA', False):
         return True
     import urllib.request
     import urllib.parse

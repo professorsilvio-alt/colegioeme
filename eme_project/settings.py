@@ -209,6 +209,7 @@ RECAPTCHA_SITE_KEY   = os.environ.get('RECAPTCHA_SITE_KEY', '')
 RECAPTCHA_SECRET_KEY = os.environ.get('RECAPTCHA_SECRET_KEY', '')
 # Score mínimo aceitável (0.0 = bot certo, 1.0 = humano certo). 0.5 é o padrão Google.
 RECAPTCHA_MIN_SCORE = 0.5
+BYPASS_RECAPTCHA = os.environ.get('BYPASS_RECAPTCHA', 'False') == 'True'
 
 # ──────────────────────────────────────────────
 # ADMINS — alertas automáticos por e-mail em erros 500
