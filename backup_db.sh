@@ -16,10 +16,16 @@ if [ -f "$ENV_FILE" ]; then
     export MYSQL_PWD=$(grep '^DB_PASSWORD=' "$ENV_FILE" | cut -d '=' -f2- | tr -d '"'\''' | xargs)
 fi
 
-# 3. Dados do Banco (Consistentes com settings.py)
-DB_USER="SilvioFreitas"
-DB_HOST="SilvioFreitas.mysql.pythonanywhere-services.com"
-DB_NAME="SilvioFreitas\$colegioeme"
+# 3. Dados do Banco (Carregados do .env com fallback seguro)
+if [ -f "$ENV_FILE" ]; then
+    DB_USER=$(grep '^DB_USER=' "$ENV_FILE" | cut -d '=' -f2- | tr -d '"'\''' | xargs)
+    DB_HOST=$(grep '^DB_HOST=' "$ENV_FILE" | cut -d '=' -f2- | tr -d '"'\''' | xargs)
+    DB_NAME=$(grep '^DB_NAME=' "$ENV_FILE" | cut -d '=' -f2- | tr -d '"'\''' | xargs)
+fi
+
+DB_USER=${DB_USER:-"SilvioFreitas"}
+DB_HOST=${DB_HOST:-"SilvioFreitas.mysql.pythonanywhere-services.com"}
+DB_NAME=${DB_NAME:-"SilvioFreitas\$capelo"}
 
 # Criar diretório de backups se não existir
 mkdir -p "$BACKUP_DIR"
