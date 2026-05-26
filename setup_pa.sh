@@ -56,6 +56,11 @@ if [ ! -f "db.sqlite3" ]; then
     python manage.py migrate
 fi
 
+# 8. Dar permissão de execução aos scripts shell
+echo "Configurando permissões dos scripts..."
+chmod +x backup_db.sh
+chmod +x setup_pa.sh
+
 echo "--- Configuração de arquivos finalizada! ---"
 echo ""
 echo "PRÓXIMOS PASSOS MANUAIS NA ABA 'WEB' DO PYTHONANYWHERE:"

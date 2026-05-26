@@ -33,7 +33,7 @@ echo "$(date): Iniciando backup do banco: $DB_NAME"
 
 # 4. Executar o Dump
 # Usamos a variável MYSQL_PWD herdada do export acima para autenticação automática
-mysqldump -u "$DB_USER" -h "$DB_HOST" "$DB_NAME" | gzip > "$BACKUP_DIR/$FILENAME"
+mysqldump --no-tablespaces -u "$DB_USER" -h "$DB_HOST" "$DB_NAME" | gzip > "$BACKUP_DIR/$FILENAME"
 
 if [ $? -eq 0 ]; then
     SIZE=$(du -h "$BACKUP_DIR/$FILENAME" | cut -f1)
