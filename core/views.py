@@ -364,7 +364,8 @@ def dashboard(request):
     context.update(calcular_stats_conteudo(prof,
                                            data_ini=request.GET.get('data_ini', ''),
                                            data_fim=request.GET.get('data_fim', ''),
-                                           ano_letivo=request.ano_letivo))
+                                           ano_letivo=request.ano_letivo,
+                                           escola=request.escola))
     return render(request, 'core/dashboard.html', context)
 
 
@@ -710,6 +711,10 @@ def calcular_stats_conteudo(prof, data_ini=None, data_fim=None, feriados=None, a
     
     # 1. Busca todas as grades relevantes de uma vez
     gh_qs = GradeHoraria.objects.select_related('turma', 'professor')
+    if ano_letivo:
+        gh_qs = gh_qs.filter(turma__ano_letivo=ano_letivo)
+    if escola:
+        gh_qs = gh_qs.filter(turma__escola=escola)
     if not global_view:
         gh_qs = gh_qs.filter(professor=prof)
     
@@ -733,6 +738,10 @@ def calcular_stats_conteudo(prof, data_ini=None, data_fim=None, feriados=None, a
 
     # 2. Busca todos os conteúdos lançados no período de uma vez
     cp_qs = ConteudoProgramatico.objects.filter(data__gte=inicio, data__lte=fim).prefetch_related('turmas')
+    if ano_letivo:
+        cp_qs = cp_qs.filter(turmas__ano_letivo=ano_letivo)
+    if escola:
+        cp_qs = cp_qs.filter(turmas__escola=escola)
     if not global_view:
         cp_qs = cp_qs.filter(professor=prof)
     
@@ -2230,7 +2239,9 @@ def exportar_pendencias_pdf(request):
     if prof_user and not prof_user.pode_gerar_relatorios:
         return HttpResponse('Acesso negado', status=403)
 
-    professores = Professor.objects.filter(cargo='PROFESSOR').order_by('nome')
+    from .models import GradeHoraria
+    prof_ids_com_grade = GradeHoraria.objects.filter(turma__ano_letivo=request.ano_letivo, turma__escola=request.escola).values_list('professor_id', flat=True).distinct()
+    professores = Professor.objects.filter(pk__in=prof_ids_com_grade).order_by('nome')
     nome_filtro = request.GET.get('nome', '')
     data_ini = request.GET.get('data_ini', '')
     data_fim = request.GET.get('data_fim', '')
@@ -2238,10 +2249,10 @@ def exportar_pendencias_pdf(request):
     if nome_filtro:
         professores = professores.filter(nome__icontains=nome_filtro)
 
-    feriados_set = get_feriados()
+    feriados_set = get_feriados(ano_letivo=request.ano_letivo, escola=request.escola)
     relatorio = []
     for p in professores:
-        stats = calcular_stats_conteudo(p, data_ini=data_ini, data_fim=data_fim, feriados=feriados_set)
+        stats = calcular_stats_conteudo(p, data_ini=data_ini, data_fim=data_fim, feriados=feriados_set, ano_letivo=request.ano_letivo, escola=request.escola)
         if stats['total_conteudo'] > 0:
             p.stats = stats
             relatorio.append(p)
