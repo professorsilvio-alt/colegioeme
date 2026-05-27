@@ -1,12 +1,16 @@
 import csv
 import datetime
 import io
+import logging
 import sys
 import os
 from datetime import date
 from collections import defaultdict
 
 from django.conf import settings
+
+# Logger para auditoria de ações sensíveis
+logger = logging.getLogger('core')
 
 # ─────────────────────────────────────────────────────────
 # FERIADOS 2026 — Nacionais + RJ (estaduais) + Nova Iguaçu
@@ -96,10 +100,11 @@ def _verificar_recaptcha(token):
         req = urllib.request.Request('https://www.google.com/recaptcha/api/siteverify', data=data)
         with urllib.request.urlopen(req, timeout=5) as response:
             result = json.loads(response.read().decode())
-        return result.get('success', False) and result.get('score', 0) >= settings.RECAPTCHA_MIN_SCORE
-    except Exception:
-        # Em caso de falha de rede, permite (não bloqueia usuários legítimos)
-        return True
+        return result.get('success', False)
+    except Exception as e:
+        # Em caso de falha de rede, registra o erro e BLOQUEIA por segurança
+        logger.warning('reCAPTCHA: falha na verificação (%s). Bloqueando requisição.', e)
+        return False
 
 
 def login_view(request):
@@ -123,11 +128,11 @@ def login_view(request):
         user = authenticate(request, username=usuario, password=senha)
         if user:
             login(request, user)
+            logger.info('LOGIN OK: usuário=%s ip=%s', usuario, ip)
             # Salva a escola selecionada na sessão
             if escola_id:
                 request.session['escola_id'] = escola_id
             # Limpa tentativas em caso de sucesso
-            ip = request.META.get('REMOTE_ADDR')
             cache.delete(f'login_attempts_{ip}')
             return redirect('dashboard')
         else:
@@ -136,6 +141,7 @@ def login_view(request):
             cache_key = f'login_attempts_{ip}'
             attempts = cache.get(cache_key, 0)
             cache.set(cache_key, attempts + 1, 300) # Expira em 5 min
+            logger.warning('LOGIN FALHOU: usuário=%s ip=%s tentativa=%d', usuario, ip, attempts + 1)
             messages.error(request, 'Usuário ou senha incorretos!')
     return render(request, 'core/login.html', {
         'recaptcha_site_key': settings.RECAPTCHA_SITE_KEY,
@@ -143,7 +149,10 @@ def login_view(request):
     })
 
 
+@require_POST
 def logout_view(request):
+    username = request.user.username if request.user.is_authenticated else 'anon'
+    logger.info('LOGOUT: usuário=%s', username)
     logout(request)
     return redirect('login')
 
@@ -488,6 +497,11 @@ def api_datas_validas(request, codigo, prof_id):
     from .models import GradeHoraria, ConteudoProgramatico
     import datetime
 
+    # Proteção IDOR: professor comum só consulta seus próprios dados
+    prof_logado = get_professor(request.user)
+    if prof_logado and not prof_logado.pode_ver_tudo and prof_logado.pk != prof_id:
+        return JsonResponse([], safe=False)
+
     disc_id = request.GET.get('disciplina')
 
     # Weekday numbers in GradeHoraria: '1'=Segunda=Monday(0), ..., '5'=Sexta=Friday(4)
@@ -560,7 +574,12 @@ def api_datas_validas(request, codigo, prof_id):
 def api_professor_grades(request, prof_id):
     """Return all turmas and their weekdays for a given professor."""
     from .models import GradeHoraria
-    
+
+    # Proteção IDOR: professor comum só consulta seus próprios dados
+    prof_logado = get_professor(request.user)
+    if prof_logado and not prof_logado.pode_ver_tudo and prof_logado.pk != prof_id:
+        return JsonResponse({}, safe=False)
+
     disc_id = request.GET.get('disciplina')
     query = GradeHoraria.objects.filter(professor_id=prof_id, turma__ano_letivo=request.ano_letivo, turma__escola=request.escola)
     if disc_id:
@@ -1189,7 +1208,7 @@ def ocorrencia_criar(request):
     descricao = request.POST.get('descricao', '')
     status = request.POST.get('status', 'Aberta')
 
-    turma = get_object_or_404(Turma, codigo=turma_cod)
+    turma = get_object_or_404(Turma, codigo=turma_cod, escola=request.escola, ano_letivo=request.ano_letivo)
     disciplina = get_object_or_404(Disciplina, pk=disc_id) if disc_id else None
     
     # Security: Ensure only admins or professors can create occurrences.
@@ -1210,6 +1229,7 @@ def ocorrencia_criar(request):
     )
     if alunos_ids:
         oc.alunos.set(Aluno.objects.filter(pk__in=alunos_ids))
+    logger.info('OCORRÊNCIA CRIADA: OC-%04d por usuário=%s turma=%s', oc.pk, request.user.username, turma_cod)
     messages.success(request, f'Ocorrência OC-{oc.pk:04d} criada com sucesso!')
     return redirect('dashboard')
 
@@ -1299,6 +1319,7 @@ def ocorrencia_excluir(request, pk):
         messages.error(request, 'Você não tem permissão para excluir esta ocorrência.')
         return redirect('dashboard')
         
+    logger.info('OCORRÊNCIA EXCLUÍDA: OC-%04d por usuário=%s', pk, request.user.username)
     oc.delete()
     messages.success(request, 'Ocorrência excluída.')
     return redirect('dashboard')
@@ -1339,6 +1360,7 @@ def ocorrencia_mudar_status(request):
 
 
 @login_required
+@require_POST
 def ocorrencia_mudar_status_direto(request, pk):
     oc = get_object_or_404(Ocorrencia, pk=pk)
     prof = get_professor(request.user)
@@ -1354,6 +1376,7 @@ def ocorrencia_mudar_status_direto(request, pk):
 
     oc.status = 'Resolvida' if oc.status == 'Aberta' else 'Aberta'
     oc.save()
+    logger.info('STATUS ALTERADO: OC-%04d para %s por usuário=%s', oc.pk, oc.status, request.user.username)
     messages.success(request, f'Status da OC-{oc.pk:04d} alterado para {oc.status}.')
     return redirect('dashboard')
 
@@ -1380,6 +1403,12 @@ def api_sugestoes_conteudo(request):
 @require_POST
 def conteudo_criar(request):
     prof_logado = get_professor(request.user)
+
+    # Secretaria não lança conteúdos programáticos
+    if prof_logado and prof_logado.cargo == 'SECRETARIA':
+        messages.error(request, 'Seu cargo não permite lançar conteúdos programáticos.')
+        return redirect('dashboard')
+
     data = request.POST.get('data')
     turmas_cods = request.POST.getlist('turmas')
     disc_id = request.POST.get('disciplina')
@@ -1420,8 +1449,10 @@ def conteudo_criar(request):
                 cont = ConteudoProgramatico.objects.create(
                     data=data, professor=professor, disciplina=disciplina, descricao=descricao
                 )
-                cont.turmas.add(Turma.objects.get(codigo=t_cod))
+                cont.turmas.add(Turma.objects.get(codigo=t_cod, escola=request.escola, ano_letivo=request.ano_letivo))
 
+    logger.info('CONTEÚDO CRIADO: por usuário=%s turmas=%s disc=%s data=%s',
+                request.user.username, ','.join(turmas_cods), disc_id, data)
     messages.success(request, 'Conteúdo(s) lançado(s) com sucesso!')
     return redirect('/?tab=conteudos')
 
@@ -1563,6 +1594,7 @@ def conteudo_excluir(request, pk):
         messages.error(request, 'Você não tem permissão para excluir este conteúdo.')
         return redirect('dashboard')
 
+    logger.info('CONTEÚDO EXCLUÍDO: pk=%d por usuário=%s', pk, request.user.username)
     cont.delete()
     messages.success(request, 'Conteúdo excluído.')
     return redirect('dashboard')
@@ -1786,7 +1818,7 @@ def exportar_ocorrencias_csv(request):
     writer = csv.writer(response, delimiter=';')
     writer.writerow(['ID', 'Data', 'Turma', 'Alunos', 'Professor', 'Disciplina', 'Descrição', 'Status'])
     
-    qs, _ = filtrar_ocorrencias(request, ocorrencias_do_usuario(request.user))
+    qs, _ = filtrar_ocorrencias(request, ocorrencias_do_usuario(request))
     for oc in qs:
         writer.writerow([
             f'OC-{oc.pk:04d}',
@@ -1808,7 +1840,7 @@ def exportar_conteudos_csv(request):
     writer = csv.writer(response, delimiter=';')
     writer.writerow(['Data', 'Turmas', 'Professor', 'Disciplina', 'Descrição'])
     
-    qs, _ = filtrar_conteudos(request, conteudos_do_usuario(request.user))
+    qs, _ = filtrar_conteudos(request, conteudos_do_usuario(request))
     for c in qs:
         writer.writerow([
             c.data.strftime('%d/%m/%Y') if c.data else '',
@@ -1916,7 +1948,7 @@ def exportar_ocorrencias_pdf(request):
 
     elems.append(Paragraph('Ocorrências - SCA - Sistema de Controle Acadêmico', styles['Title']))
     
-    qs, resumo_filtros = filtrar_ocorrencias(request, ocorrencias_do_usuario(request.user))
+    qs, resumo_filtros = filtrar_ocorrencias(request, ocorrencias_do_usuario(request))
     if resumo_filtros:
         elems.append(Paragraph(f"Filtros aplicados: {resumo_filtros}", filter_style))
     
@@ -2026,7 +2058,7 @@ def exportar_conteudos_pdf(request):
 
     elems.append(Paragraph('Conteúdo Programático - SCA - Sistema de Controle Acadêmico', styles['Title']))
     
-    qs, resumo_filtros = filtrar_conteudos(request, conteudos_do_usuario(request.user))
+    qs, resumo_filtros = filtrar_conteudos(request, conteudos_do_usuario(request))
     if resumo_filtros:
         elems.append(Paragraph(f"Filtros aplicados: {resumo_filtros}", filter_style))
         
@@ -2162,6 +2194,17 @@ def sugestao_criar_massa(request):
 
         if not discs_ids or not turmas_ids or not file_obj:
             messages.error(request, 'Selecione pelo menos uma disciplina, turmas e o arquivo Excel.')
+            return redirect('dashboard')
+
+        # Validação de tipo e tamanho do arquivo (#9)
+        MAX_UPLOAD_SIZE = 5 * 1024 * 1024  # 5 MB
+        EXTENSOES_PERMITIDAS = ('.csv', '.xlsx', '.xls')
+        nome_arquivo = file_obj.name.lower()
+        if not nome_arquivo.endswith(EXTENSOES_PERMITIDAS):
+            messages.error(request, f'Tipo de arquivo não permitido. Use: {", ".join(EXTENSOES_PERMITIDAS)}')
+            return redirect('dashboard')
+        if file_obj.size > MAX_UPLOAD_SIZE:
+            messages.error(request, f'Arquivo muito grande (máximo {MAX_UPLOAD_SIZE // (1024*1024)} MB).')
             return redirect('dashboard')
 
         try:
@@ -2600,8 +2643,11 @@ def escola_professor_novo(request):
                 messages.error(request, 'Este nome de usuário já está em uso.')
             else:
                 # 1. Cria o User
-                # Senha padrão é o próprio username no primeiro acesso
-                user = User.objects.create_user(username=usuario_login, password=usuario_login)
+                # Senha temporária aleatória segura (força troca no primeiro login)
+                import secrets
+                import string
+                senha_temp = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
+                user = User.objects.create_user(username=usuario_login, password=senha_temp)
                 
                 # 2. Cria o Professor
                 professor = form.save(commit=False)
@@ -2613,7 +2659,8 @@ def escola_professor_novo(request):
                 # 3. Vincula à escola atual
                 professor.escolas.add(request.escola)
                 
-                messages.success(request, f'Professor {professor.nome} criado com sucesso! Login: {usuario_login}')
+                messages.success(request, f'Professor {professor.nome} criado com sucesso! Login: {usuario_login} | Senha temporária: {senha_temp}')
+                logger.info('PROFESSOR CRIADO: %s (user=%s) por %s', professor.nome, usuario_login, request.user.username)
                 return redirect('escola_professores_list')
     else:
         form = ProfessorForm(escola=request.escola)

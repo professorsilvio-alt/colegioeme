@@ -11,7 +11,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Carrega variáveis de ambiente do arquivo .env
 load_dotenv(BASE_DIR / '.env', override=True)
 
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-eme-2026-robust-key-placeholder-must-change-in-prod')
+# Em produção, a SECRET_KEY DEVE ser definida via variável de ambiente.
+# Se não estiver definida e DEBUG=False, o sistema irá crashar imediatamente.
+_secret = os.environ.get('DJANGO_SECRET_KEY', '')
+if not _secret and os.environ.get('DJANGO_DEBUG', 'True') != 'True':
+    raise RuntimeError(
+        'DJANGO_SECRET_KEY não definida! Defina uma chave secreta forte '
+        'na variável de ambiente antes de rodar em produção.'
+    )
+SECRET_KEY = _secret or 'django-insecure-dev-only-key-DO-NOT-USE-IN-PRODUCTION'
 
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
@@ -106,10 +114,13 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-        'OPTIONS': {'min_length': 6},
+        'OPTIONS': {'min_length': 8},
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
 
@@ -283,7 +294,7 @@ LOGGING = {
             'class': 'django.utils.log.AdminEmailHandler',
             'formatter': 'verbose',
             'filters': ['require_debug_false'],
-            'include_html': True,
+            'include_html': False,  # Evita expor dados sensíveis de sessão nos e-mails de erro
         },
     },
 

@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
     {% if recaptcha_site_key %}
-    <script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     {% endif %}
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -369,10 +369,6 @@
                 <span class="feature-icon">🔔</span>
                 Ocorrências
             </div>
-            <div class="feature-item">
-                <span class="feature-icon">👥</span>
-                Multi-escola
-            </div>
         </div>
     </div>
 </div>
@@ -391,19 +387,12 @@
 
     <form method="post" action="{% url 'login' %}" class="login-form" id="login-form">
         {% csrf_token %}
-        <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
+        {% if recaptcha_site_key %}
+        <div class="g-recaptcha" data-sitekey="{{ recaptcha_site_key }}" style="margin-bottom: 20px; display: flex; justify-content: center;"></div>
+        {% endif %}
         <div class="input-group">
             <label for="usuario">Usuário</label>
             <input type="text" id="usuario" name="usuario" placeholder="Digite seu usuário" autocomplete="username" required>
-        </div>
-        <div class="input-group">
-            <label for="escola">Escola</label>
-            <select id="escola" name="escola" required style="width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 15px; font-family: 'Inter', sans-serif; color: #1a1a2e; background: #f8fafc; transition: all 0.3s ease; appearance: none; cursor: pointer;">
-                <option value="" disabled selected>Selecione sua escola</option>
-                {% for esc in escolas %}
-                <option value="{{ esc.id }}">{{ esc.nome }}</option>
-                {% endfor %}
-            </select>
         </div>
         <div class="input-group">
             <label for="senha">Senha</label>
@@ -419,27 +408,7 @@
     </div>
 </div>
 
-{% if recaptcha_site_key %}
-<script>
-    // reCAPTCHA v3: invisível — gera token antes do submit
-    document.getElementById('login-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        var form = this;
-        var btn = document.getElementById('btn-login');
-        btn.textContent = 'Verificando...';
-        btn.disabled = true;
-        grecaptcha.ready(function() {
-            grecaptcha.execute('{{ recaptcha_site_key }}', {action: 'login'}).then(function(token) {
-                document.getElementById('g-recaptcha-response').value = token;
-                form.submit();
-            }).catch(function() {
-                // Se falhar, envia sem token (o servidor tem fallback)
-                form.submit();
-            });
-        });
-    });
-</script>
-{% endif %}
+
 
 </body>
 </html>

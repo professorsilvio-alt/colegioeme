@@ -381,7 +381,7 @@
 
         <div class="regras">
             <strong>Requisitos da senha:</strong><br>
-            • Mínimo de 6 caracteres<br>
+            • Mínimo de 8 caracteres<br>
             • Não pode ser igual ao seu nome de usuário<br>
             • Não pode ser uma senha muito comum (ex: 123456)<br>
             • Não pode ser a senha padrão do sistema
@@ -389,9 +389,13 @@
 
         <button type="submit" class="btn-salvar">✅ Salvar minha nova senha</button>
 
-        <div class="link-voltar">
-            <a href="{% url 'logout' %}">← Entrar com outra conta</a>
+        <div class="link-voltar" style="margin-top: 15px;">
+            <button type="submit" form="form-logout" style="background:none; border:none; color:#8892a4; font-size:13px; cursor:pointer; text-decoration:none;">← Entrar com outra conta</button>
         </div>
+    </form>
+    
+    <form id="form-logout" method="post" action="{% url 'logout' %}" style="display:none;">
+        {% csrf_token %}
     </form>
 
     <div class="form-footer">

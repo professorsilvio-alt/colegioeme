@@ -163,6 +163,7 @@ class Aluno(models.Model):
 
     def _redimensionar_foto(self):
         from PIL import Image
+        import logging
         import os
         try:
             caminho = self.foto.path
@@ -173,8 +174,10 @@ class Aluno(models.Model):
                 # Redimensiona mantendo proporção, encaixado em 200x200
                 img.thumbnail((200, 200), Image.LANCZOS)
                 img.save(caminho, 'JPEG', quality=85, optimize=True)
-        except Exception:
-            pass  # Não interrompe o fluxo se a imagem falhar
+        except Exception as e:
+            logging.getLogger('core').warning(
+                'Falha ao redimensionar foto do aluno pk=%s: %s', self.pk, e
+            )
 
 
 class Ocorrencia(models.Model):
