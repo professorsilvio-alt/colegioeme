@@ -100,6 +100,7 @@ def _verificar_recaptcha(token):
         req = urllib.request.Request('https://www.google.com/recaptcha/api/siteverify', data=data)
         with urllib.request.urlopen(req, timeout=5) as response:
             result = json.loads(response.read().decode())
+        logger.warning('RECAPTCHA DEBUG: %s', result)
         return result.get('success', False)
     except Exception as e:
         # Em caso de falha de rede, registra o erro e BLOQUEIA por segurança
