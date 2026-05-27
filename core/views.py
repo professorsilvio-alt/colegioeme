@@ -97,10 +97,14 @@ def _verificar_recaptcha(token):
         'response': token,
     }).encode()
     try:
-        req = urllib.request.Request('https://www.google.com/recaptcha/api/siteverify', data=data)
+        req = urllib.request.Request(
+            'https://www.google.com/recaptcha/api/siteverify', 
+            data=data,
+            headers={'Content-Type': 'application/x-www-form-urlencoded'}
+        )
         with urllib.request.urlopen(req, timeout=5) as response:
             result = json.loads(response.read().decode())
-        logger.warning('RECAPTCHA DEBUG: %s', result)
+        logger.warning('RECAPTCHA DEBUG: token_prefix=%s result=%s', str(token)[:30], result)
         return result.get('success', False)
     except Exception as e:
         # Em caso de falha de rede, registra o erro e BLOQUEIA por segurança
