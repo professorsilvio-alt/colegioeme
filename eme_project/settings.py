@@ -216,8 +216,8 @@ EMAIL_TIMEOUT       = 10  # segundos — evita travamento em caso de falha SMTP
 # ──────────────────────────────────────────────
 # RECAPTCHA v3 — Google
 # ──────────────────────────────────────────────
-RECAPTCHA_SITE_KEY   = os.environ.get('RECAPTCHA_SITE_KEY', '')
-RECAPTCHA_SECRET_KEY = os.environ.get('RECAPTCHA_SECRET_KEY', '')
+RECAPTCHA_SITE_KEY   = os.environ.get('RECAPTCHA_SITE_KEY', '').strip()
+RECAPTCHA_SECRET_KEY = os.environ.get('RECAPTCHA_SECRET_KEY', '').strip()
 # Score mínimo aceitável (0.0 = bot certo, 1.0 = humano certo). 0.5 é o padrão Google.
 RECAPTCHA_MIN_SCORE = 0.5
 BYPASS_RECAPTCHA = os.environ.get('BYPASS_RECAPTCHA', 'False') == 'True'
