@@ -130,6 +130,7 @@ def login_view(request):
                 'escolas': Escola.objects.all()
             })
 
+        ip = request.META.get('REMOTE_ADDR')
         user = authenticate(request, username=usuario, password=senha)
         if user:
             login(request, user)
@@ -142,7 +143,6 @@ def login_view(request):
             return redirect('dashboard')
         else:
             # Incrementa tentativas em caso de falha
-            ip = request.META.get('REMOTE_ADDR')
             cache_key = f'login_attempts_{ip}'
             attempts = cache.get(cache_key, 0)
             cache.set(cache_key, attempts + 1, 300) # Expira em 5 min
