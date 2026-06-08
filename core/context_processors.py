@@ -1,4 +1,4 @@
-from .views import get_professor
+from .utils import get_professor
 from .models import AnoLetivo, Escola
 
 def prof_context(request):
@@ -22,7 +22,10 @@ def prof_context(request):
             if ano_atual_obj:
                 qs_anos = qs_anos.filter(ano__lte=ano_atual_obj.ano, ano__gte=ano_atual_obj.ano - 1)
         context['anos_disponiveis'] = qs_anos
-        context['cor_primaria'] = request.escola.cor_primaria if request.escola else '#1e3a8a'
+
+        # Cor primária — guard contra request.escola ausente
+        escola = getattr(request, 'escola', None)
+        context['cor_primaria'] = escola.cor_primaria if escola else '#1e3a8a'
         
         # Lógica de escolas disponíveis
         if request.user.is_superuser:

@@ -414,6 +414,7 @@ class AlunoAdmin(admin.ModelAdmin):
 class OcorrenciaAdmin(admin.ModelAdmin):
     list_display = ['pk', 'data', 'turma', 'professor', 'disciplina', 'status']
     list_filter = ['status', 'turma', 'professor', 'disciplina']
+    list_select_related = ['turma', 'professor', 'disciplina']
     filter_horizontal = ['alunos']
     date_hierarchy = 'data'
 
@@ -422,6 +423,7 @@ class OcorrenciaAdmin(admin.ModelAdmin):
 class ConteudoAdmin(admin.ModelAdmin):
     list_display = ['data', 'professor', 'disciplina', 'descricao']
     list_filter = ['turmas', 'professor', 'disciplina']
+    list_select_related = ['professor', 'disciplina']
     filter_horizontal = ['turmas']
     date_hierarchy = 'data'
 
@@ -503,7 +505,4 @@ class ConfiguracaoAdmin(admin.ModelAdmin):
     ]
 
     def has_add_permission(self, request):
-        # Only allow one configuration instance
-        if self.model.objects.exists():
-            return False
         return super().has_add_permission(request)

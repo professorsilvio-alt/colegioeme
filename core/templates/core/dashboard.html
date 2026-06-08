@@ -84,6 +84,25 @@
     </div>
     {% endif %}
 
+    <!-- GRÁFICOS VISUAIS (CHART.JS) -->
+    {% if total > 0 or total_conteudo > 0 %}
+    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 40px; margin-top: 40px; margin-bottom: 20px;">
+        {% if prof.pode_ver_ocorrencias %}
+        <div style="width: 300px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <h3 style="text-align: center; color: #003366; font-size: 1.1em; margin-bottom: 15px;">Status das Ocorrências</h3>
+            <canvas id="ocorrenciasChart"></canvas>
+        </div>
+        {% endif %}
+        
+        {% if prof.cargo != 'INSPETOR' %}
+        <div style="width: 300px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <h3 style="text-align: center; color: #003366; font-size: 1.1em; margin-bottom: 15px;">Engajamento de Diários</h3>
+            <canvas id="conteudosChart"></canvas>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
 </div><!-- /tab-dashboard -->
 
 
@@ -453,7 +472,7 @@
                 style="margin-left: 5px;" download="conteudos_filtrado.pdf">📄 PDF (Filtrado)</a>
             {% endif %}
         </div>
-        <table>
+        <table id="conteudosTable">
             <thead>
                 <tr>
                     <th><input type="checkbox" onclick="toggleAll(this, 'cont_check')"></th>
@@ -465,39 +484,7 @@
                     <th>Ações</th>
                 </tr>
             </thead>
-            <tbody>
-                {% for c in conteudos %}
-                <tr {% if c.confirmado_secretaria %}style="background:#f0fff8;"{% endif %}>
-                    <td><input type="checkbox" name="ids" value="{{ c.pk }}" class="cont_check"></td>
-                    <td>{{ c.data|date:"d/m/Y" }}</td>
-                    <td>{{ c.turmas_str }}</td>
-                    <td>{{ c.professor.nome|default:"-" }}</td>
-                    <td>{{ c.disciplina.nome|default:"-" }}</td>
-                    <td>{{ c.descricao|truncatechars:80 }}</td>
-                    <td>
-                        {% if c.confirmado_secretaria %}
-                        <span style="display:inline-block; background:#e6f9ef; color:#1a7a4a; border:1px solid #9ee8c4; border-radius:12px; padding:2px 8px; font-size:10px; font-weight:700;">✅ Confirmado</span>
-                        {% endif %}
-                        <a href="{% url 'conteudo_ver' c.pk %}" class="btn-sm"
-                            style="background: #16a085; text-decoration: none;">👁 Ver</a>
-                        {% if prof.cargo != 'COORDENADOR' %}
-                        {% if prof.pode_editar_tudo or c.professor == prof %}
-                        {% if not c.confirmado_secretaria or prof.pode_editar_tudo %}
-                        <a href="{% url 'conteudo_editar' c.pk %}" class="btn-sm" style="text-decoration: none;">✏
-                            Editar</a>
-                        <button type="submit" formaction="{% url 'conteudo_excluir' c.pk %}"
-                            class="btn-sm btn-danger-sm" onclick="return confirm('Excluir conteúdo?')">🗑</button>
-                        {% endif %}
-                        {% endif %}
-                        {% endif %}
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="7" style="text-align:center;color:#999">Nenhum conteúdo lançado.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
+            {% include 'core/partials/conteudos_table_body.html' %}
         </table>
     </form>
 
@@ -527,6 +514,43 @@
         const btn = document.querySelectorAll('.tab-btn')[1];
         if (btn) showTab('conteudos', btn);
     }
+
+    // ── PAGINAÇÃO AJAX DE CONTEÚDOS ──
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.classList.contains('ajax-page-btn')) {
+            e.preventDefault();
+            const page = e.target.getAttribute('data-page');
+            const form = document.getElementById('filtroContForm');
+            const urlParams = new URLSearchParams(new FormData(form));
+            urlParams.set('page', page);
+            urlParams.set('is_ajax', '1');
+
+            // Mostrar um feedback visual rápido
+            const table = document.getElementById('conteudosTable');
+            table.style.opacity = '0.5';
+
+            fetch('?' + urlParams.toString(), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.text())
+            .then(html => {
+                // Remove os tbodys existentes
+                const oldBodies = table.querySelectorAll('tbody');
+                oldBodies.forEach(b => b.remove());
+                
+                // Insere os novos tbodys (tabela normal + paginador)
+                table.insertAdjacentHTML('beforeend', html);
+                table.style.opacity = '1';
+                
+                // Scroll suave para o topo da tabela
+                table.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            })
+            .catch(err => {
+                console.error("Erro na paginação AJAX:", err);
+                table.style.opacity = '1';
+            });
+        }
+    });
 
     // ── COLLAPSIBLE ──
     function toggleSection(id) {
@@ -1097,5 +1121,58 @@
     }
 
     document.addEventListener('DOMContentLoaded', handleAutoLancar);
+
+    // ── GRÁFICOS (CHART.JS) ──
+    document.addEventListener('DOMContentLoaded', function() {
+        // Dados injetados pelo backend
+        const abertas = {{ abertas|default:0 }};
+        const resolvidas = {{ resolvidas|default:0 }};
+        const preenchidos = {{ preenchidos|default:0 }};
+        const faltam = {{ faltam_ate_hoje|default:0 }};
+
+        // Gráfico de Ocorrências
+        const ctxOc = document.getElementById('ocorrenciasChart');
+        if (ctxOc && (abertas > 0 || resolvidas > 0)) {
+            new Chart(ctxOc, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Abertas', 'Resolvidas'],
+                    datasets: [{
+                        data: [abertas, resolvidas],
+                        backgroundColor: ['#e74c3c', '#27ae60'], // Vermelho e Verde
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        // Gráfico de Conteúdos
+        const ctxCont = document.getElementById('conteudosChart');
+        if (ctxCont && (preenchidos > 0 || faltam > 0)) {
+            new Chart(ctxCont, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Preenchidos', 'Faltam'],
+                    datasets: [{
+                        data: [preenchidos, faltam],
+                        backgroundColor: ['#4a90d9', '#ff9090'], // Azul e Vermelho suave
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+    });
 </script>
 {% endblock %}

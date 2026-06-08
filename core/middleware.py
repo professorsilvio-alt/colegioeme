@@ -3,6 +3,8 @@ from django.http import HttpResponseForbidden
 from django.shortcuts import redirect
 from django.urls import resolve
 
+from .utils import get_client_ip
+
 
 # Caminhos técnicos que nunca devem ser interceptados
 CAMINHOS_TECNICOS = ('/static/', '/media/', '/favicon', '/painel-gestao-eme/', '/password_reset/', '/reset/', '/recuperar-senha/')
@@ -55,7 +57,7 @@ class LoginRateLimitMiddleware:
     def __call__(self, request):
         # Usa caminho literal para evitar chamar reverse() a cada request
         if request.path == LOGIN_PATH and request.method == 'POST':
-            ip = request.META.get('REMOTE_ADDR', 'unknown')
+            ip = get_client_ip(request)
             cache_key = f'login_attempts_{ip}'
             attempts = cache.get(cache_key, 0)
             
@@ -98,6 +100,8 @@ class ForcarTrocaSenhaMiddleware:
                 pass
 
         return self.get_response(request)
+
+
 class EscolaMiddleware:
     """
     Middleware que gerencia a Escola selecionada na sessão.

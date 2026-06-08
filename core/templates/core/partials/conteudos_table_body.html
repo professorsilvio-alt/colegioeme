@@ -1,0 +1,64 @@
+<tbody>
+    {% for c in conteudos %}
+    <tr {% if c.confirmado_secretaria %}style="background:#f0fff8;"{% endif %}>
+        <td><input type="checkbox" name="ids" value="{{ c.pk }}" class="cont_check"></td>
+        <td>{{ c.data|date:"d/m/Y" }}</td>
+        <td>{{ c.turmas_str }}</td>
+        <td>{{ c.professor.nome|default:"-" }}</td>
+        <td>{{ c.disciplina.nome|default:"-" }}</td>
+        <td>{{ c.descricao|truncatechars:80 }}</td>
+        <td>
+            {% if c.confirmado_secretaria %}
+            <span style="display:inline-block; background:#e6f9ef; color:#1a7a4a; border:1px solid #9ee8c4; border-radius:12px; padding:2px 8px; font-size:10px; font-weight:700;">✅ Confirmado</span>
+            {% endif %}
+            <a href="{% url 'conteudo_ver' c.pk %}" class="btn-sm"
+                style="background: #16a085; text-decoration: none;">👁 Ver</a>
+            {% if prof.cargo != 'COORDENADOR' %}
+            {% if prof.pode_editar_tudo or c.professor == prof %}
+            {% if not c.confirmado_secretaria or prof.pode_editar_tudo %}
+            <a href="{% url 'conteudo_editar' c.pk %}" class="btn-sm" style="text-decoration: none;">✏
+                Editar</a>
+            <button type="submit" formaction="{% url 'conteudo_excluir' c.pk %}"
+                class="btn-sm btn-danger-sm" onclick="return confirm('Excluir conteúdo?')">🗑</button>
+            {% endif %}
+            {% endif %}
+            {% endif %}
+        </td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="7" style="text-align:center;color:#999">Nenhum conteúdo lançado.</td>
+    </tr>
+    {% endfor %}
+</tbody>
+
+<!-- Paginador -->
+{% if conteudos.has_other_pages %}
+<tbody class="paginator-row" style="background-color: transparent;">
+    <tr>
+        <td colspan="7" style="text-align:center; padding-top:15px; border:none; background-color: transparent;">
+            <div class="pagination-controls" style="display:inline-flex; gap:10px; align-items:center;">
+                {% if conteudos.has_previous %}
+                    <button type="button" class="btn-sm btn-gray ajax-page-btn" data-page="1" title="Primeira Página">«</button>
+                    <button type="button" class="btn-sm btn-blue ajax-page-btn" data-page="{{ conteudos.previous_page_number }}">Anterior</button>
+                {% else %}
+                    <button type="button" class="btn-sm btn-gray" disabled style="opacity:0.5;">«</button>
+                    <button type="button" class="btn-sm btn-gray" disabled style="opacity:0.5;">Anterior</button>
+                {% endif %}
+
+                <span style="font-size:14px; font-weight:bold; color:#003366;">
+                    Página {{ conteudos.number }} de {{ conteudos.paginator.num_pages }}
+                </span>
+
+                {% if conteudos.has_next %}
+                    <button type="button" class="btn-sm btn-blue ajax-page-btn" data-page="{{ conteudos.next_page_number }}">Próxima</button>
+                    <button type="button" class="btn-sm btn-gray ajax-page-btn" data-page="{{ conteudos.paginator.num_pages }}" title="Última Página">»</button>
+                {% else %}
+                    <button type="button" class="btn-sm btn-gray" disabled style="opacity:0.5;">Próxima</button>
+                    <button type="button" class="btn-sm btn-gray" disabled style="opacity:0.5;">»</button>
+                {% endif %}
+            </div>
+        </td>
+    </tr>
+</tbody>
+{% endif %}

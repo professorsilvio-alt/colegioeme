@@ -1,0 +1,53 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Professor Cadastrado - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 30px; text-align: center;">
+    <div style="font-size: 48px; margin-bottom: 20px;">✅</div>
+    
+    <h2 style="color: #1a1a2e; font-size: 24px; font-weight: 700; margin-bottom: 15px;">Professor Cadastrado com Sucesso!</h2>
+    
+    <p style="color: #4a5568; font-size: 15px; margin-bottom: 30px; line-height: 1.6;">
+        O perfil para <strong>{{ professor.nome }}</strong> foi criado. Repasse as credenciais abaixo para o professor. 
+        No primeiro acesso, ele será obrigado a cadastrar uma nova senha e informar um e-mail de contato.
+    </p>
+
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; text-align: left; margin-bottom: 30px;">
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; font-size: 12px; font-weight: 600; color: #718096; text-transform: uppercase; margin-bottom: 5px;">Usuário de Login</label>
+            <div style="font-family: monospace; font-size: 18px; color: #2d3748; background: #fff; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px;">
+                {{ usuario_login }}
+            </div>
+        </div>
+
+        <div>
+            <label style="display: block; font-size: 12px; font-weight: 600; color: #718096; text-transform: uppercase; margin-bottom: 5px;">Senha Temporária</label>
+            <div style="display: flex; gap: 10px;">
+                <div id="senhaTemp" style="font-family: monospace; font-size: 18px; color: #c53030; font-weight: 600; background: #fff; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; flex-grow: 1;">
+                    {{ senha_temp }}
+                </div>
+                <button onclick="copiarSenha()" style="background: #e2e8f0; border: none; padding: 0 15px; border-radius: 6px; cursor: pointer; font-weight: 600; color: #4a5568; transition: background 0.2s;">
+                    Copiar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 15px; justify-content: center;">
+        <a href="{% url 'escola_professores_list' %}" class="btn-cancel" style="padding: 12px 24px; text-decoration: none;">Voltar para Lista</a>
+        <a href="{% url 'escola_professor_novo' %}" class="btn-primary" style="padding: 12px 24px; text-decoration: none;">Cadastrar Outro</a>
+    </div>
+</div>
+
+<script>
+function copiarSenha() {
+    const senha = document.getElementById('senhaTemp').innerText;
+    navigator.clipboard.writeText(senha).then(() => {
+        alert('Senha copiada para a área de transferência!');
+    }).catch(err => {
+        console.error('Falha ao copiar senha', err);
+    });
+}
+</script>
+{% endblock %}

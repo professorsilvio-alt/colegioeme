@@ -185,13 +185,13 @@ class Ocorrencia(models.Model):
         ('Aberta', 'Aberta'),
         ('Resolvida', 'Resolvida'),
     ]
-    data = models.DateField()
+    data = models.DateField(db_index=True)
     turma = models.ForeignKey(Turma, on_delete=models.SET_NULL, null=True)
     alunos = models.ManyToManyField(Aluno, blank=True)
     professor = models.ForeignKey(Professor, on_delete=models.SET_NULL, null=True)
     disciplina = models.ForeignKey(Disciplina, on_delete=models.SET_NULL, null=True)
     descricao = models.TextField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Aberta')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Aberta', db_index=True)
     criado_em = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -305,11 +305,21 @@ class SugestaoConteudo(models.Model):
         return f'{self.disciplina} | {self.texto[:50]}'
 
 
+def _default_inicio_periodo():
+    """Callable default — avaliado a cada criação, não no import."""
+    return datetime.date(datetime.date.today().year, 2, 3)
+
+
+def _default_fim_periodo():
+    """Callable default — avaliado a cada criação, não no import."""
+    return datetime.date(datetime.date.today().year, 12, 18)
+
+
 class Configuracao(models.Model):
     escola = models.ForeignKey(Escola, on_delete=models.CASCADE, related_name='configuracoes', null=True, blank=True)
     ano_letivo = models.ForeignKey(AnoLetivo, on_delete=models.CASCADE, related_name='configuracoes', null=True, blank=True)
-    inicio_periodo_letivo = models.DateField(verbose_name="Início do Período Letivo", default=datetime.date(datetime.date.today().year, 2, 3))
-    fim_periodo_letivo = models.DateField(verbose_name="Fim do Período Letivo", default=datetime.date(datetime.date.today().year, 12, 18))
+    inicio_periodo_letivo = models.DateField(verbose_name="Início do Período Letivo", default=_default_inicio_periodo)
+    fim_periodo_letivo = models.DateField(verbose_name="Fim do Período Letivo", default=_default_fim_periodo)
     feriados = models.TextField(
         blank=True,
         default='',
