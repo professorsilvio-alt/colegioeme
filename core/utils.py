@@ -40,7 +40,6 @@ def get_client_ip(request):
 def get_feriados(ano_letivo=None, escola=None):
     """
     Retorna o conjunto de datas de feriados a partir da Configuracao.
-    Sem fallback hardcoded — retorna set() vazio se não houver configuração.
     """
     try:
         from .models import Configuracao
@@ -53,6 +52,34 @@ def get_feriados(ano_letivo=None, escola=None):
                 return feriados
     except Exception:
         pass
+    
+    # Fallback apenas para 2026 se o ano for compatível ou não informado
+    if not ano_letivo or getattr(ano_letivo, 'ano', None) == 2026 or ano_letivo == 2026:
+        import datetime
+        return {
+            # Nacionais fixos
+            datetime.date(2026, 1, 1),   # Confraternização Universal
+            datetime.date(2026, 4, 21),  # Tiradentes
+            datetime.date(2026, 5, 1),   # Dia do Trabalho
+            datetime.date(2026, 9, 7),   # Independência do Brasil
+            datetime.date(2026, 10, 12), # Nossa Senhora Aparecida
+            datetime.date(2026, 11, 2),  # Finados
+            datetime.date(2026, 11, 15), # Proclamação da República
+            datetime.date(2026, 11, 20), # Consciência Negra (nacional)
+            datetime.date(2026, 12, 25), # Natal
+            # Nacionais móveis (2026)
+            datetime.date(2026, 2, 16),  # Carnaval (segunda)
+            datetime.date(2026, 2, 17),  # Carnaval (terça)
+            datetime.date(2026, 4, 2),   # Sexta-feira Santa
+            datetime.date(2026, 4, 4),   # Páscoa
+            datetime.date(2026, 6, 4),   # Corpus Christi
+            # Estaduais — Rio de Janeiro
+            datetime.date(2026, 4, 23),  # São Jorge (padroeiro do RJ)
+            # Municipais — Nova Iguaçu
+            datetime.date(2026, 1, 15),  # Aniversário de Nova Iguaçu
+            datetime.date(2026, 4, 25),  # Dia de São Marcos (padroeiro)
+        }
+        
     return set()
 
 
