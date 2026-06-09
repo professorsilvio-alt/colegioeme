@@ -240,6 +240,22 @@ class ConteudoProgramatico(models.Model):
         return ', '.join(t.codigo for t in self.turmas.all())
 
 
+class AulaExtraProgramada(models.Model):
+    data = models.DateField(db_index=True, verbose_name="Data da Aula Extra")
+    turma = models.ForeignKey(Turma, on_delete=models.CASCADE)
+    disciplina = models.ForeignKey(Disciplina, on_delete=models.CASCADE)
+    professor = models.ForeignKey(Professor, on_delete=models.CASCADE)
+    data_upload = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = "Aula Extra Programada"
+        verbose_name_plural = "Aulas Extras Programadas"
+        unique_together = ('data', 'turma', 'disciplina', 'professor')
+
+    def __str__(self):
+        return f"{self.data.strftime('%d/%m/%Y')} - {self.turma.codigo} - {self.disciplina.nome} ({self.professor.nome})"
+
+
 class GradeHoraria(models.Model):
     DIA_CHOICES = [
         ('1', 'Segunda-feira'),

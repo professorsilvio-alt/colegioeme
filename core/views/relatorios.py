@@ -29,7 +29,7 @@ from reportlab.platypus import (Image, Paragraph, SimpleDocTemplate, Spacer, Tab
 
 from ..models import (Aluno, AnoLetivo, ConteudoProgramatico, Disciplina,
                      Escola, GradeHoraria, Ocorrencia, Professor,
-                     SugestaoConteudo, Turma, Configuracao)
+                     SugestaoConteudo, Turma, Configuracao, AulaExtraProgramada)
 from ..utils import get_professor, get_feriados, get_client_ip
 
 # Logger para auditoria de ações sensíveis
@@ -336,7 +336,17 @@ def calcular_stats_conteudo(prof, data_ini=None, data_fim=None, feriados=None, a
         gh_qs = gh_qs.filter(professor=prof)
     
     grades = list(gh_qs)
-    if not grades:
+    
+    ae_qs = AulaExtraProgramada.objects.select_related('turma', 'professor')
+    if ano_letivo:
+        ae_qs = ae_qs.filter(turma__ano_letivo=ano_letivo)
+    if escola:
+        ae_qs = ae_qs.filter(turma__escola=escola)
+    if not global_view:
+        ae_qs = ae_qs.filter(professor=prof)
+    aulas_extras = list(ae_qs)
+
+    if not grades and not aulas_extras:
         return {
             'total_conteudo': 0, 'preenchidos': 0, 'faltam': 0,
             'total_ate_hoje': 0, 'preenchidos_ate_hoje': 0, 'faltam_ate_hoje': 0
@@ -347,11 +357,16 @@ def calcular_stats_conteudo(prof, data_ini=None, data_fim=None, feriados=None, a
     # dia da semana não inflam o total — igual à lógica do relatório de pendências.
     DIA_TO_WEEKDAY = {'1': 0, '2': 1, '3': 2, '4': 3, '5': 4}
     slots_map = defaultdict(set)  # key -> set of weekdays com aula
+    extra_dates_map = defaultdict(set) # key -> set of specific dates com aula extra
 
     for g in grades:
         key = (g.professor_id, g.turma.codigo, g.disciplina_id)
         if g.dia_semana in DIA_TO_WEEKDAY:
             slots_map[key].add(DIA_TO_WEEKDAY[g.dia_semana])
+            
+    for ae in aulas_extras:
+        key = (ae.professor_id, ae.turma.codigo, ae.disciplina_id)
+        extra_dates_map[key].add(ae.data)
 
     # 2. Busca todos os conteúdos lançados no período de uma vez
     cp_qs = ConteudoProgramatico.objects.filter(data__gte=inicio, data__lte=fim).prefetch_related('turmas')
@@ -378,7 +393,7 @@ def calcular_stats_conteudo(prof, data_ini=None, data_fim=None, feriados=None, a
     for cp in cp_qs:
         for t in cp.turmas.all():
             key = (cp.professor_id, t.codigo, cp.disciplina_id)
-            if key in slots_map: # Só conta se estiver na grade
+            if key in slots_map or key in extra_dates_map: # Só conta se estiver na grade ou extra
                 lancados_map[key].add(cp.data)
             elif cp.disciplina and cp.disciplina.nome in disciplinas_peso_2:
                 # Aula extra fora da grade com peso 2
@@ -392,11 +407,17 @@ def calcular_stats_conteudo(prof, data_ini=None, data_fim=None, feriados=None, a
     preenchidos = extras_adicionais
     preenchidos_ate_hoje = extras_adicionais_ate_hoje
 
-    for key, weekdays in slots_map.items():
+    all_keys = set(slots_map.keys()) | set(extra_dates_map.keys())
+
+    for key in all_keys:
+        weekdays = slots_map.get(key, set())
+        extra_dates = extra_dates_map.get(key, set())
+        
         # Cálculo de esperado (Total): 1 por data de aula no período
         cur = inicio
         while cur <= fim:
-            if cur.weekday() in weekdays and cur not in feriados:
+            is_expected = (cur.weekday() in weekdays or cur in extra_dates)
+            if is_expected and cur not in feriados:
                 total += 1
                 if cur <= hoje:
                     total_ate_hoje += 1
@@ -405,7 +426,8 @@ def calcular_stats_conteudo(prof, data_ini=None, data_fim=None, feriados=None, a
         # Cálculo de realizado (Preenchidos): 1 por data efetivamente lançada
         dates_lancadas = lancados_map.get(key, set())
         for d in dates_lancadas:
-            if d.weekday() in weekdays and d not in feriados:
+            is_expected = (d.weekday() in weekdays or d in extra_dates)
+            if is_expected and d not in feriados:
                 preenchidos += 1
                 if d <= hoje:
                     preenchidos_ate_hoje += 1
@@ -517,14 +539,21 @@ def detalhe_pendencias_professor(request, prof_id):
 
     # All (turma, disciplina) pairings for this professor
     grades = GradeHoraria.objects.filter(professor=professor, turma__ano_letivo=request.ano_letivo, turma__escola=request.escola).select_related('turma', 'disciplina')
+    aulas_extras = AulaExtraProgramada.objects.filter(professor=professor, turma__ano_letivo=request.ano_letivo, turma__escola=request.escola).select_related('turma', 'disciplina')
     
     # Group by turma+disciplina to find missing dates
-    turma_disc_map = defaultdict(lambda: {'weekdays': set(), 'turma': None, 'disc': None})
+    turma_disc_map = defaultdict(lambda: {'weekdays': set(), 'extra_dates': set(), 'turma': None, 'disc': None})
     for g in grades:
         key = (g.turma.codigo, g.disciplina.id)
         turma_disc_map[key]['weekdays'].add(DIA_TO_WEEKDAY[g.dia_semana])
         turma_disc_map[key]['turma'] = g.turma
         turma_disc_map[key]['disc'] = g.disciplina
+        
+    for ae in aulas_extras:
+        key = (ae.turma.codigo, ae.disciplina.id)
+        turma_disc_map[key]['extra_dates'].add(ae.data)
+        turma_disc_map[key]['turma'] = ae.turma
+        turma_disc_map[key]['disc'] = ae.disciplina
 
     pendencias = []
     for (t_cod, d_id), info in turma_disc_map.items():
@@ -540,7 +569,8 @@ def detalhe_pendencias_professor(request, prof_id):
         missing_dates = []
         cur = inicio
         while cur <= fim:
-            if cur.weekday() in info['weekdays'] and cur not in feriados:
+            is_expected = (cur.weekday() in info['weekdays'] or cur in info['extra_dates'])
+            if is_expected and cur not in feriados:
                 if cur not in lancados:
                     missing_dates.append(cur)
             cur += datetime.timedelta(days=1)

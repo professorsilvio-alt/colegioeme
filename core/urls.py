@@ -58,6 +58,7 @@ urlpatterns = [
     path('relatorios/pendencias/professor/<int:prof_id>/', views.detalhe_pendencias_professor, name='detalhe_pendencias_professor'),
     path('relatorios/lancamento-coletivo/', views.lancamento_coletivo, name='lancamento_coletivo'),
     path('sugestao/criar-massa/', views.sugestao_criar_massa, name='sugestao_criar_massa'),
+    path('aulas-extras/upload/', views.upload_aulas_extras, name='upload_aulas_extras'),
     path('gerenciar-sugestoes/', views.gerenciar_sugestoes, name='gerenciar_sugestoes'),
     path('sugestao/<int:pk>/editar/', views.sugestao_editar, name='sugestao_editar'),
     path('sugestao/<int:pk>/excluir/', views.sugestao_excluir, name='sugestao_excluir'),

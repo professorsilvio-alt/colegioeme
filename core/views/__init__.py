@@ -5,3 +5,4 @@ from .conteudos import *
 from .relatorios import *
 from .exportacao import *
 from .gestao import *
+from .importacao import *
