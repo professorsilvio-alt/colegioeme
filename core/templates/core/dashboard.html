@@ -220,6 +220,9 @@
             {% if prof.pode_editar_tudo %}
             <button type="submit" formaction="{% url 'ocorrencia_excluir_varios' %}" class="btn-danger"
                 onclick="return confirm('Excluir selecionadas?')">🗑 Excluir Selecionadas</button>
+            {% endif %}
+            
+            {% if prof.cargo != 'SECRETARIA' %}
             <button type="submit" formaction="{% url 'ocorrencia_mudar_status' %}" class="btn-success"
                 onclick="document.getElementById('statusMassa').value='Resolvida'">✔ Marcar Resolvidas</button>
             <button type="submit" formaction="{% url 'ocorrencia_mudar_status' %}" class="btn-warning"
