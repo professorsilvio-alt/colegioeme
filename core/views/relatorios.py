@@ -89,8 +89,15 @@ def ocorrencias_do_usuario(request):
     if not prof.pode_ver_ocorrencias:
         return Ocorrencia.objects.none()
 
-    if prof.pode_ver_tudo:
-        # Cargos de gestão e inspetores veem tudo (respeitando a restrição de secretária acima)
+    if prof.cargo == 'INSPETOR':
+        # Inspetor vê apenas ocorrências das suas turmas responsáveis
+        turmas_resp = prof.turmas_inspetor.all()
+        if turmas_resp.exists():
+            qs = qs.filter(turma__in=turmas_resp)
+        else:
+            return Ocorrencia.objects.none()
+    elif prof.pode_ver_tudo:
+        # Demais cargos de gestão veem tudo
         pass
     else:
         # Professor comum vê apenas suas próprias ocorrências

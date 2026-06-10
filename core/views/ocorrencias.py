@@ -104,8 +104,15 @@ def ocorrencias_do_usuario(request):
     if not prof.pode_ver_ocorrencias:
         return Ocorrencia.objects.none()
 
-    if prof.pode_ver_tudo:
-        # Cargos de gestão e inspetores veem tudo (respeitando a restrição de secretária acima)
+    if prof.cargo == 'INSPETOR':
+        # Inspetor vê apenas ocorrências das suas turmas responsáveis
+        turmas_resp = prof.turmas_inspetor.all()
+        if turmas_resp.exists():
+            qs = qs.filter(turma__in=turmas_resp)
+        else:
+            return Ocorrencia.objects.none()
+    elif prof.pode_ver_tudo:
+        # Demais cargos de gestão veem tudo
         pass
     else:
         # Professor comum vê apenas suas próprias ocorrências
@@ -177,8 +184,10 @@ def ocorrencia_ver(request, pk):
     # Check permissions
     if prof:
         if prof.cargo == 'INSPETOR':
-            # Inspetor vê todas as ocorrências sem bloqueio
-            pass
+            # Inspetor vê apenas ocorrências das suas turmas
+            if oc.turma and oc.turma not in prof.turmas_inspetor.all():
+                messages.error(request, 'Você não tem permissão para visualizar esta ocorrência.')
+                return redirect('dashboard')
         elif not prof.pode_ver_tudo:
             if oc.professor != prof:
                 messages.error(request, 'Você não tem permissão para visualizar esta ocorrência.')
@@ -345,7 +354,10 @@ def ocorrencia_mudar_status_direto(request, pk):
     # Check permissions
     if prof:
         if prof.cargo == 'INSPETOR':
-            pass # Inspetores podem mudar
+            # Inspetor só altera status das suas turmas
+            if oc.turma and oc.turma not in prof.turmas_inspetor.all():
+                messages.error(request, 'Sem permissão.')
+                return redirect('dashboard')
         elif not prof.pode_ver_tudo:
             if oc.professor != prof:
                 messages.error(request, 'Sem permissão.')
