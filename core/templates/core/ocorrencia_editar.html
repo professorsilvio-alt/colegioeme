@@ -4,7 +4,7 @@
 {% block content %}
 <h2>Editar Ocorrência OC-{{ oc.pk|stringformat:"04d" }}</h2>
 <div class="collapsible">
-    <form method="post">
+    <form method="post" id="formEditarOc">
         {% csrf_token %}
         <label>Data</label>
         <input type="date" name="data" value="{{ oc.data|date:'Y-m-d' }}" required>
@@ -53,8 +53,27 @@
             {% endfor %}
         </select>
 
-        <label>Descrição</label>
-        <textarea name="descricao" required>{{ oc.descricao }}</textarea>
+        <label>Tipo de Ocorrência</label>
+        <div class="oc-tipos-grid" id="ocTiposGrid-editar">
+            {% for tipo in tipos_ocorrencia %}
+            <label class="oc-tipo-chip" {% if tipo in tipos_selecionados %}id="chip-editar-sel"{% endif %}>
+                <input type="checkbox" name="tipos_ocorrencia" value="{{ tipo }}"
+                    onchange="atualizarDescricaoOc('editar')"
+                    {% if tipo == 'Outros' %}id="chk-editar-outros"{% endif %}
+                    {% if tipo in tipos_selecionados %}checked{% endif %}>
+                <span>{{ tipo }}</span>
+            </label>
+            {% endfor %}
+        </div>
+
+        <div id="descricaoOcWrapper-editar" style="{% if tem_outros %}display:block{% else %}display:none{% endif %}; margin-top:8px;">
+            <label>Descrição Adicional <span style="color:#888;font-weight:400;font-size:12px;">(campo "Outros")</span></label>
+            <textarea name="descricao_outros" id="descricaoOutros-editar" rows="3"
+                placeholder="Descreva a situação aqui...">{{ descricao_outros_texto }}</textarea>
+        </div>
+
+        <!-- Campo oculto preenchido via JS antes de submeter -->
+        <input type="hidden" name="descricao" id="descricaoHidden-editar" value="{{ oc.descricao }}">
 
         <label>Status</label>
         <select name="status">
@@ -62,7 +81,7 @@
             <option value="Resolvida" {% if oc.status == 'Resolvida' %}selected{% endif %}>Resolvida</option>
         </select>
 
-        <button type="submit">Salvar Alterações</button>
+        <button type="submit" onclick="return prepararEnvioOc('editar')">Salvar Alterações</button>
         <a href="/" class="btn-cancel" style="margin-left:8px;padding:11px 18px;border-radius:7px;text-decoration:none;color:#fff;">Cancelar</a>
     </form>
 </div>
@@ -98,5 +117,95 @@ function carregarProfessores(discId, selectId) {
                 profs.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
         });
 }
+
+// ── CHIPS DE TIPO DE OCORRÊNCIA ──
+function atualizarDescricaoOc(prefixo) {
+    const outrosChk = document.getElementById('chk-' + prefixo + '-outros');
+    const wrapper   = document.getElementById('descricaoOcWrapper-' + prefixo);
+    if (outrosChk && wrapper) {
+        wrapper.style.display = outrosChk.checked ? 'block' : 'none';
+    }
+    document.querySelectorAll('#ocTiposGrid-' + prefixo + ' .oc-tipo-chip').forEach(lbl => {
+        const chk = lbl.querySelector('input[type=checkbox]');
+        if (chk) lbl.classList.toggle('selecionado', chk.checked);
+    });
+}
+
+function prepararEnvioOc(prefixo) {
+    const grid = document.getElementById('ocTiposGrid-' + prefixo);
+    const checkboxes = grid ? grid.querySelectorAll('input[type=checkbox]:checked') : [];
+    const tipos = Array.from(checkboxes).map(c => c.value);
+
+    if (tipos.length === 0) {
+        alert('Selecione pelo menos um tipo de ocorrência.');
+        return false;
+    }
+
+    const outrosIdx = tipos.indexOf('Outros');
+    let partes = tipos.filter(t => t !== 'Outros');
+
+    if (outrosIdx !== -1) {
+        const desc = document.getElementById('descricaoOutros-' + prefixo);
+        const texto = desc ? desc.value.trim() : '';
+        if (!texto) {
+            alert('Preencha a descrição para o tipo "Outros".');
+            return false;
+        }
+        partes.push('Outros: ' + texto);
+    }
+
+    const hidden = document.getElementById('descricaoHidden-' + prefixo);
+    if (hidden) hidden.value = partes.join(' | ');
+    return true;
+}
+
+// Inicializar estado visual dos chips ao carregar a página
+document.addEventListener('DOMContentLoaded', function() {
+    atualizarDescricaoOc('editar');
+});
 </script>
+
+<style>
+    .oc-tipos-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 8px;
+        margin-bottom: 4px;
+    }
+    .oc-tipo-chip {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border: 2px solid #c5d5e8;
+        border-radius: 20px;
+        background: #f0f4f8;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        color: #2c3e50;
+        transition: all 0.18s;
+        user-select: none;
+    }
+    .oc-tipo-chip input[type=checkbox] {
+        accent-color: #003366;
+        width: 15px;
+        height: 15px;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+    .oc-tipo-chip:hover {
+        border-color: #4a90d9;
+        background: #dce8f5;
+    }
+    .oc-tipo-chip.selecionado {
+        border-color: #003366;
+        background: #003366;
+        color: #fff;
+    }
+    .oc-tipo-chip.selecionado input[type=checkbox] {
+        accent-color: #fff;
+    }
+</style>
 {% endblock %}

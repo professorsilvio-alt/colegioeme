@@ -31,6 +31,7 @@ from ..models import (Aluno, AnoLetivo, ConteudoProgramatico, Disciplina,
                      Escola, GradeHoraria, Ocorrencia, Professor,
                      SugestaoConteudo, Turma, Configuracao, AulaExtraProgramada)
 from ..utils import get_professor, get_feriados, get_client_ip
+from .ocorrencias import TIPOS_OCORRENCIA
 
 # Logger para auditoria de ações sensíveis
 logger = logging.getLogger('core')
@@ -263,6 +264,7 @@ def dashboard(request):
         'filtro_data_fim_c': request.GET.get('data_fim', ''),
         'today': date.today().isoformat(),
         'config_pk': Configuracao.objects.filter(ano_letivo=request.ano_letivo, escola=request.escola).values_list('pk', flat=True).first(),
+        'tipos_ocorrencia': TIPOS_OCORRENCIA,
     }
     # Paginação para os conteúdos filtrados
     from django.core.paginator import Paginator

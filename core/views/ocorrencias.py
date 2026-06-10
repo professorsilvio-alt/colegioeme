@@ -35,6 +35,22 @@ from ..utils import get_professor, get_feriados, get_client_ip
 # Logger para auditoria de ações sensíveis
 logger = logging.getLogger('core')
 
+# Tipos predefinidos de ocorrência disponíveis para os professores
+TIPOS_OCORRENCIA = [
+    'Retirado de Sala',
+    'Não fez atividade de casa',
+    'Não participou da aula',
+    'Sonolento/Dormiu',
+    'Celular tocou',
+    'Conversando',
+    'Não trouxe o material',
+    'Atitude inconveniente com o colega',
+    'Atitude inconveniente com o professor',
+    'Dever de casa incompleto',
+    'Utilizando o celular',
+    'Outros',
+]
+
 
 
 # ──────────────────────────────────────────────
@@ -105,8 +121,27 @@ def ocorrencia_criar(request):
     alunos_ids = request.POST.getlist('alunos')
     prof_id = request.POST.get('professor')
     disc_id = request.POST.get('disciplina')
-    descricao = request.POST.get('descricao', '')
     status = request.POST.get('status', 'Aberta')
+
+    # Montar descrição a partir dos tipos predefinidos selecionados
+    tipos_selecionados = request.POST.getlist('tipos_ocorrencia')
+    descricao_outros = request.POST.get('descricao_outros', '').strip()
+    descricao_hidden = request.POST.get('descricao', '').strip()
+
+    # Prioridade: campo oculto preenchido pelo JS (já formatado)
+    if descricao_hidden:
+        descricao = descricao_hidden
+    elif tipos_selecionados:
+        partes = [t for t in tipos_selecionados if t != 'Outros']
+        if 'Outros' in tipos_selecionados and descricao_outros:
+            partes.append(f'Outros: {descricao_outros}')
+        descricao = ' | '.join(partes)
+    else:
+        descricao = descricao_outros  # fallback
+
+    if not descricao:
+        messages.error(request, 'Selecione pelo menos um tipo de ocorrência.')
+        return redirect('dashboard')
 
     turma = get_object_or_404(Turma, codigo=turma_cod, escola=request.escola, ano_letivo=request.ano_letivo)
     disciplina = get_object_or_404(Disciplina, pk=disc_id) if disc_id else None
@@ -176,8 +211,26 @@ def ocorrencia_editar(request, pk):
         alunos_ids = request.POST.getlist('alunos')
         prof_id = request.POST.get('professor')
         disc_id = request.POST.get('disciplina')
-        descricao = request.POST.get('descricao', '')
         status = request.POST.get('status', 'Aberta')
+
+        # Montar descrição a partir dos tipos predefinidos selecionados
+        tipos_selecionados_post = request.POST.getlist('tipos_ocorrencia')
+        descricao_outros_post = request.POST.get('descricao_outros', '').strip()
+        descricao_hidden_post = request.POST.get('descricao', '').strip()
+
+        if descricao_hidden_post:
+            descricao = descricao_hidden_post
+        elif tipos_selecionados_post:
+            partes = [t for t in tipos_selecionados_post if t != 'Outros']
+            if 'Outros' in tipos_selecionados_post and descricao_outros_post:
+                partes.append(f'Outros: {descricao_outros_post}')
+            descricao = ' | '.join(partes)
+        else:
+            descricao = descricao_outros_post
+
+        if not descricao:
+            messages.error(request, 'Selecione pelo menos um tipo de ocorrência.')
+            return redirect(f'/ocorrencia/{oc.pk}/editar/')
 
         oc.data = data
         oc.turma = get_object_or_404(Turma, codigo=turma_cod, escola=request.escola, ano_letivo=request.ano_letivo)
@@ -193,6 +246,26 @@ def ocorrencia_editar(request, pk):
         messages.success(request, 'Ocorrência atualizada!')
         return redirect('dashboard')
 
+    # Parsear a descrição existente para pré-selecionar os chips
+    descricao_existente = oc.descricao or ''
+    # Os tipos são separados por ' | '
+    partes_existentes = [p.strip() for p in descricao_existente.split('|')]
+    tipos_selecionados = []
+    descricao_outros_texto = ''
+    tem_outros = False
+    for parte in partes_existentes:
+        if parte.startswith('Outros:'):
+            tipos_selecionados.append('Outros')
+            descricao_outros_texto = parte[len('Outros:'):].strip()
+            tem_outros = True
+        elif parte in TIPOS_OCORRENCIA:
+            tipos_selecionados.append(parte)
+        # Se não reconhece o tipo, coloca como "Outros" para não perder informação
+        elif parte:
+            tipos_selecionados.append('Outros')
+            descricao_outros_texto = parte
+            tem_outros = True
+
     alunos_turma = Aluno.objects.filter(turma=oc.turma) if oc.turma else []
     context = {
         'oc': oc,
@@ -200,6 +273,10 @@ def ocorrencia_editar(request, pk):
         'disciplinas': disciplinas_qs,
         'todos_professores': Professor.objects.all(),
         'alunos_turma': alunos_turma,
+        'tipos_ocorrencia': TIPOS_OCORRENCIA,
+        'tipos_selecionados': tipos_selecionados,
+        'descricao_outros_texto': descricao_outros_texto,
+        'tem_outros': tem_outros,
     }
     return render(request, 'core/ocorrencia_editar.html', context)
 
