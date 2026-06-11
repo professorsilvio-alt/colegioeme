@@ -38,6 +38,14 @@
             {% endfor %}
         </select>
 
+        <label>Disciplina (Opcional)</label>
+        <select name="disciplina" id="selDisciplina">
+            <option value="">Todas as disciplinas...</option>
+            {% for d in disciplinas %}
+            <option value="{{ d.pk }}">{{ d.nome }}</option>
+            {% endfor %}
+        </select>
+
         <button type="submit" id="btnAbrirNotas" style="margin-top:8px;">📋 Abrir Lançamento</button>
     </form>
 </div>
@@ -49,11 +57,18 @@ document.getElementById('formSelecionarNotas').addEventListener('submit', functi
     e.preventDefault();
     const turma   = document.getElementById('selTurma').value;
     const bimestre = document.getElementById('selBimestre').value;
+    const disciplina = document.getElementById('selDisciplina').value;
+
     if (!turma || !bimestre) {
         alert('Selecione turma e bimestre.');
         return;
     }
-    window.location.href = `/notas/turma/${turma}/${bimestre}/`;
+
+    let url = `/notas/turma/${turma}/${bimestre}/`;
+    if (disciplina) {
+        url += `?disciplina=${disciplina}`;
+    }
+    window.location.href = url;
 });
 </script>
 {% endblock %}

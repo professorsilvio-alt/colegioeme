@@ -72,9 +72,17 @@ def notas_index(request):
         ano_letivo=request.ano_letivo, escola=request.escola
     )
 
+    if prof and prof.cargo == 'PROFESSOR':
+        from ..models import GradeHoraria
+        disc_ids = GradeHoraria.objects.filter(professor=prof, ano_letivo=request.ano_letivo).values_list('disciplina_id', flat=True).distinct()
+        disciplinas = Disciplina.objects.filter(pk__in=disc_ids).order_by('nome')
+    else:
+        disciplinas = Disciplina.objects.all().order_by('nome')
+
     return render(request, 'core/notas_index.html', {
         'prof': prof,
         'turmas': turmas_qs,
+        'disciplinas': disciplinas,
         'bimestres': [1, 2, 3, 4],
         'pode_lancar': pode_lancar,
         'config': config,
@@ -114,6 +122,10 @@ def notas_turma(request, codigo, bimestre):
         disciplinas = Disciplina.objects.filter(pk__in=disc_ids).order_by('nome')
     else:
         disciplinas = Disciplina.objects.none()
+
+    filtro_disc = request.GET.get('disciplina')
+    if filtro_disc:
+        disciplinas = disciplinas.filter(pk=filtro_disc)
 
     alunos = Aluno.objects.filter(turma=turma).order_by('nome')
 
