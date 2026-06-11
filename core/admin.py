@@ -3,7 +3,9 @@ from django.urls import path
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.html import format_html
 from django.contrib import messages
-from .models import Turma, Disciplina, Professor, Aluno, Ocorrencia, ConteudoProgramatico, GradeHoraria, InspetorProxy, ProfessorDocente, SugestaoConteudo, Configuracao
+from .models import (Turma, Disciplina, GrupoDisciplina, Professor, Aluno, Ocorrencia,
+                     ConteudoProgramatico, GradeHoraria, InspetorProxy, ProfessorDocente,
+                     SugestaoConteudo, Configuracao, NotaBimestral)
 import datetime
 
 
@@ -281,9 +283,23 @@ class SugestaoConteudoInline(admin.TabularInline):
     model = SugestaoConteudo
     extra = 1
 
+@admin.register(GrupoDisciplina)
+class GrupoDisciplinaAdmin(admin.ModelAdmin):
+    list_display  = ['nome_boletim', 'faz_simulado_ef', 'ordem_boletim', 'disciplinas_lista']
+    list_editable = ['faz_simulado_ef', 'ordem_boletim']
+    search_fields = ['nome_boletim']
+
+    def disciplinas_lista(self, obj):
+        nomes = ', '.join(obj.disciplinas.values_list('nome', flat=True).order_by('nome'))
+        return nomes or '—'
+    disciplinas_lista.short_description = 'Sub-Disciplinas'
+
+
 @admin.register(Disciplina)
 class DisciplinaAdmin(admin.ModelAdmin):
-    list_display = ['nome']
+    list_display  = ['nome', 'grupo', 'faz_simulado_ef']
+    list_editable = ['grupo', 'faz_simulado_ef']
+    list_filter   = ['grupo', 'faz_simulado_ef']
     search_fields = ['nome']
     inlines = [SugestaoConteudoInline]
 
@@ -317,6 +333,10 @@ class ProfessorAdmin(admin.ModelAdmin):
             'fields': ['deve_trocar_senha'],
             'description': 'Marque esta opção para forçar o usuário a criar uma nova senha no próximo login.',
         }),
+        ('Lançamento de Notas', {
+            'fields': ['autorizado_lancar_notas'],
+            'description': 'Habilita o professor a lançar notas dentro do período configurado em Configuração.',
+        }),
         ('Permissões', {
             'fields': ['todas_turmas', 'todas_disciplinas']
         }),
@@ -336,6 +356,7 @@ class ProfessorAdmin(admin.ModelAdmin):
         'DIRETOR':     '#0055aa',
         'COORDENADOR': '#0077cc',
         'AUX_COORD':   '#5ba4cf',
+        'AUX_ADMIN':   '#2980b9',
         'ORIENTADOR':  '#8e44ad',
         'SECRETARIA':  '#16a085',
         'PROFESSOR':   '#27ae60',
@@ -469,6 +490,10 @@ class ProfessorDocenteAdmin(admin.ModelAdmin):
         ('Turmas e Disciplinas', {
             'fields': ['turmas', 'disciplinas', 'todas_turmas', 'todas_disciplinas'],
         }),
+        ('Lançamento de Notas', {
+            'fields': ['autorizado_lancar_notas'],
+            'description': 'Quando marcado, o professor pode lançar notas dentro do período configurado.',
+        }),
     ]
 
     def get_queryset(self, request):
@@ -489,10 +514,17 @@ class ProfessorDocenteAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 @admin.register(Configuracao)
 class ConfiguracaoAdmin(admin.ModelAdmin):
-    list_display = ['inicio_periodo_letivo', 'fim_periodo_letivo']
+    list_display = ['inicio_periodo_letivo', 'fim_periodo_letivo', 'periodo_notas_ini', 'periodo_notas_fim']
     fieldsets = [
         ('Período Letivo', {
             'fields': ['inicio_periodo_letivo', 'fim_periodo_letivo'],
+        }),
+        ('Lançamento de Notas', {
+            'fields': ['periodo_notas_ini', 'periodo_notas_fim'],
+            'description': (
+                'Define o intervalo em que <strong>professores autorizados</strong> podem lançar notas. '
+                'Fora deste período, apenas ADMIN, DIRETOR e AUX_ADMIN conseguem lançar.'
+            ),
         }),
         ('Feriados', {
             'fields': ['feriados'],
@@ -506,3 +538,19 @@ class ConfiguracaoAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return super().has_add_permission(request)
+
+
+@admin.register(NotaBimestral)
+class NotaBimestralAdmin(admin.ModelAdmin):
+    list_display  = ['aluno', 'disciplina', 'bimestre', 'nota_prova', 'nota_simulado',
+                     'nota_final', 'ano_letivo', 'lancado_por', 'atualizado_em']
+    list_filter   = ['bimestre', 'ano_letivo', 'disciplina', 'aluno__turma']
+    search_fields = ['aluno__nome', 'disciplina__nome']
+    readonly_fields = ['nota_final', 'criado_em', 'atualizado_em']
+    date_hierarchy = 'atualizado_em'
+    ordering = ['aluno__nome', 'bimestre']
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related(
+            'aluno', 'disciplina', 'ano_letivo', 'lancado_por'
+        )

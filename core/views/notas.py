@@ -263,39 +263,36 @@ def boletim_aluno(request, pk):
     for nota in notas_qs:
         notas_por_disc[nota.disciplina_id][nota.bimestre] = nota.nota_final
 
+    def _medias_e_anual(disc_pks):
+        """Retorna (lista_medias_b1_b2_b3_b4, media_anual) para um conjunto de disciplinas."""
+        medias = []
+        for b in (1, 2, 3, 4):
+            valores = [
+                notas_por_disc[dpk][b]
+                for dpk in disc_pks
+                if b in notas_por_disc[dpk]
+            ]
+            medias.append(round(sum(valores) / len(valores), 1) if valores else None)
+        vals_validos = [v for v in medias if v is not None]
+        media_anual = round(sum(vals_validos) / len(vals_validos), 1) if vals_validos else None
+        return medias, media_anual
+
     # Agrupa para boletim: grupos e disciplinas standalone
     grupos_no_boletim = []
 
     # 1. Grupos com sub-disciplinas que o aluno tem notas
     grupos = GrupoDisciplina.objects.prefetch_related('disciplinas').order_by('ordem_boletim')
     for grupo in grupos:
-        # sub-disciplinas que o aluno tem nota neste ano
         disc_ids_com_nota = [
             d.pk for d in grupo.disciplinas.all()
             if d.pk in notas_por_disc
         ]
         if not disc_ids_com_nota:
             continue
-
-        # Calcula média por bimestre (soma das sub-disciplinas / quantidade)
-        medias = {}
-        for b in (1, 2, 3, 4):
-            valores = [
-                notas_por_disc[dpk][b]
-                for dpk in disc_ids_com_nota
-                if b in notas_por_disc[dpk]
-            ]
-            if valores:
-                medias[b] = round(sum(valores) / len(valores), 1)
-            else:
-                medias[b] = None
-
-        media_anual_vals = [v for v in medias.values() if v is not None]
-        media_anual = round(sum(media_anual_vals) / len(media_anual_vals), 1) if media_anual_vals else None
-
+        medias, media_anual = _medias_e_anual(disc_ids_com_nota)
         grupos_no_boletim.append({
             'nome': grupo.nome_boletim,
-            'medias': medias,
+            'medias': medias,   # lista [b1, b2, b3, b4]
             'media_anual': media_anual,
             'is_grupo': True,
         })
@@ -305,15 +302,14 @@ def boletim_aluno(request, pk):
         pk__in=notas_por_disc.keys(), grupo__isnull=True
     ).order_by('nome')
     for disc in discs_standalone:
-        medias = {b: notas_por_disc[disc.pk].get(b) for b in (1, 2, 3, 4)}
-        media_anual_vals = [v for v in medias.values() if v is not None]
-        media_anual = round(sum(media_anual_vals) / len(media_anual_vals), 1) if media_anual_vals else None
+        medias, media_anual = _medias_e_anual([disc.pk])
         grupos_no_boletim.append({
             'nome': disc.nome,
             'medias': medias,
             'media_anual': media_anual,
             'is_grupo': False,
         })
+
 
     return render(request, 'core/boletim_aluno.html', {
         'prof': prof,

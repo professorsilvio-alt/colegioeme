@@ -41,7 +41,7 @@
                 {% if not prof or prof.cargo != 'INSPETOR' %}
                 <a href="{% url 'dashboard' %}?tab=conteudos" class="nav-item">📚 Diário</a>
                 {% endif %}
-                {% if not prof or prof.cargo not in 'INSPETOR,SECRETARIA' %}
+                {% if not prof or prof.cargo != 'INSPETOR' and prof.cargo != 'SECRETARIA' %}
                 <a href="{% url 'notas_index' %}" class="nav-item">📝 Notas</a>
                 {% endif %}
                 {% if prof.pode_ver_tudo or user.is_superuser %}
