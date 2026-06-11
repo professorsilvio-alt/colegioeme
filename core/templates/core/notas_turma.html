@@ -1,4 +1,6 @@
 {% extends 'core/base.html' %}
+{% load l10n %}
+
 {% block title %}Notas — Turma {{ turma.codigo }} — B{{ bimestre }} — SCA{% endblock %}
 
 {% block content %}
@@ -66,7 +68,7 @@
                            data-disc="{{ linha.disciplina.pk }}"
                            data-bimestre="{{ bimestre }}"
                            data-tipo="prova"
-                           value="{{ cel.nota.nota_prova|default:'' }}"
+                           value="{{ cel.nota.nota_prova|unlocalize|default:'' }}"
                            placeholder="Prova"
                            title="Nota da Prova — {{ i.nome }}"
                            {% if not pode_lancar %}disabled{% endif %}
@@ -79,7 +81,7 @@
                            data-disc="{{ linha.disciplina.pk }}"
                            data-bimestre="{{ bimestre }}"
                            data-tipo="simulado"
-                           value="{{ cel.nota.nota_simulado|default:'' }}"
+                           value="{{ cel.nota.nota_simulado|unlocalize|default:'' }}"
                            placeholder="Sim."
                            title="Nota do Simulado (interno) — {{ i.nome }}"
                            {% if not pode_lancar %}disabled{% endif %}
@@ -89,7 +91,7 @@
                     <span class="nota-final-display"
                           data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}"
                           style="min-width:40px; font-weight:700; color:#003366; font-size:14px; display:inline-block; text-align:center;">
-                        {{ cel.nota.nota_final|default:'—' }}
+                        {{ cel.nota.nota_final|unlocalize|default:'—' }}
                     </span>
                     <!-- Status da última ação -->
                     <span class="nota-status" data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}"
@@ -176,7 +178,7 @@ function salvarNota(input) {
         nota_simulado: notaSim,
     });
 
-    fetch(NOTA_SAVE_URL, { method: 'POST', body })
+    fetch(NOTA_SAVE_URL, { method: 'POST', body, credentials: 'same-origin' })
         .then(r => r.json())
         .then(data => {
             if (data.ok) {
