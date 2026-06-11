@@ -22,6 +22,10 @@
 <div style="background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:10px 14px; margin-bottom:16px; color:#856404; font-size:13px;">
     ⚠️ Modo <strong>somente leitura</strong> — você não está no período de lançamento ou não tem autorização.
 </div>
+{% else %}
+<div style="background:#e8f4fd; border:1px solid #b8daff; border-radius:8px; padding:10px 14px; margin-bottom:16px; color:#004085; font-size:13px;">
+    ℹ️ <strong>Atenção:</strong> Todas as notas (Prova e Simulado) devem estar no intervalo de <strong>0,0 a 10,0</strong>. Valores fora deste limite não serão aceitos.
+</div>
 {% endif %}
 
 {% if not grade %}
@@ -193,11 +197,24 @@ function salvarNota(input) {
         .catch(() => { setStatus(alunoId, discId, '✗', '#e74c3c'); });
 }
 
+function enforceRange(input) {
+    if (input.value === '') return;
+    let v = parseFloat(input.value);
+    if (v < 0) input.value = 0;
+    if (v > 10) input.value = 10;
+}
+
 if (PODE_LANCAR) {
     const debouncedSave = debounce(salvarNota, 600);
     document.querySelectorAll('.nota-input').forEach(inp => {
-        inp.addEventListener('input', () => debouncedSave(inp));
-        inp.addEventListener('change', () => salvarNota(inp));
+        inp.addEventListener('input', () => {
+            enforceRange(inp);
+            debouncedSave(inp);
+        });
+        inp.addEventListener('change', () => {
+            enforceRange(inp);
+            salvarNota(inp);
+        });
     });
 }
 </script>
