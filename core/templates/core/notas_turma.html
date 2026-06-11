@@ -33,11 +33,11 @@
 {% else %}
 
 <!-- Legenda do simulado -->
-{% for linha in grade %}{% if linha.faz_simulado %}
+{% if tem_simulado %}
 <div style="background:#e8f0fe; border:1px solid #4a90d9; border-radius:8px; padding:8px 14px; margin-bottom:12px; font-size:13px; color:#1a3a6e;">
-    📊 Esta turma faz <strong>Simulado</strong> nesta disciplina. O campo "Sim." aparece para lançamento interno e <em>não aparece no boletim</em>.
+    📊 Esta turma faz <strong>Simulado</strong> em algumas disciplinas. O campo "Sim." aparece para lançamento interno e <em>não aparece no boletim</em>.
 </div>
-{% endif %}{% endfor %}
+{% endif %}
 
 <div style="overflow-x:auto;">
 <table id="tabelaNotas" style="width:100%; border-collapse:collapse; font-size:13px;">

@@ -154,6 +154,7 @@ def notas_turma(request, codigo, bimestre):
         'grade': grade,
         'pode_lancar': pode_lancar,
         'config': config,
+        'tem_simulado': any(g['faz_simulado'] for g in grade),
     })
 
 
