@@ -68,4 +68,11 @@ urlpatterns = [
     path('escola/professores/', views.escola_professores_list, name='escola_professores_list'),
     path('escola/professores/novo/', views.escola_professor_novo, name='escola_professor_novo'),
     path('escola/professores/<int:pk>/editar/', views.escola_professor_edit, name='escola_professor_edit'),
+
+    # Notas
+    path('notas/', views.notas_index, name='notas_index'),
+    path('notas/turma/<str:codigo>/<int:bimestre>/', views.notas_turma, name='notas_turma'),
+    path('notas/salvar/', views.nota_salvar, name='nota_salvar'),
+    path('notas/aluno/<int:pk>/', views.boletim_aluno, name='boletim_aluno'),
+    path('notas/boletim/<str:codigo>/', views.boletim_turma, name='boletim_turma'),
 ]

@@ -1,0 +1,59 @@
+{% extends 'core/base.html' %}
+{% block title %}Notas — SCA{% endblock %}
+
+{% block content %}
+<h2 style="color:#003366; margin-bottom: 6px;">📝 Controle de Notas</h2>
+<p style="color:#666; margin-bottom: 24px;">Selecione a turma e o bimestre para lançar ou consultar notas.</p>
+
+{% if not pode_lancar %}
+<div style="background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:12px 16px; margin-bottom:20px; color:#856404;">
+    ⚠️
+    {% if prof.cargo == 'PROFESSOR' and not prof.autorizado_lancar_notas %}
+        Você ainda não está autorizado a lançar notas. Aguarde a autorização da secretaria.
+    {% elif config and config.periodo_notas_ini and config.periodo_notas_fim %}
+        O período de lançamento de notas é de <strong>{{ config.periodo_notas_ini|date:"d/m/Y" }}</strong>
+        a <strong>{{ config.periodo_notas_fim|date:"d/m/Y" }}</strong>.
+        Fora deste período você pode apenas consultar.
+    {% else %}
+        O período de lançamento de notas ainda não foi configurado.
+    {% endif %}
+</div>
+{% endif %}
+
+<div class="collapsible" style="max-width: 500px;">
+    <form method="get" action="" id="formSelecionarNotas">
+        <label>Turma</label>
+        <select name="turma" id="selTurma" required>
+            <option value="">Selecione a turma...</option>
+            {% for t in turmas %}
+            <option value="{{ t.codigo }}">Turma {{ t.codigo }}</option>
+            {% endfor %}
+        </select>
+
+        <label>Bimestre</label>
+        <select name="bimestre" id="selBimestre" required>
+            <option value="">Selecione o bimestre...</option>
+            {% for b in bimestres %}
+            <option value="{{ b }}">{{ b }}º Bimestre</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" id="btnAbrirNotas" style="margin-top:8px;">📋 Abrir Lançamento</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('formSelecionarNotas').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const turma   = document.getElementById('selTurma').value;
+    const bimestre = document.getElementById('selBimestre').value;
+    if (!turma || !bimestre) {
+        alert('Selecione turma e bimestre.');
+        return;
+    }
+    window.location.href = `/notas/turma/${turma}/${bimestre}/`;
+});
+</script>
+{% endblock %}
