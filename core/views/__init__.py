@@ -7,3 +7,4 @@ from .exportacao import *
 from .gestao import *
 from .importacao import *
 from .notas import *
+from .periodos import *

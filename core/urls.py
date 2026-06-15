@@ -75,4 +75,7 @@ urlpatterns = [
     path('notas/salvar/', views.nota_salvar, name='nota_salvar'),
     path('notas/aluno/<int:pk>/', views.boletim_aluno, name='boletim_aluno'),
     path('notas/boletim/<str:codigo>/', views.boletim_turma, name='boletim_turma'),
+
+    # Secretaria — Períodos de lançamento
+    path('secretaria/periodos-notas/', views.config_periodos_notas, name='config_periodos_notas'),
 ]

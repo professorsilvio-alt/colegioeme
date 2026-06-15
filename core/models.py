@@ -386,16 +386,29 @@ class Configuracao(models.Model):
     ano_letivo = models.ForeignKey(AnoLetivo, on_delete=models.CASCADE, related_name='configuracoes', null=True, blank=True)
     inicio_periodo_letivo = models.DateField(verbose_name="Início do Período Letivo", default=_default_inicio_periodo)
     fim_periodo_letivo = models.DateField(verbose_name="Fim do Período Letivo", default=_default_fim_periodo)
+
+    # ── Períodos de lançamento por bimestre ───────────────────────
+    notas_b1_ini = models.DateField(null=True, blank=True, verbose_name='B1 — Início do lançamento')
+    notas_b1_fim = models.DateField(null=True, blank=True, verbose_name='B1 — Fim do lançamento')
+    notas_b2_ini = models.DateField(null=True, blank=True, verbose_name='B2 — Início do lançamento')
+    notas_b2_fim = models.DateField(null=True, blank=True, verbose_name='B2 — Fim do lançamento')
+    notas_b3_ini = models.DateField(null=True, blank=True, verbose_name='B3 — Início do lançamento')
+    notas_b3_fim = models.DateField(null=True, blank=True, verbose_name='B3 — Fim do lançamento')
+    notas_b4_ini = models.DateField(null=True, blank=True, verbose_name='B4 — Início do lançamento')
+    notas_b4_fim = models.DateField(null=True, blank=True, verbose_name='B4 — Fim do lançamento')
+
+    # ── Período global (fallback) ─────────────────────────────────
     periodo_notas_ini = models.DateField(
         null=True, blank=True,
-        verbose_name='Início do lançamento de notas',
-        help_text='Data de abertura do período para professores lançarem notas.'
+        verbose_name='Período global — Início (fallback)',
+        help_text='Usado somente se o bimestre não tiver datas próprias configuradas.'
     )
     periodo_notas_fim = models.DateField(
         null=True, blank=True,
-        verbose_name='Fim do lançamento de notas',
-        help_text='Data de encerramento do período para professores lançarem notas.'
+        verbose_name='Período global — Fim (fallback)',
+        help_text='Usado somente se o bimestre não tiver datas próprias configuradas.'
     )
+
     feriados = models.TextField(
         blank=True,
         default='',
@@ -414,6 +427,20 @@ class Configuracao(models.Model):
     def __str__(self):
         ano = self.ano_letivo.ano if self.ano_letivo else self.inicio_periodo_letivo.year
         return f"Configuração do Ano Letivo ({ano})"
+
+    def periodo_para_bimestre(self, bimestre):
+        """Retorna (ini, fim) para o bimestre dado, com fallback no período global."""
+        mapa = {
+            1: (self.notas_b1_ini, self.notas_b1_fim),
+            2: (self.notas_b2_ini, self.notas_b2_fim),
+            3: (self.notas_b3_ini, self.notas_b3_fim),
+            4: (self.notas_b4_ini, self.notas_b4_fim),
+        }
+        ini, fim = mapa.get(bimestre, (None, None))
+        if ini and fim:
+            return ini, fim
+        # fallback para período global
+        return self.periodo_notas_ini, self.periodo_notas_fim
 
     def get_feriados(self):
         """Retorna um set de datetime.date com os feriados configurados."""
@@ -484,7 +511,7 @@ class NotaBimestral(models.Model):
     def save(self, *args, **kwargs):
         """Calcula nota_final com bônus de simulado antes de salvar."""
         if self.nota_simulado is not None:
-            bonus = float(self.nota_simulado) * 0.02
+            bonus = float(self.nota_simulado) * 0.01
             self.nota_final = min(
                 Decimal('10.0'),
                 self.nota_prova * Decimal(str(round(1 + bonus, 4)))

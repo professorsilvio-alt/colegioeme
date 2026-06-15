@@ -22,16 +22,28 @@ logger = logging.getLogger('core')
 # HELPERS
 # ─────────────────────────────────────────────────────────────
 
-def _pode_lancar_notas(prof, config):
-    """Verifica se o usuário tem permissão de lançar notas agora."""
+def _pode_lancar_notas(prof, config, bimestre=None):
+    """Verifica se o usuário tem permissão de lançar notas agora.
+
+    Regra:
+    - ADMIN / DIRETOR / AUX_ADMIN: sempre podem
+    - PROFESSOR / COORDENADOR / AUX_COORD: apenas dentro do período
+      configurado pela secretaria para o bimestre em questão.
+      Não é necessário o flag individual autorizado_lancar_notas.
+    """
     if not prof:
         return True  # superuser sem perfil
     if prof.pode_lancar_notas:  # ADMIN, DIRETOR, AUX_ADMIN
         return True
-    if prof.cargo == 'PROFESSOR' and prof.autorizado_lancar_notas:
+    if prof.cargo in ('PROFESSOR', 'COORDENADOR', 'AUX_COORD'):
         hoje = datetime.date.today()
-        if config and config.periodo_notas_ini and config.periodo_notas_fim:
-            return config.periodo_notas_ini <= hoje <= config.periodo_notas_fim
+        if config:
+            if bimestre:
+                ini, fim = config.periodo_para_bimestre(bimestre)
+            else:
+                ini, fim = config.periodo_notas_ini, config.periodo_notas_fim
+            if ini and fim:
+                return ini <= hoje <= fim
     return False
 
 
@@ -63,8 +75,9 @@ def notas_index(request):
         messages.error(request, 'Você não tem acesso ao módulo de notas.')
         return redirect('dashboard')
 
+    import datetime as _dt
+    hoje = _dt.date.today()
     config = _get_config(request)
-    pode_lancar = _pode_lancar_notas(prof, config)
 
     turmas_qs = prof.get_turmas(
         ano_letivo=request.ano_letivo, escola=request.escola
@@ -74,18 +87,43 @@ def notas_index(request):
 
     if prof and prof.cargo == 'PROFESSOR':
         from ..models import GradeHoraria
-        disc_ids = GradeHoraria.objects.filter(professor=prof, ano_letivo=request.ano_letivo).values_list('disciplina_id', flat=True).distinct()
+        disc_ids = GradeHoraria.objects.filter(
+            professor=prof, turma__ano_letivo=request.ano_letivo
+        ).values_list('disciplina_id', flat=True).distinct()
         disciplinas = Disciplina.objects.filter(pk__in=disc_ids).order_by('nome')
     else:
         disciplinas = Disciplina.objects.all().order_by('nome')
+
+    # Monta mapa de status por bimestre para o JS usar no cliente
+    periodos_status = {}
+    for b in (1, 2, 3, 4):
+        if config:
+            ini, fim = config.periodo_para_bimestre(b)
+        else:
+            ini, fim = None, None
+
+        if ini and fim:
+            if hoje < ini:
+                status = 'futuro'
+                msg = f'O lançamento do {b}º bimestre ainda não começou. Início em {ini.strftime("%d/%m/%Y")}.'
+            elif hoje > fim:
+                status = 'encerrado'
+                msg = f'O período de lançamento do {b}º bimestre encerrou em {fim.strftime("%d/%m/%Y")}.'
+            else:
+                status = 'aberto'
+                msg = f'Lançamento do {b}º bimestre aberto até {fim.strftime("%d/%m/%Y")}.'
+        else:
+            status = 'nao_configurado'
+            msg = f'O período de lançamento do {b}º bimestre ainda não foi configurado pela secretaria.'
+        periodos_status[b] = {'status': status, 'msg': msg}
 
     return render(request, 'core/notas_index.html', {
         'prof': prof,
         'turmas': turmas_qs,
         'disciplinas': disciplinas,
         'bimestres': [1, 2, 3, 4],
-        'pode_lancar': pode_lancar,
         'config': config,
+        'periodos_status': periodos_status,
     })
 
 
@@ -105,7 +143,7 @@ def notas_turma(request, codigo, bimestre):
         escola=request.escola, ano_letivo=request.ano_letivo
     )
     config = _get_config(request)
-    pode_lancar = _pode_lancar_notas(prof, config)
+    pode_lancar = _pode_lancar_notas(prof, config, bimestre)
 
     # Disciplinas visíveis para este professor/turma
     if prof and prof.cargo == 'PROFESSOR':
@@ -157,6 +195,13 @@ def notas_turma(request, codigo, bimestre):
             })
         grade.append(linha)
 
+    # Período de lançamento para este bimestre (para exibir no aviso)
+    periodo_b = None
+    if config:
+        p_ini, p_fim = config.periodo_para_bimestre(bimestre)
+        if p_ini and p_fim:
+            periodo_b = {'ini': p_ini, 'fim': p_fim}
+
     return render(request, 'core/notas_turma.html', {
         'prof': prof,
         'turma': turma,
@@ -166,6 +211,7 @@ def notas_turma(request, codigo, bimestre):
         'grade': grade,
         'pode_lancar': pode_lancar,
         'config': config,
+        'periodo_b': periodo_b,
         'tem_simulado': any(g['faz_simulado'] for g in grade),
     })
 
@@ -202,6 +248,13 @@ def nota_salvar(request):
     except (Aluno.DoesNotExist, Disciplina.DoesNotExist, ValueError, TypeError):
         return JsonResponse({'ok': False, 'erro': 'Dados inválidos.'}, status=400)
 
+    # Re-verifica permissão com o bimestre específico
+    if not _pode_lancar_notas(prof, config, bimestre):
+        return JsonResponse(
+            {'ok': False, 'erro': 'Fora do período de lançamento para este bimestre.'},
+            status=403
+        )
+
     # Validar notas
     try:
         nota_prova = Decimal(nota_prova_str.replace(',', '.'))
@@ -217,11 +270,11 @@ def nota_salvar(request):
     if nota_sim_str:
         try:
             nota_simulado = Decimal(nota_sim_str.replace(',', '.'))
-            if not (Decimal('0') <= nota_simulado <= Decimal('10')):
+            if not (Decimal('0') <= nota_simulado <= Decimal('20')):
                 raise ValueError
         except (InvalidOperation, ValueError):
             return JsonResponse(
-                {'ok': False, 'erro': 'Nota do simulado inválida (0,0 – 10,0).'},
+                {'ok': False, 'erro': 'Nota do simulado inválida (0 – 20).'},
                 status=400
             )
 

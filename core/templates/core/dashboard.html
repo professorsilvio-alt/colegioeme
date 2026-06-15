@@ -48,7 +48,8 @@
 
     {% if prof.cargo == 'PROFESSOR' %}
     <h2 style="color: #003366; margin-top: 5px;">📅 Meu Horário</h2>
-    <table class="schedule-table">
+    <div style="overflow-x: auto; width: 100%;">
+    <table class="schedule-table" style="margin-top: 0;">
         <thead>
             <tr>
                 <th>Segunda</th>
@@ -76,6 +77,7 @@
             </tr>
         </tbody>
     </table>
+    </div>
     {% else %}
     <div style="text-align: center; padding: 40px 0;">
         <img src="{% static 'core/owl_head.png' %}" alt="Capelum" style="max-width: 200px; height: auto;">
@@ -256,6 +258,7 @@
             {% endif %}
         </div>
 
+        <div style="overflow-x: auto; width: 100%;">
         <table>
             <thead>
                 <tr>
@@ -302,6 +305,7 @@
                 {% endfor %}
             </tbody>
         </table>
+        </div>
     </form>
     {% else %}
     <div style="text-align: center; padding: 40px 0;">
@@ -496,6 +500,7 @@
                 style="margin-left: 5px;" download="conteudos_filtrado.pdf">📄 PDF (Filtrado)</a>
             {% endif %}
         </div>
+        <div style="overflow-x: auto; width: 100%;">
         <table id="conteudosTable">
             <thead>
                 <tr>
@@ -510,6 +515,7 @@
             </thead>
             {% include 'core/partials/conteudos_table_body.html' %}
         </table>
+        </div>
     </form>
 
 </div><!-- /tab-conteudos -->

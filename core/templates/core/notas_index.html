@@ -5,20 +5,8 @@
 <h2 style="color:#003366; margin-bottom: 6px;">📝 Controle de Notas</h2>
 <p style="color:#666; margin-bottom: 24px;">Selecione a turma e o bimestre para lançar ou consultar notas.</p>
 
-{% if not pode_lancar %}
-<div style="background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:12px 16px; margin-bottom:20px; color:#856404;">
-    ⚠️
-    {% if prof.cargo == 'PROFESSOR' and not prof.autorizado_lancar_notas %}
-        Você ainda não está autorizado a lançar notas. Aguarde a autorização da secretaria.
-    {% elif config and config.periodo_notas_ini and config.periodo_notas_fim %}
-        O período de lançamento de notas é de <strong>{{ config.periodo_notas_ini|date:"d/m/Y" }}</strong>
-        a <strong>{{ config.periodo_notas_fim|date:"d/m/Y" }}</strong>.
-        Fora deste período você pode apenas consultar.
-    {% else %}
-        O período de lançamento de notas ainda não foi configurado.
-    {% endif %}
-</div>
-{% endif %}
+{# Alerta dinâmico — exibido via JS quando o bimestre é selecionado #}
+<div id="alertaBimestre" style="display:none; border-radius:8px; padding:12px 16px; margin-bottom:20px; font-size:14px;"></div>
 
 <div class="collapsible" style="max-width: 500px;">
     <form method="get" action="" id="formSelecionarNotas">
@@ -53,9 +41,42 @@
 
 {% block extra_js %}
 <script>
+// Status dos períodos por bimestre (calculado no servidor)
+const PERIODOS = {
+    {% for b, info in periodos_status.items %}
+    {{ b }}: { status: "{{ info.status }}", msg: "{{ info.msg }}" },
+    {% endfor %}
+};
+
+const PROF_CARGO = "{{ prof.cargo|default:'' }}";
+
+const alerta = document.getElementById('alertaBimestre');
+
+const COR_STATUS = {
+    'aberto':          { bg: '#dcfce7', border: '#86efac', text: '#166534', icone: '✅' },
+    'futuro':          { bg: '#dbeafe', border: '#93c5fd', text: '#1e40af', icone: '🔵' },
+    'encerrado':       { bg: '#fee2e2', border: '#fca5a5', text: '#991b1b', icone: '🔴' },
+    'nao_configurado': { bg: '#f1f5f9', border: '#cbd5e1', text: '#475569', icone: '⚪' },
+};
+
+function atualizarAlerta() {
+    const b = parseInt(document.getElementById('selBimestre').value);
+    if (!b) { alerta.style.display = 'none'; return; }
+
+    const info = PERIODOS[b];
+    if (!info) { alerta.style.display = 'none'; return; }
+
+    const c = COR_STATUS[info.status] || COR_STATUS['nao_configurado'];
+    alerta.style.cssText = `display:block; background:${c.bg}; border:1px solid ${c.border}; color:${c.text}; border-radius:8px; padding:12px 16px; margin-bottom:20px; font-size:14px;`;
+    alerta.innerHTML = `${c.icone} ${info.msg}`;
+}
+
+
+document.getElementById('selBimestre').addEventListener('change', atualizarAlerta);
+
 document.getElementById('formSelecionarNotas').addEventListener('submit', function(e) {
     e.preventDefault();
-    const turma   = document.getElementById('selTurma').value;
+    const turma    = document.getElementById('selTurma').value;
     const bimestre = document.getElementById('selBimestre').value;
     const disciplina = document.getElementById('selDisciplina').value;
 

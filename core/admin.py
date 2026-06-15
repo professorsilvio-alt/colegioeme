@@ -514,16 +514,30 @@ class ProfessorDocenteAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 @admin.register(Configuracao)
 class ConfiguracaoAdmin(admin.ModelAdmin):
-    list_display = ['inicio_periodo_letivo', 'fim_periodo_letivo', 'periodo_notas_ini', 'periodo_notas_fim']
+    list_display = [
+        'inicio_periodo_letivo', 'fim_periodo_letivo',
+        'notas_b1_ini', 'notas_b1_fim',
+        'notas_b2_ini', 'notas_b2_fim',
+        'notas_b3_ini', 'notas_b3_fim',
+        'notas_b4_ini', 'notas_b4_fim',
+    ]
     fieldsets = [
         ('Período Letivo', {
             'fields': ['inicio_periodo_letivo', 'fim_periodo_letivo'],
         }),
-        ('Lançamento de Notas', {
+        ('Períodos de Lançamento por Bimestre', {
+            'fields': [
+                ('notas_b1_ini', 'notas_b1_fim'),
+                ('notas_b2_ini', 'notas_b2_fim'),
+                ('notas_b3_ini', 'notas_b3_fim'),
+                ('notas_b4_ini', 'notas_b4_fim'),
+            ],
+            'description': 'Intervalos específicos de lançamento de notas para cada bimestre.',
+        }),
+        ('Lançamento de Notas (Fallback Global)', {
             'fields': ['periodo_notas_ini', 'periodo_notas_fim'],
             'description': (
-                'Define o intervalo em que <strong>professores autorizados</strong> podem lançar notas. '
-                'Fora deste período, apenas ADMIN, DIRETOR e AUX_ADMIN conseguem lançar.'
+                'Período global usado como fallback se o bimestre não tiver datas configuradas.'
             ),
         }),
         ('Feriados', {
