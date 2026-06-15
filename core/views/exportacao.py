@@ -118,6 +118,7 @@ def filtrar_ocorrencias(request, qs):
     filtro_turma = request.GET.get('filtro_turma', '')
     filtro_status = request.GET.get('filtro_status', '')
     filtro_professor = request.GET.get('filtro_professor', '')
+    filtro_aluno = request.GET.get('filtro_aluno', '').strip()
     filtro_data_ini = request.GET.get('data_ini', '')
     filtro_data_fim = request.GET.get('data_fim', '')
 
@@ -132,6 +133,9 @@ def filtrar_ocorrencias(request, qs):
         p = get_object_or_404(Professor, pk=filtro_professor)
         qs = qs.filter(professor=p)
         resumo.append(f"Professor: {p.nome}")
+    if filtro_aluno:
+        qs = qs.filter(alunos__nome__icontains=filtro_aluno)
+        resumo.append(f"Aluno: {filtro_aluno}")
     if filtro_data_ini:
         qs = qs.filter(data__gte=filtro_data_ini)
         resumo.append(f"Início: {filtro_data_ini}")
@@ -139,7 +143,7 @@ def filtrar_ocorrencias(request, qs):
         qs = qs.filter(data__lte=filtro_data_fim)
         resumo.append(f"Fim: {filtro_data_fim}")
 
-    return qs, " | ".join(resumo)
+    return qs.distinct(), " | ".join(resumo)
 
 
 def filtrar_conteudos(request, qs, override_prof=None):

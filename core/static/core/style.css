@@ -620,7 +620,8 @@ textarea {
 }
 
 .filter-row select,
-.filter-row input[type="date"] {
+.filter-row input[type="date"],
+.filter-row input[type="text"] {
     width: 100%;
     font-size: 13px;
     padding: 8px;

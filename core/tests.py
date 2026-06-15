@@ -1,7 +1,7 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
-from .models import Turma, Disciplina, Professor, Aluno, SugestaoConteudo, ConteudoProgramatico
+from .models import Turma, Disciplina, Professor, Aluno, SugestaoConteudo, ConteudoProgramatico, Ocorrencia
 import datetime
 
 class CoreModelTests(TestCase):
@@ -128,3 +128,63 @@ class DuplicateProtectionTests(TestCase):
         self.assertIn('[MESCLADO EM', self.cont.descricao)
         self.assertIn('Novo Conteúdo', self.cont.descricao)
         self.assertEqual(ConteudoProgramatico.objects.filter(data=self.data, turmas=self.turma).count(), 1)
+
+
+class OcorrenciaTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.turma = Turma.objects.create(codigo='82')
+        self.aluno1 = Aluno.objects.create(nome='João Silva', turma=self.turma)
+        self.aluno2 = Aluno.objects.create(nome='Maria Oliveira', turma=self.turma)
+        self.aluno3 = Aluno.objects.create(nome='Pedro Souza', turma=self.turma)
+        self.disc = Disciplina.objects.create(nome='Química')
+        
+        self.u_prof = User.objects.create_user(username='prof82', password='pass')
+        self.prof = Professor.objects.create(user=self.u_prof, nome='Marcos', cargo='PROFESSOR')
+        self.prof.turmas.add(self.turma)
+        self.prof.disciplinas.add(self.disc)
+        self.client.login(username='prof82', password='pass')
+
+    def test_criar_ocorrencia_multiplos_alunos_individualizada(self):
+        # Envia formulário para criar ocorrência selecionando 3 alunos
+        response = self.client.post(reverse('ocorrencia_criar'), {
+            'data': '2026-06-15',
+            'turma': self.turma.codigo,
+            'alunos': [self.aluno1.pk, self.aluno2.pk, self.aluno3.pk],
+            'disciplina': self.disc.pk,
+            'status': 'Aberta',
+            'tipos_ocorrencia': ['Conversando'],
+            'descricao_outros': '',
+        })
+        self.assertEqual(response.status_code, 302)
+        
+        # Deve ter criado 3 ocorrências diferentes
+        ocorrencias = Ocorrencia.objects.filter(turma=self.turma)
+        self.assertEqual(ocorrencias.count(), 3)
+        
+        # Cada ocorrência deve conter exatamente um aluno
+        alunos_vinculados = [oc.alunos.first() for oc in ocorrencias]
+        self.assertIn(self.aluno1, alunos_vinculados)
+        self.assertIn(self.aluno2, alunos_vinculados)
+        self.assertIn(self.aluno3, alunos_vinculados)
+
+    def test_filtrar_ocorrencias_por_aluno(self):
+        # Cria uma ocorrência para João Silva
+        oc1 = Ocorrencia.objects.create(
+            data='2026-06-15', turma=self.turma, professor=self.prof,
+            disciplina=self.disc, descricao='Conversando', status='Aberta'
+        )
+        oc1.alunos.add(self.aluno1)
+
+        # Cria uma ocorrência para Maria Oliveira
+        oc2 = Ocorrencia.objects.create(
+            data='2026-06-15', turma=self.turma, professor=self.prof,
+            disciplina=self.disc, descricao='Dormiu', status='Aberta'
+        )
+        oc2.alunos.add(self.aluno2)
+
+        # Filtra por 'João'
+        response = self.client.get(reverse('dashboard') + '?tab=ocorrencias&filtro_aluno=João')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('João Silva', response.content.decode('utf-8'))
+        self.assertNotIn('Maria Oliveira', response.content.decode('utf-8'))

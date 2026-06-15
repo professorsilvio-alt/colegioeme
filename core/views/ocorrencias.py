@@ -165,14 +165,26 @@ def ocorrencia_criar(request):
     else:
         professor = prof
 
-    oc = Ocorrencia.objects.create(
-        data=data, turma=turma, professor=professor,
-        disciplina=disciplina, descricao=descricao, status=status
-    )
     if alunos_ids:
-        oc.alunos.set(Aluno.objects.filter(pk__in=alunos_ids))
-    logger.info('OCORRÊNCIA CRIADA: OC-%04d por usuário=%s turma=%s', oc.pk, request.user.username, turma_cod)
-    messages.success(request, f'Ocorrência OC-{oc.pk:04d} criada com sucesso!')
+        created_count = 0
+        with transaction.atomic():
+            for al_id in alunos_ids:
+                aluno = get_object_or_404(Aluno, pk=al_id)
+                oc = Ocorrencia.objects.create(
+                    data=data, turma=turma, professor=professor,
+                    disciplina=disciplina, descricao=descricao, status=status
+                )
+                oc.alunos.add(aluno)
+                created_count += 1
+                logger.info('OCORRÊNCIA CRIADA INDIVIDUAL: OC-%04d para aluno=%s por usuário=%s turma=%s', oc.pk, aluno.nome, request.user.username, turma_cod)
+        messages.success(request, f'{created_count} ocorrência(s) criada(s) com sucesso!')
+    else:
+        oc = Ocorrencia.objects.create(
+            data=data, turma=turma, professor=professor,
+            disciplina=disciplina, descricao=descricao, status=status
+        )
+        logger.info('OCORRÊNCIA CRIADA SEM ALUNO: OC-%04d por usuário=%s turma=%s', oc.pk, request.user.username, turma_cod)
+        messages.success(request, f'Ocorrência OC-{oc.pk:04d} criada com sucesso!')
     return redirect('dashboard')
 
 
@@ -249,10 +261,26 @@ def ocorrencia_editar(request, pk):
         oc.status = status
         oc.save()
         if alunos_ids:
-            oc.alunos.set(Aluno.objects.filter(pk__in=alunos_ids))
+            primeiro_id = alunos_ids[0]
+            oc.alunos.set(Aluno.objects.filter(pk=primeiro_id))
+            
+            novos_criados = 0
+            with transaction.atomic():
+                for al_id in alunos_ids[1:]:
+                    aluno = get_object_or_404(Aluno, pk=al_id)
+                    nova_oc = Ocorrencia.objects.create(
+                        data=data, turma=oc.turma, professor=oc.professor,
+                        disciplina=oc.disciplina, descricao=descricao, status=status
+                    )
+                    nova_oc.alunos.add(aluno)
+                    novos_criados += 1
+            if novos_criados > 0:
+                messages.success(request, f'Ocorrência atualizada e {novos_criados} nova(s) ocorrência(s) criada(s) para os outros alunos.')
+            else:
+                messages.success(request, 'Ocorrência atualizada!')
         else:
             oc.alunos.clear()
-        messages.success(request, 'Ocorrência atualizada!')
+            messages.success(request, 'Ocorrência atualizada!')
         return redirect('dashboard')
 
     # Parsear a descrição existente para pré-selecionar os chips
