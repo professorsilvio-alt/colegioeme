@@ -533,6 +533,10 @@
 {% endblock %}
 
 {% block extra_js %}
+{{ abertas|default:0|json_script:"data-abertas" }}
+{{ resolvidas|default:0|json_script:"data-resolvidas" }}
+{{ preenchidos|default:0|json_script:"data-preenchidos" }}
+{{ faltam_ate_hoje|default:0|json_script:"data-faltam" }}
 <script>
     // ── TABS ──
     function showTab(name, btn) {
@@ -1163,11 +1167,11 @@
 
     // ── GRÁFICOS (CHART.JS) ──
     document.addEventListener('DOMContentLoaded', function() {
-        // Dados injetados pelo backend
-        const abertas = {{ abertas|default:0 }};
-        const resolvidas = {{ resolvidas|default:0 }};
-        const preenchidos = {{ preenchidos|default:0 }};
-        const faltam = {{ faltam_ate_hoje|default:0 }};
+        // Dados injetados pelo backend via json_script (seguro, sem erros de lint)
+        const abertas = JSON.parse(document.getElementById('data-abertas').textContent);
+        const resolvidas = JSON.parse(document.getElementById('data-resolvidas').textContent);
+        const preenchidos = JSON.parse(document.getElementById('data-preenchidos').textContent);
+        const faltam = JSON.parse(document.getElementById('data-faltam').textContent);
 
         // Gráfico de Ocorrências
         const ctxOc = document.getElementById('ocorrenciasChart');
