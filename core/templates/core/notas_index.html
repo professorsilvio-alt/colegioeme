@@ -74,6 +74,34 @@ function atualizarAlerta() {
 
 document.getElementById('selBimestre').addEventListener('change', atualizarAlerta);
 
+document.getElementById('selTurma').addEventListener('change', function() {
+    const turmaCod = this.value;
+    const selDisc = document.getElementById('selDisciplina');
+    
+    // Limpa e mostra "Carregando..."
+    selDisc.innerHTML = '<option value="">Carregando...</option>';
+    
+    if (!turmaCod) {
+        selDisc.innerHTML = '<option value="">Todas as disciplinas...</option>';
+        return;
+    }
+
+    fetch(`/api/turma/${turmaCod}/disciplinas/`)
+        .then(r => r.json())
+        .then(data => {
+            selDisc.innerHTML = '<option value="">Todas as disciplinas...</option>';
+            data.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d.id;
+                opt.textContent = d.nome;
+                selDisc.appendChild(opt);
+            });
+        })
+        .catch(() => {
+            selDisc.innerHTML = '<option value="">Erro ao carregar</option>';
+        });
+});
+
 document.getElementById('formSelecionarNotas').addEventListener('submit', function(e) {
     e.preventDefault();
     const turma    = document.getElementById('selTurma').value;
