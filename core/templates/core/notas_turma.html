@@ -199,7 +199,7 @@
 <script>
     const NOTA_SAVE_URL = '{% url "nota_salvar" %}';
     const CSRF_TOKEN = '{{ csrf_token }}';
-    const PODE_LANCAR = {{ pode_lancar| yesno: "true,false" }};
+    const PODE_LANCAR = {{ pode_lancar|yesno:"true,false" }};
 
     // Debounce para não enviar a cada tecla
     function debounce(fn, delay) {
