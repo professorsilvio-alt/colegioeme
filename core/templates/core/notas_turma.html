@@ -1,17 +1,17 @@
 {% extends 'core/base.html' %}
 {% load l10n %}
 
-{% block title %}Notas — Turma {{ turma.codigo }} — B{{ bimestre }} — SCA{% endblock %}
+{% block title %}Notas — Turma {{ turma.codigo }} — {{ periodo_nome }} — SCA{% endblock %}
 
 {% block content %}
 <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:16px;">
-    <h2 style="color:#003366; margin:0;">📝 Notas — Turma {{ turma.codigo }} — {{ bimestre }}º Bimestre</h2>
+    <h2 style="color:#003366; margin:0;">📝 Notas — Turma {{ turma.codigo }} — {{ periodo_nome }}</h2>
     <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        {% for b in bimestres %}
-        <a href="{% url 'notas_turma' turma.codigo b %}"
+        {% for p in periodos_lista %}
+        <a href="{% url 'notas_turma' turma.codigo p %}"
             style="padding:6px 14px; border-radius:20px; text-decoration:none; font-size:13px; font-weight:600;
-                  {% if b == bimestre %}background:#003366; color:#fff;{% else %}background:#e8eef5; color:#003366;{% endif %}">
-            B{{ b }}
+                  {% if p == periodo %}background:#003366; color:#fff;{% else %}background:#e8eef5; color:#003366;{% endif %}">
+            {% if p == 'PA1' or p == 'PA2' %}{{ p }}{% else %}B{{ p }}{% endif %}
         </a>
         {% endfor %}
         <a href="{% url 'notas_index' %}"
