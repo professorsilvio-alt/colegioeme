@@ -89,6 +89,22 @@
                 {% with celula=linha.celulas|dictsort:"aluno.nome" %}
                 {% for cel in linha.celulas %}
                 {% if cel.aluno.pk == i.pk %}
+                {% if is_pa %}
+                <!-- Célula de PA -->
+                <td style="padding:6px 4px; text-align:center; vertical-align:middle; background:#f4f6f9;">
+                    <div style="display:flex; gap:4px; align-items:center; justify-content:center;">
+                        <input type="number" min="0" max="10" step="0.1" class="pa-input"
+                               data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}"
+                               data-pa="{{ periodo|slice:"-1:" }}"
+                               value="{{ cel.pa.nota|unlocalize|default:'' }}"
+                               placeholder="PA" title="Prova Auxiliar — {{ i.nome }}"
+                               {% if not pode_lancar %}disabled{% endif %}
+                               style="width:60px; padding:4px 6px; border:1.5px solid #aebac9; border-radius:6px; text-align:center; font-size:13px; background:#fff;">
+                        <span class="pa-status" data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}"
+                              style="font-size:16px; width:16px; text-align:center;"></span>
+                    </div>
+                </td>
+                {% else %}
                 <td style="padding:6px 4px; text-align:center; vertical-align:middle;" {% if cel.nota.nao_avaliado %}style="background:#fff8e1;"{% endif %}>
                     {% if cel.nota.nao_avaliado %}
                     <!-- Aluno marcado como N/A (não avaliado) -->
@@ -97,7 +113,7 @@
                               title="Não Avaliado — aluno ausente na avaliação" 
                               style="background:#f39c12; color:#fff; font-weight:700; font-size:12px; padding:3px 8px; border-radius:12px; letter-spacing:.5px;">N/A</span>
                         {% if pode_lancar %}
-                        <button type="button" onclick="removerNA({{ i.pk }}, {{ linha.disciplina.pk }}, {{ bimestre }})"
+                        <button type="button" onclick="removerNA({{ i.pk }}, {{ linha.disciplina.pk }}, '{{ periodo }}')"
                                 title="Desfazer N/A e lançar nota"
                                 style="background:none; border:none; cursor:pointer; font-size:14px; padding:2px;">✕</button>
                         {% endif %}
@@ -106,7 +122,7 @@
                     <div style="display:flex; gap:4px; align-items:center; justify-content:center; flex-wrap:nowrap;">
                         <!-- Nota da prova -->
                         <input type="number" min="0" max="10" step="0.1" class="nota-input nota-prova"
-                               data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}" data-bimestre="{{ bimestre }}"
+                               data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}" data-periodo="{{ periodo }}"
                                data-tipo="prova" value="{{ cel.nota.nota_prova|unlocalize|default:'' }}"
                                placeholder="Prova" title="Nota da Prova — {{ i.nome }}" 
                                {% if not pode_lancar %}disabled{% endif %}
@@ -115,7 +131,7 @@
                         <!-- Nota do simulado (interno) -->
                         {% if linha.faz_simulado %}
                         <input type="number" min="0" max="20" step="1" class="nota-input nota-simulado"
-                               data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}" data-bimestre="{{ bimestre }}"
+                               data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}" data-periodo="{{ periodo }}"
                                data-tipo="simulado" value="{{ cel.nota.nota_simulado|unlocalize|default:'' }}"
                                placeholder="Sim." title="Nota do Simulado (interno) — {{ i.nome }}" 
                                {% if not pode_lancar %}disabled{% endif %}
@@ -134,21 +150,7 @@
                     </div>
                     {% endif %}
                 </td>
-                
-                <!-- Célula de PA -->
-                <td style="padding:6px 4px; text-align:center; vertical-align:middle; background:#f4f6f9; border-left:1px dashed #d0d7e5;">
-                    <div style="display:flex; gap:4px; align-items:center; justify-content:center;">
-                        <input type="number" min="0" max="10" step="0.1" class="pa-input"
-                               data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}"
-                               data-pa="{% if bimestre in '1,2' %}1{% else %}2{% endif %}"
-                               value="{{ cel.pa.nota|unlocalize|default:'' }}"
-                               placeholder="PA" title="Prova Auxiliar — {{ i.nome }}"
-                               {% if not pode_lancar %}disabled{% endif %}
-                               style="width:55px; padding:4px 6px; border:1.5px solid #aebac9; border-radius:6px; text-align:center; font-size:13px; background:#fff;">
-                        <span class="pa-status" data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}"
-                              style="font-size:16px; width:16px; text-align:center;"></span>
-                    </div>
-                </td>
+                {% endif %}
                 {% endif %}
                 {% endfor %}
                 {% endwith %}
@@ -169,7 +171,7 @@
     </table>
 </div>
 
-{% if prof.pode_lancar_notas %}
+{% if prof.pode_lancar_notas and not is_pa %}
 <div style="margin-top:20px; padding:14px 18px; background:#fff3cd; border:1px solid #ffc107; border-radius:10px;">
     <strong style="color:#856404;">⚠️ Aplicar N/A para ausentes</strong>
     <p style="margin:6px 0 10px; color:#6d5507; font-size:13px;">
@@ -295,9 +297,10 @@
     // ── N/A — Aplicar e Remover ──
     const NA_URL = '{% url "aplicar_na_bimestre" %}';
     const TURMA_COD = '{{ turma.codigo }}';
-    const BIMESTRE = {{ bimestre }};
+    const BIMESTRE = '{{ periodo }}';
 
     function aplicarNA() {
+        if ('{{ is_pa|yesno:"true,false" }}' === 'true') return;
         const discId = document.getElementById('naDiscSelect').value;
         const msg = document.getElementById('naMsg');
         if (!discId) { msg.textContent = 'Selecione uma disciplina.'; msg.style.color = '#c0392b'; return; }
@@ -338,6 +341,60 @@
             .then(r => r.json())
             .then(data => { if (data.ok) location.reload(); else alert('Erro: ' + data.erro); })
             .catch(() => alert('Erro de conexão.'));
+    }
+
+    // ── PA Save Logic ──
+    const PA_SAVE_URL = '{% url "pa_salvar" %}';
+    
+    function setPAStatus(alunoId, discId, icon, color) {
+        const el = document.querySelector(`.pa-status[data-aluno="${alunoId}"][data-disc="${discId}"]`);
+        if (el) { el.textContent = icon; el.style.color = color; }
+    }
+
+    function salvarPA(input) {
+        const alunoId = input.dataset.aluno;
+        const discId = input.dataset.disc;
+        const numPA = input.dataset.pa;
+        const nota = input.value.trim();
+
+        if (nota === '') { setPAStatus(alunoId, discId, '', ''); return; }
+
+        setPAStatus(alunoId, discId, '⏳', '#999');
+
+        const body = new URLSearchParams({
+            csrfmiddlewaretoken: CSRF_TOKEN,
+            aluno_id: alunoId,
+            disciplina_id: discId,
+            numero_pa: numPA,
+            nota: nota,
+        });
+
+        fetch(PA_SAVE_URL, { method: 'POST', body, credentials: 'same-origin' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.ok) {
+                    setPAStatus(alunoId, discId, '✓', '#27ae60');
+                    setTimeout(() => setPAStatus(alunoId, discId, '', ''), 2500);
+                } else {
+                    setPAStatus(alunoId, discId, '✗', '#e74c3c');
+                    alert('Erro: ' + data.erro);
+                }
+            })
+            .catch(() => { setPAStatus(alunoId, discId, '✗', '#e74c3c'); });
+    }
+
+    if (PODE_LANCAR) {
+        const debouncedSavePA = debounce(salvarPA, 600);
+        document.querySelectorAll('.pa-input').forEach(inp => {
+            inp.addEventListener('input', () => {
+                enforceRange(inp);
+                debouncedSavePA(inp);
+            });
+            inp.addEventListener('change', () => {
+                enforceRange(inp);
+                salvarPA(inp);
+            });
+        });
     }
 </script>
 

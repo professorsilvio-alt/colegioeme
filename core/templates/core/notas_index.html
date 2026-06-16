@@ -18,11 +18,11 @@
             {% endfor %}
         </select>
 
-        <label>Bimestre</label>
-        <select name="bimestre" id="selBimestre" required>
-            <option value="">Selecione o bimestre...</option>
-            {% for b in bimestres %}
-            <option value="{{ b }}">{{ b }}º Bimestre</option>
+        <label>Período</label>
+        <select name="periodo" id="selBimestre" required>
+            <option value="">Selecione o período...</option>
+            {% for p in periodos_lista %}
+            <option value="{{ p }}">{% if p == 'PA1' or p == 'PA2' %}{{ p }}{% else %}{{ p }}º Bimestre{% endif %}</option>
             {% endfor %}
         </select>
 
@@ -60,10 +60,10 @@ const COR_STATUS = {
 };
 
 function atualizarAlerta() {
-    const b = parseInt(document.getElementById('selBimestre').value);
-    if (!b) { alerta.style.display = 'none'; return; }
+    const p = document.getElementById('selBimestre').value;
+    if (!p) { alerta.style.display = 'none'; return; }
 
-    const info = PERIODOS[b];
+    const info = PERIODOS[p];
     if (!info) { alerta.style.display = 'none'; return; }
 
     const c = COR_STATUS[info.status] || COR_STATUS['nao_configurado'];
@@ -77,15 +77,15 @@ document.getElementById('selBimestre').addEventListener('change', atualizarAlert
 document.getElementById('formSelecionarNotas').addEventListener('submit', function(e) {
     e.preventDefault();
     const turma    = document.getElementById('selTurma').value;
-    const bimestre = document.getElementById('selBimestre').value;
+    const periodo  = document.getElementById('selBimestre').value;
     const disciplina = document.getElementById('selDisciplina').value;
 
-    if (!turma || !bimestre) {
-        alert('Selecione turma e bimestre.');
+    if (!turma || !periodo) {
+        alert('Selecione turma e período.');
         return;
     }
 
-    let url = `/notas/turma/${turma}/${bimestre}/`;
+    let url = `/notas/turma/${turma}/${periodo}/`;
     if (disciplina) {
         url += `?disciplina=${disciplina}`;
     }

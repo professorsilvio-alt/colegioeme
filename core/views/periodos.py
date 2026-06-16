@@ -41,10 +41,14 @@ def config_periodos_notas(request):
         config.notas_b1_fim = parse_date('notas_b1_fim')
         config.notas_b2_ini = parse_date('notas_b2_ini')
         config.notas_b2_fim = parse_date('notas_b2_fim')
+        config.notas_pa1_ini = parse_date('notas_pa1_ini')
+        config.notas_pa1_fim = parse_date('notas_pa1_fim')
         config.notas_b3_ini = parse_date('notas_b3_ini')
         config.notas_b3_fim = parse_date('notas_b3_fim')
         config.notas_b4_ini = parse_date('notas_b4_ini')
         config.notas_b4_fim = parse_date('notas_b4_fim')
+        config.notas_pa2_ini = parse_date('notas_pa2_ini')
+        config.notas_pa2_fim = parse_date('notas_pa2_fim')
         config.save()
         messages.success(request, 'Períodos de lançamento atualizados com sucesso!')
         return redirect('config_periodos_notas')
@@ -60,20 +64,30 @@ def config_periodos_notas(request):
             return 'encerrado'
         return 'aberto'
 
-    bimestres = []
-    for b in range(1, 5):
-        ini, fim = config.periodo_para_bimestre(b)
-        bimestres.append({
-            'numero': b,
-            'ini_field': f'notas_b{b}_ini',
-            'fim_field': f'notas_b{b}_fim',
-            'ini': getattr(config, f'notas_b{b}_ini'),
-            'fim': getattr(config, f'notas_b{b}_fim'),
-            'status': status_periodo(getattr(config, f'notas_b{b}_ini'), getattr(config, f'notas_b{b}_fim')),
+    periodos_lista = []
+    lista_db = [
+        ('1', '1º', 'Bimestre', 'notas_b1_ini', 'notas_b1_fim'),
+        ('2', '2º', 'Bimestre', 'notas_b2_ini', 'notas_b2_fim'),
+        ('PA1', 'PA 1', 'Prova Auxiliar', 'notas_pa1_ini', 'notas_pa1_fim'),
+        ('3', '3º', 'Bimestre', 'notas_b3_ini', 'notas_b3_fim'),
+        ('4', '4º', 'Bimestre', 'notas_b4_ini', 'notas_b4_fim'),
+        ('PA2', 'PA 2', 'Prova Auxiliar', 'notas_pa2_ini', 'notas_pa2_fim'),
+    ]
+
+    for p_id, p_prin, p_sec, f_ini, f_fim in lista_db:
+        periodos_lista.append({
+            'id': p_id,
+            'nome_principal': p_prin,
+            'nome_secundario': p_sec,
+            'ini_field': f_ini,
+            'fim_field': f_fim,
+            'ini': getattr(config, f_ini),
+            'fim': getattr(config, f_fim),
+            'status': status_periodo(getattr(config, f_ini), getattr(config, f_fim)),
         })
 
     return render(request, 'core/config_periodos_notas.html', {
         'config': config,
-        'bimestres': bimestres,
+        'periodos': periodos_lista,
         'hoje': hoje,
     })

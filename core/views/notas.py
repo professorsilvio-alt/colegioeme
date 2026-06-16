@@ -22,7 +22,7 @@ logger = logging.getLogger('core')
 # HELPERS
 # ─────────────────────────────────────────────────────────────
 
-def _pode_lancar_notas(prof, config, bimestre=None):
+def _pode_lancar_notas(prof, config, periodo=None):
     """Verifica se o usuário tem permissão de lançar notas agora.
 
     Regra:
@@ -38,8 +38,8 @@ def _pode_lancar_notas(prof, config, bimestre=None):
     if prof.cargo in ('PROFESSOR', 'COORDENADOR', 'AUX_COORD'):
         hoje = datetime.date.today()
         if config:
-            if bimestre:
-                ini, fim = config.periodo_para_bimestre(bimestre)
+            if periodo:
+                ini, fim = config.periodo_para_bimestre(periodo)
             else:
                 ini, fim = config.periodo_notas_ini, config.periodo_notas_fim
             if ini and fim:
@@ -94,34 +94,38 @@ def notas_index(request):
     else:
         disciplinas = Disciplina.objects.all().order_by('nome')
 
-    # Monta mapa de status por bimestre para o JS usar no cliente
+    # Monta mapa de status por bimestre/período para o JS usar no cliente
     periodos_status = {}
-    for b in (1, 2, 3, 4):
+    periodos_lista = ['1', '2', 'PA1', '3', '4', 'PA2']
+    
+    for p in periodos_lista:
+        nome_display = f"{p}º Bimestre" if p.isdigit() else p
+        
         if config:
-            ini, fim = config.periodo_para_bimestre(b)
+            ini, fim = config.periodo_para_bimestre(p)
         else:
             ini, fim = None, None
 
         if ini and fim:
             if hoje < ini:
                 status = 'futuro'
-                msg = f'O lançamento do {b}º bimestre ainda não começou. Início em {ini.strftime("%d/%m/%Y")}.'
+                msg = f'O lançamento de {nome_display} ainda não começou. Início em {ini.strftime("%d/%m/%Y")}.'
             elif hoje > fim:
                 status = 'encerrado'
-                msg = f'O período de lançamento do {b}º bimestre encerrou em {fim.strftime("%d/%m/%Y")}.'
+                msg = f'O período de lançamento de {nome_display} encerrou em {fim.strftime("%d/%m/%Y")}.'
             else:
                 status = 'aberto'
-                msg = f'Lançamento do {b}º bimestre aberto até {fim.strftime("%d/%m/%Y")}.'
+                msg = f'Lançamento de {nome_display} aberto até {fim.strftime("%d/%m/%Y")}.'
         else:
             status = 'nao_configurado'
-            msg = f'O período de lançamento do {b}º bimestre ainda não foi configurado pela secretaria.'
-        periodos_status[b] = {'status': status, 'msg': msg}
+            msg = f'O período de lançamento de {nome_display} ainda não foi configurado pela secretaria.'
+        periodos_status[p] = {'status': status, 'msg': msg}
 
     return render(request, 'core/notas_index.html', {
         'prof': prof,
         'turmas': turmas_qs,
         'disciplinas': disciplinas,
-        'bimestres': [1, 2, 3, 4],
+        'periodos_lista': periodos_lista,
         'config': config,
         'periodos_status': periodos_status,
     })
@@ -132,7 +136,7 @@ def notas_index(request):
 # ─────────────────────────────────────────────────────────────
 
 @login_required
-def notas_turma(request, codigo, bimestre):
+def notas_turma(request, codigo, periodo):
     prof = get_professor(request.user)
     if not _pode_ver_notas(prof):
         messages.error(request, 'Você não tem acesso ao módulo de notas.')
@@ -143,7 +147,7 @@ def notas_turma(request, codigo, bimestre):
         escola=request.escola, ano_letivo=request.ano_letivo
     )
     config = _get_config(request)
-    pode_lancar = _pode_lancar_notas(prof, config, bimestre)
+    pode_lancar = _pode_lancar_notas(prof, config, periodo)
 
     # Disciplinas visíveis para este professor/turma
     if prof and prof.cargo == 'PROFESSOR':
@@ -166,32 +170,36 @@ def notas_turma(request, codigo, bimestre):
         disciplinas = disciplinas.filter(pk=filtro_disc)
 
     alunos = Aluno.objects.filter(turma=turma).order_by('nome')
+    is_pa = str(periodo).startswith('PA')
 
     # Busca notas existentes
-    notas_qs = NotaBimestral.objects.filter(
-        aluno__turma=turma,
-        bimestre=bimestre,
-        ano_letivo=request.ano_letivo,
-        disciplina__in=disciplinas,
-    ).select_related('aluno', 'disciplina')
+    if is_pa:
+        pa_num = int(str(periodo).replace('PA', ''))
+        notas_qs = []
+        pa_qs = ProvaAuxiliar.objects.filter(
+            aluno__turma=turma,
+            numero_pa=pa_num,
+            ano_letivo=request.ano_letivo,
+            disciplina__in=disciplinas,
+        ).select_related('aluno', 'disciplina')
+    else:
+        bimestre = int(periodo)
+        notas_qs = NotaBimestral.objects.filter(
+            aluno__turma=turma,
+            bimestre=bimestre,
+            ano_letivo=request.ano_letivo,
+            disciplina__in=disciplinas,
+        ).select_related('aluno', 'disciplina')
+        pa_qs = []
 
-    pa_numero = 1 if bimestre in (1, 2) else 2
-    pa_qs = ProvaAuxiliar.objects.filter(
-        aluno__turma=turma,
-        numero_pa=pa_numero,
-        ano_letivo=request.ano_letivo,
-        disciplina__in=disciplinas,
-    ).select_related('aluno', 'disciplina')
-
-    # Mapa: (aluno_pk, disc_pk) → NotaBimestral
+    # Mapas para acesso rápido
     notas_map = {(n.aluno_id, n.disciplina_id): n for n in notas_qs}
-    # Mapa: (aluno_pk, disc_pk) → ProvaAuxiliar
     pas_map = {(p.aluno_id, p.disciplina_id): p for p in pa_qs}
 
     # Monta grade de células para o template
     grade = []
     for disc in disciplinas:
-        faz_sim = turma_faz_simulado(turma, disc)
+        faz_sim = turma_faz_simulado(turma.escola, turma, disc)
         linha = {
             'disciplina': disc,
             'faz_simulado': faz_sim,
@@ -207,18 +215,19 @@ def notas_turma(request, codigo, bimestre):
             })
         grade.append(linha)
 
-    # Período de lançamento para este bimestre (para exibir no aviso)
+    # Período de lançamento para este período (para exibir no aviso)
     periodo_b = None
     if config:
-        p_ini, p_fim = config.periodo_para_bimestre(bimestre)
+        p_ini, p_fim = config.periodo_para_bimestre(periodo)
         if p_ini and p_fim:
             periodo_b = {'ini': p_ini, 'fim': p_fim}
 
     return render(request, 'core/notas_turma.html', {
         'prof': prof,
         'turma': turma,
-        'bimestre': bimestre,
-        'bimestres': [1, 2, 3, 4],
+        'is_pa': is_pa,
+        'periodo': periodo,
+        'periodo_nome': periodo if is_pa else f"{periodo}º Bim",
         'alunos': alunos,
         'grade': grade,
         'pode_lancar': pode_lancar,
