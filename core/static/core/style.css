@@ -27,9 +27,8 @@ header {
     align-items: center;
     max-width: 1400px;
     margin: 0 auto;
-    padding: 10px 20px;
-    gap: 20px;
-    flex-wrap: wrap;
+    padding: 0 20px;
+    gap: 40px;
 }
 
 .header-left {
@@ -62,10 +61,9 @@ header {
 
 .nav-row {
     display: flex;
-    gap: 10px;
+    gap: 15px;
     justify-content: center;
     width: 100%;
-    flex-wrap: wrap;
 }
 
 .nav-item {
@@ -83,9 +81,9 @@ header {
     gap: 8px;
     background: rgba(255, 255, 255, 0.12);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    flex: 1 1 auto; /* Allow shrink and grow */
+    flex: 1; /* Distribute space */
     max-width: 220px; /* Prevent over-expansion */
-    min-width: 110px;
+    min-width: 120px;
     backdrop-filter: blur(5px);
 }
 
