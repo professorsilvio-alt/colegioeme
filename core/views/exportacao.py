@@ -30,7 +30,8 @@ from reportlab.platypus import (Image, Paragraph, SimpleDocTemplate, Spacer, Tab
 from ..models import (Aluno, AnoLetivo, ConteudoProgramatico, Disciplina,
                      Escola, GradeHoraria, Ocorrencia, Professor,
                      SugestaoConteudo, Turma, Configuracao)
-from ..utils import get_professor, get_feriados, get_client_ip
+from ..utils import get_professor, get_feriados, get_client_ip, ordenar_por_nome
+from .ocorrencias import ocorrencias_do_usuario
 
 # Logger para auditoria de ações sensíveis
 logger = logging.getLogger('core')
@@ -69,32 +70,6 @@ def _verificar_recaptcha(token):
     except Exception as e:
         # Em caso de falha de rede, registra o erro e BLOQUEIA por segurança
         logger.warning('reCAPTCHA: falha na verificação (%s). Bloqueando requisição.', e)
-def ocorrencias_do_usuario(request):
-    user = request.user
-    prof = get_professor(user)
-    ano_letivo = request.ano_letivo
-    escola = request.escola
-    qs = Ocorrencia.objects.select_related('turma', 'professor', 'disciplina').prefetch_related('alunos')
-    
-    if escola:
-        qs = qs.filter(turma__escola=escola)
-    if ano_letivo:
-        qs = qs.filter(turma__ano_letivo=ano_letivo)
-    
-    if not prof:
-        return qs  # superuser/admin sem perfil: vê tudo
-    
-    # Secretária não deve visualizar as ocorrências
-    if not prof.pode_ver_ocorrencias:
-        return Ocorrencia.objects.none()
-
-    if prof.pode_ver_tudo:
-        # Cargos de gestão e inspetores veem tudo (respeitando a restrição de secretária acima)
-        pass
-    else:
-        # Professor comum vê apenas suas próprias ocorrências
-        qs = qs.filter(professor=prof)
-    return qs
 
 
 def conteudos_do_usuario(request):
@@ -640,7 +615,8 @@ def exportar_alocacao_pdf(request):
     professores = Professor.objects.filter(cargo='PROFESSOR').prefetch_related(
         'disciplinas', 'turmas', 
         Prefetch('grade_horaria', queryset=GradeHoraria.objects.select_related('turma', 'disciplina'))
-    ).order_by('nome')
+    )
+    professores = ordenar_por_nome(professores)
     
     data = [['Professor', 'Disciplinas', 'Turmas', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex']]
     for p in professores:
@@ -688,7 +664,7 @@ def exportar_pendencias_pdf(request):
 
 
     prof_ids_com_grade = GradeHoraria.objects.filter(turma__ano_letivo=request.ano_letivo, turma__escola=request.escola).values_list('professor_id', flat=True).distinct()
-    professores = Professor.objects.filter(pk__in=prof_ids_com_grade).order_by('nome')
+    professores = ordenar_por_nome(Professor.objects.filter(pk__in=prof_ids_com_grade))
     nome_filtro = request.GET.get('nome', '')
     data_ini = request.GET.get('data_ini', '')
     data_fim = request.GET.get('data_fim', '')

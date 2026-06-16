@@ -30,7 +30,7 @@ from reportlab.platypus import (Image, Paragraph, SimpleDocTemplate, Spacer, Tab
 from ..models import (Aluno, AnoLetivo, ConteudoProgramatico, Disciplina,
                      Escola, GradeHoraria, Ocorrencia, Professor,
                      SugestaoConteudo, Turma, Configuracao)
-from ..utils import get_professor, get_feriados, get_client_ip
+from ..utils import get_professor, get_feriados, get_client_ip, ordenar_por_nome
 
 # Logger para auditoria de ações sensíveis
 logger = logging.getLogger('core')
@@ -71,7 +71,8 @@ def _verificar_recaptcha(token):
         logger.warning('reCAPTCHA: falha na verificação (%s). Bloqueando requisição.', e)
 @login_required
 def api_alunos_turma(request, codigo):
-    alunos = Aluno.objects.filter(turma__codigo=codigo, turma__ano_letivo=request.ano_letivo, turma__escola=request.escola).order_by('nome')
+    alunos = Aluno.objects.filter(turma__codigo=codigo, turma__ano_letivo=request.ano_letivo, turma__escola=request.escola)
+    alunos = ordenar_por_nome(alunos)
     data = []
     for a in alunos:
         foto_url = a.foto.url if a.foto else None
@@ -85,7 +86,8 @@ def api_professores_disciplina(request, disc_id):
     profs = Professor.objects.filter(disciplinas__pk=disc_id)
     if prof and not prof.todas_disciplinas:
         profs = profs.filter(pk=prof.pk)
-    return JsonResponse(list(profs.values('id', 'nome')), safe=False)
+    profs = ordenar_por_nome(profs)
+    return JsonResponse([{'id': p.pk, 'nome': p.nome} for p in profs], safe=False)
 
 
 @login_required
@@ -154,7 +156,7 @@ def api_professores_turma_disc(request, codigo, disc_id):
 
     if is_extra:
         # Modo Aula extra: ignora a grade. Todos os professores aptos (ou si mesmo).
-        profs = Professor.objects.all().order_by('nome')
+        profs = Professor.objects.all()
     else:
         prof_ids = GradeHoraria.objects.filter(
             turma__codigo=codigo,
@@ -162,13 +164,14 @@ def api_professores_turma_disc(request, codigo, disc_id):
             turma__escola=request.escola,
             disciplina__pk=disc_id
         ).values_list('professor_id', flat=True).distinct()
-        profs = Professor.objects.filter(pk__in=prof_ids).order_by('nome')
+        profs = Professor.objects.filter(pk__in=prof_ids)
         
     # If the logged-in user is a professor (not admin/coord), limit to themselves
     if prof_logado and not prof_logado.pode_ver_tudo:
         profs = profs.filter(pk=prof_logado.pk)
         
-    return JsonResponse(list(profs.values('id', 'nome')), safe=False)
+    profs = ordenar_por_nome(profs)
+    return JsonResponse([{'id': p.pk, 'nome': p.nome} for p in profs], safe=False)
 
 
 @login_required

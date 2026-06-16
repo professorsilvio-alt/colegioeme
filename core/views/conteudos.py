@@ -30,7 +30,7 @@ from reportlab.platypus import (Image, Paragraph, SimpleDocTemplate, Spacer, Tab
 from ..models import (Aluno, AnoLetivo, ConteudoProgramatico, Disciplina,
                      Escola, GradeHoraria, Ocorrencia, Professor,
                      SugestaoConteudo, Turma, Configuracao)
-from ..utils import get_professor, get_feriados, get_client_ip
+from ..utils import get_professor, get_feriados, get_client_ip, ordenar_por_nome
 
 # Logger para auditoria de ações sensíveis
 logger = logging.getLogger('core')
@@ -399,7 +399,7 @@ def conteudo_editar(request, pk):
         'cont': cont,
         'turmas': turmas_qs,
         'disciplinas': disciplinas_qs,
-        'todos_professores': Professor.objects.all(),
+        'todos_professores': ordenar_por_nome(Professor.objects.all()),
         'cont_turmas_pks': cont.turmas.values_list('pk', flat=True),
     }
     return render(request, 'core/conteudo_editar.html', context)
@@ -527,7 +527,7 @@ def lancamentos_coletivos(request):
 
     grupos_lista = list(grupos.values())
 
-    professores = Professor.objects.filter(cargo='PROFESSOR').order_by('nome')
+    professores = ordenar_por_nome(Professor.objects.filter(cargo='PROFESSOR'))
     turmas      = Turma.objects.all()
     disciplinas = Disciplina.objects.all()
 

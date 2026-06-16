@@ -30,7 +30,7 @@ from reportlab.platypus import (Image, Paragraph, SimpleDocTemplate, Spacer, Tab
 from ..models import (Aluno, AnoLetivo, ConteudoProgramatico, Disciplina,
                      Escola, GradeHoraria, Ocorrencia, Professor,
                      SugestaoConteudo, Turma, Configuracao)
-from ..utils import get_professor, get_feriados, get_client_ip
+from ..utils import get_professor, get_feriados, get_client_ip, ordenar_por_nome
 
 # Logger para auditoria de ações sensíveis
 logger = logging.getLogger('core')
@@ -304,11 +304,12 @@ def ocorrencia_editar(request, pk):
             tem_outros = True
 
     alunos_turma = Aluno.objects.filter(turma=oc.turma) if oc.turma else []
+    alunos_turma = ordenar_por_nome(alunos_turma)
     context = {
         'oc': oc,
         'turmas': turmas_qs,
         'disciplinas': disciplinas_qs,
-        'todos_professores': Professor.objects.all(),
+        'todos_professores': ordenar_por_nome(Professor.objects.all()),
         'alunos_turma': alunos_turma,
         'tipos_ocorrencia': TIPOS_OCORRENCIA,
         'tipos_selecionados': tipos_selecionados,

@@ -30,7 +30,7 @@ from reportlab.platypus import (Image, Paragraph, SimpleDocTemplate, Spacer, Tab
 from ..models import (Aluno, AnoLetivo, ConteudoProgramatico, Disciplina,
                      Escola, GradeHoraria, Ocorrencia, Professor,
                      SugestaoConteudo, Turma, Configuracao)
-from ..utils import get_professor, get_feriados, get_client_ip
+from ..utils import get_professor, get_feriados, get_client_ip, ordenar_por_nome
 
 # Logger para auditoria de ações sensíveis
 logger = logging.getLogger('core')
@@ -320,6 +320,7 @@ def migrar_alunos(request):
         
     if turma_origem_id:
         alunos = Aluno.objects.filter(turma_id=turma_origem_id)
+        alunos = ordenar_por_nome(alunos)
         
     if ano_destino_id:
         turmas_destino = Turma.objects.filter(ano_letivo_id=ano_destino_id, escola=request.escola)
@@ -395,7 +396,7 @@ def escola_professores_list(request):
         messages.error(request, 'Acesso negado.')
         return redirect('dashboard')
     
-    professores = Professor.objects.filter(escolas=request.escola).order_by('nome')
+    professores = ordenar_por_nome(Professor.objects.filter(escolas=request.escola))
     return render(request, 'core/escola_professores_list.html', {
         'professores': professores
     })

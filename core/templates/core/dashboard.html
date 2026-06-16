@@ -205,6 +205,7 @@
                         </option>
                     </select>
                 </div>
+                {% if prof.pode_ver_tudo or not prof %}
                 <div>
                     <label>Professor</label>
                     <select name="filtro_professor" onchange="this.form.submit()">
@@ -215,9 +216,19 @@
                         {% endfor %}
                     </select>
                 </div>
+                {% endif %}
                 <div>
-                    <label>Buscar Aluno</label>
+                    <label>Aluno</label>
+                    {% if filtro_turma %}
+                    <select name="filtro_aluno" onchange="this.form.submit()">
+                        <option value="">Todos da turma</option>
+                        {% for al in alunos_filtro %}
+                        <option value="{{ al.nome }}" {% if filtro_aluno == al.nome %}selected{% endif %}>{{ al.nome }}</option>
+                        {% endfor %}
+                    </select>
+                    {% else %}
                     <input type="text" name="filtro_aluno" value="{{ filtro_aluno }}" placeholder="Nome do aluno...">
+                    {% endif %}
                 </div>
                 <div>
                     <label>Data Inicial</label>

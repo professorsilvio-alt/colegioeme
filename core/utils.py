@@ -108,3 +108,18 @@ def requires_cargo(*cargos_permitidos):
             return view_func(request, *args, **kwargs)
         return _wrapped
     return decorator
+
+
+import unicodedata
+
+def remover_acentos(texto):
+    """Remove acentos e converte para minúsculas para comparação."""
+    if not texto:
+        return ''
+    return ''.join(c for c in unicodedata.normalize('NFD', texto) if unicodedata.category(c) != 'Mn').lower()
+
+
+def ordenar_por_nome(objs, key_func=lambda x: x.nome):
+    """Ordena uma lista/queryset de objetos de forma alfabética sem diferenciar acentos."""
+    return sorted(objs, key=lambda x: remover_acentos(key_func(x)))
+

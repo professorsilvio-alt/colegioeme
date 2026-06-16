@@ -30,8 +30,8 @@ from reportlab.platypus import (Image, Paragraph, SimpleDocTemplate, Spacer, Tab
 from ..models import (Aluno, AnoLetivo, ConteudoProgramatico, Disciplina,
                      Escola, GradeHoraria, Ocorrencia, Professor,
                      SugestaoConteudo, Turma, Configuracao, AulaExtraProgramada)
-from ..utils import get_professor, get_feriados, get_client_ip
-from .ocorrencias import TIPOS_OCORRENCIA
+from ..utils import get_professor, get_feriados, get_client_ip, ordenar_por_nome
+from .ocorrencias import TIPOS_OCORRENCIA, ocorrencias_do_usuario
 
 # Logger para auditoria de ações sensíveis
 logger = logging.getLogger('core')
@@ -70,39 +70,6 @@ def _verificar_recaptcha(token):
     except Exception as e:
         # Em caso de falha de rede, registra o erro e BLOQUEIA por segurança
         logger.warning('reCAPTCHA: falha na verificação (%s). Bloqueando requisição.', e)
-def ocorrencias_do_usuario(request):
-    user = request.user
-    prof = get_professor(user)
-    ano_letivo = request.ano_letivo
-    escola = request.escola
-    qs = Ocorrencia.objects.select_related('turma', 'professor', 'disciplina').prefetch_related('alunos')
-    
-    if escola:
-        qs = qs.filter(turma__escola=escola)
-    if ano_letivo:
-        qs = qs.filter(turma__ano_letivo=ano_letivo)
-    
-    if not prof:
-        return qs  # superuser/admin sem perfil: vê tudo
-    
-    # Secretária não deve visualizar as ocorrências
-    if not prof.pode_ver_ocorrencias:
-        return Ocorrencia.objects.none()
-
-    if prof.cargo == 'INSPETOR':
-        # Inspetor vê apenas ocorrências das suas turmas responsáveis
-        turmas_resp = prof.turmas_inspetor.all()
-        if turmas_resp.exists():
-            qs = qs.filter(turma__in=turmas_resp)
-        else:
-            return Ocorrencia.objects.none()
-    elif prof.pode_ver_tudo:
-        # Demais cargos de gestão veem tudo
-        pass
-    else:
-        # Professor comum vê apenas suas próprias ocorrências
-        qs = qs.filter(professor=prof)
-    return qs
 
 
 def conteudos_do_usuario(request):
@@ -194,6 +161,21 @@ def dashboard(request):
     resolvidas = ocorrencias.filter(status='Resolvida').count()
 
     oc_filtradas, _ = filtrar_ocorrencias(request, ocorrencias)
+
+    filtro_turma = request.GET.get('filtro_turma', '')
+    alunos_filtro = []
+    if filtro_turma:
+        alunos_filtro = Aluno.objects.filter(
+            turma__codigo=filtro_turma,
+            turma__ano_letivo=request.ano_letivo,
+            turma__escola=request.escola
+        )
+        alunos_filtro = ordenar_por_nome(alunos_filtro)
+
+    if prof and not prof.pode_ver_tudo:
+        todos_professores = Professor.objects.filter(pk=prof.pk)
+    else:
+        todos_professores = ordenar_por_nome(Professor.objects.all())
     cont_qs = conteudos_do_usuario(request)
     
     filtro_turma_c = request.GET.get('filtro_turma_c', '')
@@ -251,12 +233,15 @@ def dashboard(request):
         lancadas_ids = cont_qs.values_list('disciplina_id', flat=True).distinct()
         disciplinas_tab_c = (disciplinas_tab_c | Disciplina.objects.filter(pk__in=lancadas_ids)).distinct()
 
+    professores_tab_c = ordenar_por_nome(professores_tab_c)
+
     context = {
         'prof': prof,
         'turmas': turmas_qs,
         'disciplinas': disciplinas_qs,  # usado em modais/outros forms
         'disciplinas_tab_c': disciplinas_tab_c,  # usado no filtro da aba conteúdos
-        'todos_professores': Professor.objects.all(), # usado em filtros de ocorrencias
+        'todos_professores': todos_professores,
+        'alunos_filtro': alunos_filtro,
         'professores_tab_c': professores_tab_c, # usado no filtro da aba conteúdos
         'total': total,
         'abertas': abertas,
@@ -469,7 +454,7 @@ def relatorio_pendencias(request):
 
     # Only include active professors (those with GradeHoraria entries)
     prof_ids_com_grade = GradeHoraria.objects.filter(turma__ano_letivo=request.ano_letivo, turma__escola=request.escola).values_list('professor_id', flat=True).distinct()
-    professores = Professor.objects.filter(pk__in=prof_ids_com_grade).order_by('nome')
+    professores = ordenar_por_nome(Professor.objects.filter(pk__in=prof_ids_com_grade))
 
     # Filtering
     nome_filtro = request.GET.get('nome', '')
@@ -614,7 +599,8 @@ def relatorio_alocacao(request):
     professores = Professor.objects.filter(cargo='PROFESSOR').prefetch_related(
         'disciplinas', 'turmas', 
         Prefetch('grade_horaria', queryset=GradeHoraria.objects.select_related('turma', 'disciplina'))
-    ).order_by('nome')
+    )
+    professores = ordenar_por_nome(professores)
     return render(request, 'core/relatorio_alocacao.html', {
         'professores': professores,
         'prof': prof,
