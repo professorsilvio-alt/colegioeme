@@ -199,7 +199,7 @@ def notas_turma(request, codigo, periodo):
     # Monta grade de células para o template
     grade = []
     for disc in disciplinas:
-        faz_sim = turma_faz_simulado(turma.escola, turma, disc)
+        faz_sim = turma_faz_simulado(turma, disc)
         linha = {
             'disciplina': disc,
             'faz_simulado': faz_sim,
