@@ -1,0 +1,95 @@
+{% extends 'core/base.html' %}
+{% block title %}Notas — SCA{% endblock %}
+
+{% block content %}
+<h2 style="color:#003366; margin-bottom: 6px;">📝 Controle de Notas</h2>
+<p style="color:#666; margin-bottom: 24px;">Selecione a turma e o bimestre para lançar ou consultar notas.</p>
+
+{# Alerta dinâmico — exibido via JS quando o bimestre é selecionado #}
+<div id="alertaBimestre" style="display:none; border-radius:8px; padding:12px 16px; margin-bottom:20px; font-size:14px;"></div>
+
+<div class="collapsible" style="max-width: 500px;">
+    <form method="get" action="" id="formSelecionarNotas">
+        <label>Turma</label>
+        <select name="turma" id="selTurma" required>
+            <option value="">Selecione a turma...</option>
+            {% for t in turmas %}
+            <option value="{{ t.codigo }}">Turma {{ t.codigo }}</option>
+            {% endfor %}
+        </select>
+
+        <label>Bimestre</label>
+        <select name="bimestre" id="selBimestre" required>
+            <option value="">Selecione o bimestre...</option>
+            {% for b in bimestres %}
+            <option value="{{ b }}">{{ b }}º Bimestre</option>
+            {% endfor %}
+        </select>
+
+        <label>Disciplina (Opcional)</label>
+        <select name="disciplina" id="selDisciplina">
+            <option value="">Todas as disciplinas...</option>
+            {% for d in disciplinas %}
+            <option value="{{ d.pk }}">{{ d.nome }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" id="btnAbrirNotas" style="margin-top:8px;">📋 Abrir Lançamento</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Status dos períodos por bimestre (calculado no servidor)
+const PERIODOS = {
+    {% for b, info in periodos_status.items %}
+    {{ b }}: { status: "{{ info.status }}", msg: "{{ info.msg }}" },
+    {% endfor %}
+};
+
+const PROF_CARGO = "{{ prof.cargo|default:'' }}";
+
+const alerta = document.getElementById('alertaBimestre');
+
+const COR_STATUS = {
+    'aberto':          { bg: '#dcfce7', border: '#86efac', text: '#166534', icone: '✅' },
+    'futuro':          { bg: '#dbeafe', border: '#93c5fd', text: '#1e40af', icone: '🔵' },
+    'encerrado':       { bg: '#fee2e2', border: '#fca5a5', text: '#991b1b', icone: '🔴' },
+    'nao_configurado': { bg: '#f1f5f9', border: '#cbd5e1', text: '#475569', icone: '⚪' },
+};
+
+function atualizarAlerta() {
+    const b = parseInt(document.getElementById('selBimestre').value);
+    if (!b) { alerta.style.display = 'none'; return; }
+
+    const info = PERIODOS[b];
+    if (!info) { alerta.style.display = 'none'; return; }
+
+    const c = COR_STATUS[info.status] || COR_STATUS['nao_configurado'];
+    alerta.style.cssText = `display:block; background:${c.bg}; border:1px solid ${c.border}; color:${c.text}; border-radius:8px; padding:12px 16px; margin-bottom:20px; font-size:14px;`;
+    alerta.innerHTML = `${c.icone} ${info.msg}`;
+}
+
+
+document.getElementById('selBimestre').addEventListener('change', atualizarAlerta);
+
+document.getElementById('formSelecionarNotas').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const turma    = document.getElementById('selTurma').value;
+    const bimestre = document.getElementById('selBimestre').value;
+    const disciplina = document.getElementById('selDisciplina').value;
+
+    if (!turma || !bimestre) {
+        alert('Selecione turma e bimestre.');
+        return;
+    }
+
+    let url = `/notas/turma/${turma}/${bimestre}/`;
+    if (disciplina) {
+        url += `?disciplina=${disciplina}`;
+    }
+    window.location.href = url;
+});
+</script>
+{% endblock %}

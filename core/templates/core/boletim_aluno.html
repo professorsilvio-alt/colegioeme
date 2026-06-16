@@ -1,0 +1,74 @@
+{% extends 'core/base.html' %}
+{% block title %}Boletim — {{ aluno.nome }} — SCA{% endblock %}
+
+{% block content %}
+<div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:20px;">
+    <div>
+        <h2 style="color:#003366; margin:0 0 4px;">📄 Boletim Escolar</h2>
+        <p style="margin:0; color:#555; font-size:15px;">
+            <strong>{{ aluno.nome }}</strong> — Turma <strong>{{ turma.codigo }}</strong>
+        </p>
+    </div>
+    <a href="{% url 'notas_turma' turma.codigo 1 %}"
+       style="padding:8px 16px; background:#003366; color:#fff; border-radius:8px; text-decoration:none; font-size:13px; font-weight:600; margin-left:auto;">
+        ← Voltar ao Lançamento
+    </a>
+</div>
+
+<div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; font-size:14px; box-shadow:0 2px 8px rgba(0,0,0,.08);">
+    <thead>
+        <tr style="background:#003366; color:#fff;">
+            <th style="padding:12px 16px; text-align:left; min-width:200px;">Disciplina</th>
+            {% for b in bimestres %}
+            <th style="padding:12px; text-align:center; min-width:90px;">{{ b }}º Bimestre</th>
+            {% endfor %}
+            <th style="padding:12px; text-align:center; min-width:90px; background:#001f3f;">Média Anual</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for linha in grupos_no_boletim %}
+        <tr style="border-bottom:1px solid #e0e0e0; {% cycle 'background:#f9fbff;' '' %}">
+            <td style="padding:10px 16px; font-weight:{% if linha.is_grupo %}600{% else %}400{% endif %};">
+                {{ linha.nome }}
+            </td>
+            {% for v in linha.medias %}
+            <td style="padding:10px; text-align:center;">
+                {% if v == 'NA' %}
+                <span style="background:#f39c12; color:#fff; font-weight:700; font-size:12px;
+                             padding:3px 8px; border-radius:12px; letter-spacing:.5px;">N/A</span>
+                {% elif v is not None %}
+                <span style="font-weight:600; {% if v >= 5.0 %}color:#1a7a4a;{% else %}color:#c0392b;{% endif %}">
+                    {{ v }}
+                </span>
+                {% else %}
+                <span style="color:#bbb;">—</span>
+                {% endif %}
+            </td>
+            {% endfor %}
+            <td style="padding:10px; text-align:center; background:#eef4ff;">
+                {% if linha.media_anual is not None %}
+                <strong style="font-size:15px;
+                    {% if linha.media_anual >= 5.0 %}color:#1a7a4a;{% else %}color:#c0392b;{% endif %}">
+                    {{ linha.media_anual }}
+                </strong>
+                {% else %}
+                <span style="color:#bbb;">—</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6" style="text-align:center; color:#999; padding:30px;">
+                Nenhuma nota lançada ainda.
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<p style="margin-top:14px; color:#888; font-size:12px;">
+    ⓘ Nota mínima para aprovação: <strong>5,0</strong> — As notas de simulado não são exibidas neste boletim.
+</p>
+{% endblock %}
