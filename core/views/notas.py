@@ -11,7 +11,7 @@ from django.views.decorators.http import require_POST
 
 from ..models import (
     Aluno, AnoLetivo, Configuracao, Disciplina, GradeHoraria, GrupoDisciplina,
-    NotaBimestral, Professor, Turma, turma_faz_simulado,
+    NotaBimestral, ProvaAuxiliar, Professor, Turma, turma_faz_simulado,
 )
 from ..utils import get_professor
 
@@ -175,8 +175,18 @@ def notas_turma(request, codigo, bimestre):
         disciplina__in=disciplinas,
     ).select_related('aluno', 'disciplina')
 
+    pa_numero = 1 if bimestre in (1, 2) else 2
+    pa_qs = ProvaAuxiliar.objects.filter(
+        aluno__turma=turma,
+        numero_pa=pa_numero,
+        ano_letivo=request.ano_letivo,
+        disciplina__in=disciplinas,
+    ).select_related('aluno', 'disciplina')
+
     # Mapa: (aluno_pk, disc_pk) → NotaBimestral
     notas_map = {(n.aluno_id, n.disciplina_id): n for n in notas_qs}
+    # Mapa: (aluno_pk, disc_pk) → ProvaAuxiliar
+    pas_map = {(p.aluno_id, p.disciplina_id): p for p in pa_qs}
 
     # Monta grade de células para o template
     grade = []
@@ -189,9 +199,11 @@ def notas_turma(request, codigo, bimestre):
         }
         for aluno in alunos:
             nota = notas_map.get((aluno.pk, disc.pk))
+            pa = pas_map.get((aluno.pk, disc.pk))
             linha['celulas'].append({
                 'aluno': aluno,
                 'nota': nota,
+                'pa': pa,
             })
         grade.append(linha)
 
@@ -308,6 +320,58 @@ def nota_salvar(request):
 
 
 # ─────────────────────────────────────────────────────────────
+# SALVAR PROVA AUXILIAR (PA1/PA2)
+# ─────────────────────────────────────────────────────────────
+
+@login_required
+@require_POST
+def pa_salvar(request):
+    prof = get_professor(request.user)
+    config = _get_config(request)
+
+    if not _pode_lancar_notas(prof, config):
+        return JsonResponse({'ok': False, 'erro': 'Fora do período de lançamento ou sem permissão.'}, status=403)
+
+    aluno_id  = request.POST.get('aluno_id')
+    disc_id   = request.POST.get('disciplina_id')
+    numero_pa = request.POST.get('numero_pa')
+    nota_str  = request.POST.get('nota', '').strip()
+
+    try:
+        aluno = Aluno.objects.get(pk=aluno_id)
+        disc  = Disciplina.objects.get(pk=disc_id)
+        numero_pa = int(numero_pa)
+        if numero_pa not in (1, 2):
+            raise ValueError
+    except (Aluno.DoesNotExist, Disciplina.DoesNotExist, ValueError, TypeError):
+        return JsonResponse({'ok': False, 'erro': 'Dados inválidos.'}, status=400)
+
+    if not nota_str:
+        # Apagar PA se existir
+        ProvaAuxiliar.objects.filter(
+            aluno=aluno, disciplina=disc, numero_pa=numero_pa, ano_letivo=request.ano_letivo
+        ).delete()
+        return JsonResponse({'ok': True, 'nota': ''})
+
+    try:
+        nota_val = Decimal(nota_str.replace(',', '.'))
+        if not (Decimal('0') <= nota_val <= Decimal('10')):
+            raise ValueError
+    except (InvalidOperation, ValueError):
+        return JsonResponse({'ok': False, 'erro': 'Nota inválida (0,0 – 10,0).'}, status=400)
+
+    pa, criada = ProvaAuxiliar.objects.update_or_create(
+        aluno=aluno,
+        disciplina=disc,
+        numero_pa=numero_pa,
+        ano_letivo=request.ano_letivo,
+        defaults={'nota': nota_val, 'lancado_por': prof}
+    )
+
+    return JsonResponse({'ok': True, 'nota': str(pa.nota)})
+
+
+# ─────────────────────────────────────────────────────────────
 # BOLETIM — individual do aluno
 # ─────────────────────────────────────────────────────────────
 
@@ -326,14 +390,34 @@ def boletim_aluno(request, pk):
         ano_letivo=request.ano_letivo,
     ).select_related('disciplina', 'disciplina__grupo')
 
-    # Organiza notas: {disciplina_pk: {bimestre: nota_final_ou_NA}}
+    # Busca PA1 e PA2 do aluno
+    pas_qs = ProvaAuxiliar.objects.filter(
+        aluno=aluno, ano_letivo=request.ano_letivo
+    )
+    # {disciplina_pk: {numero_pa: nota}}
+    pas_por_disc = defaultdict(dict)
+    for pa in pas_qs:
+        pas_por_disc[pa.disciplina_id][pa.numero_pa] = pa.nota
+
+    # Organiza notas: {disciplina_pk: {bimestre: {'valor': nota_final_ou_NA, 'substituido_por_pa': False}}}
     # Se nao_avaliado=True, armazena a string sentinela 'NA' para o template distinguir
-    notas_por_disc = defaultdict(dict)
+    notas_por_disc = defaultdict(lambda: defaultdict(lambda: {'valor': None, 'substituido_por_pa': False}))
+    
     for nota in notas_qs:
+        disc_id = nota.disciplina_id
+        b = nota.bimestre
+        
         if nota.nao_avaliado:
-            notas_por_disc[nota.disciplina_id][nota.bimestre] = 'NA'
+            # Verifica se tem PA para substituir
+            pa_num = 1 if b in (1, 2) else 2
+            pa_val = pas_por_disc[disc_id].get(pa_num)
+            
+            if pa_val is not None:
+                notas_por_disc[disc_id][b] = {'valor': pa_val, 'substituido_por_pa': True}
+            else:
+                notas_por_disc[disc_id][b] = {'valor': 'NA', 'substituido_por_pa': False}
         else:
-            notas_por_disc[nota.disciplina_id][nota.bimestre] = nota.nota_final
+            notas_por_disc[disc_id][b] = {'valor': nota.nota_final, 'substituido_por_pa': False}
 
     def _medias_e_anual(disc_pks):
         """Retorna (lista_medias_b1_b2_b3_b4, media_anual) para um conjunto de disciplinas.
@@ -344,8 +428,9 @@ def boletim_aluno(request, pk):
             valores = []
             for dpk in disc_pks:
                 if b in notas_por_disc[dpk]:
-                    v = notas_por_disc[dpk][b]
-                    valores.append(Decimal('0') if v == 'NA' else v)
+                    v = notas_por_disc[dpk][b]['valor']
+                    if v is not None:
+                        valores.append(Decimal('0') if v == 'NA' else v)
             # None = bimestre ainda sem nenhum lançamento (nem nota, nem N/A)
             medias.append(round(sum(valores) / len(valores), 1) if valores else None)
         # Média anual: apenas bimestres já lançados (nota ou N/A)
@@ -366,9 +451,14 @@ def boletim_aluno(request, pk):
         if not disc_ids_com_nota:
             continue
         medias, media_anual = _medias_e_anual(disc_ids_com_nota)
+        
+        # Obter os dicts completos para o template acessar 'valor' e 'substituido_por_pa'
+        # Isso é um pouco complexo para grupos, então vamos passar simplificado:
+        # Se for grupo, nao exibe `(PA)` nas medias combinadas. Se for standalone, sim.
+        
         grupos_no_boletim.append({
             'nome': grupo.nome_boletim,
-            'medias': medias,   # lista [b1, b2, b3, b4]
+            'medias': [{'valor': m, 'substituido_por_pa': False} for m in medias],   # lista [b1, b2, b3, b4]
             'media_anual': media_anual,
             'is_grupo': True,
         })
@@ -379,9 +469,17 @@ def boletim_aluno(request, pk):
     ).order_by('nome')
     for disc in discs_standalone:
         medias, media_anual = _medias_e_anual([disc.pk])
+        
+        medias_detalhadas = []
+        for b in (1, 2, 3, 4):
+            if b in notas_por_disc[disc.pk]:
+                medias_detalhadas.append(notas_por_disc[disc.pk][b])
+            else:
+                medias_detalhadas.append({'valor': None, 'substituido_por_pa': False})
+
         grupos_no_boletim.append({
             'nome': disc.nome,
-            'medias': medias,
+            'medias': medias_detalhadas,
             'media_anual': media_anual,
             'is_grupo': False,
         })
