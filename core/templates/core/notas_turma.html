@@ -89,48 +89,65 @@
                 {% with celula=linha.celulas|dictsort:"aluno.nome" %}
                 {% for cel in linha.celulas %}
                 {% if cel.aluno.pk == i.pk %}
-                <td style="padding:6px 4px; text-align:center; vertical-align:middle;" {% if cel.nota.nao_avaliado
-                    %}style="background:#fff8e1;" {% endif %}>
+                <td style="padding:6px 4px; text-align:center; vertical-align:middle;" {% if cel.nota.nao_avaliado %}style="background:#fff8e1;"{% endif %}>
                     {% if cel.nota.nao_avaliado %}
                     <!-- Aluno marcado como N/A (não avaliado) -->
                     <div style="display:flex; gap:4px; align-items:center; justify-content:center;">
                         <span class="na-badge" data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}"
-                            title="Não Avaliado — aluno ausente na avaliação" style="background:#f39c12; color:#fff; font-weight:700; font-size:12px;
-                                 padding:3px 8px; border-radius:12px; letter-spacing:.5px;">N/A</span>
+                              title="Não Avaliado — aluno ausente na avaliação" 
+                              style="background:#f39c12; color:#fff; font-weight:700; font-size:12px; padding:3px 8px; border-radius:12px; letter-spacing:.5px;">N/A</span>
                         {% if pode_lancar %}
                         <button type="button" onclick="removerNA({{ i.pk }}, {{ linha.disciplina.pk }}, {{ bimestre }})"
-                            title="Desfazer N/A e lançar nota"
-                            style="background:none; border:none; cursor:pointer; font-size:14px; padding:2px;">✕</button>
+                                title="Desfazer N/A e lançar nota"
+                                style="background:none; border:none; cursor:pointer; font-size:14px; padding:2px;">✕</button>
                         {% endif %}
                     </div>
                     {% else %}
                     <div style="display:flex; gap:4px; align-items:center; justify-content:center; flex-wrap:nowrap;">
                         <!-- Nota da prova -->
                         <input type="number" min="0" max="10" step="0.1" class="nota-input nota-prova"
-                            data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}" data-bimestre="{{ bimestre }}"
-                            data-tipo="prova" value="{{ cel.nota.nota_prova|unlocalize|default:'' }}"
-                            placeholder="Prova" title="Nota da Prova — {{ i.nome }}" {% if not pode_lancar %}disabled{%
-                            endif %}
-                            style="width:60px; padding:4px 6px; border:1.5px solid #c5d5e8; border-radius:6px; text-align:center; font-size:13px;">
+                               data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}" data-bimestre="{{ bimestre }}"
+                               data-tipo="prova" value="{{ cel.nota.nota_prova|unlocalize|default:'' }}"
+                               placeholder="Prova" title="Nota da Prova — {{ i.nome }}" 
+                               {% if not pode_lancar %}disabled{% endif %}
+                               style="width:60px; padding:4px 6px; border:1.5px solid #c5d5e8; border-radius:6px; text-align:center; font-size:13px;">
+                        
                         <!-- Nota do simulado (interno) -->
                         {% if linha.faz_simulado %}
                         <input type="number" min="0" max="20" step="1" class="nota-input nota-simulado"
-                            data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}" data-bimestre="{{ bimestre }}"
-                            data-tipo="simulado" value="{{ cel.nota.nota_simulado|unlocalize|default:'' }}"
-                            placeholder="Sim." title="Nota do Simulado (interno) — {{ i.nome }}" {% if not pode_lancar
-                            %}disabled{% endif %}
-                            style="width:55px; padding:4px 6px; border:1.5px solid #ffc107; border-radius:6px; text-align:center; font-size:13px; background:#fffde7;">
+                               data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}" data-bimestre="{{ bimestre }}"
+                               data-tipo="simulado" value="{{ cel.nota.nota_simulado|unlocalize|default:'' }}"
+                               placeholder="Sim." title="Nota do Simulado (interno) — {{ i.nome }}" 
+                               {% if not pode_lancar %}disabled{% endif %}
+                               style="width:55px; padding:4px 6px; border:1.5px solid #ffc107; border-radius:6px; text-align:center; font-size:13px; background:#fffde7;">
                         {% endif %}
+                        
                         <!-- Nota final (calculada) -->
                         <span class="nota-final-display" data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}"
-                            style="min-width:40px; font-weight:700; color:#003366; font-size:14px; display:inline-block; text-align:center;">
+                              style="min-width:40px; font-weight:700; color:#003366; font-size:14px; display:inline-block; text-align:center;">
                             {{ cel.nota.nota_final|unlocalize|default:'—' }}
                         </span>
+                        
                         <!-- Status da última ação -->
                         <span class="nota-status" data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}"
-                            style="font-size:18px; width:20px; text-align:center;"></span>
+                              style="font-size:18px; width:20px; text-align:center;"></span>
                     </div>
                     {% endif %}
+                </td>
+                
+                <!-- Célula de PA -->
+                <td style="padding:6px 4px; text-align:center; vertical-align:middle; background:#f4f6f9; border-left:1px dashed #d0d7e5;">
+                    <div style="display:flex; gap:4px; align-items:center; justify-content:center;">
+                        <input type="number" min="0" max="10" step="0.1" class="pa-input"
+                               data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}"
+                               data-pa="{% if bimestre in '1,2' %}1{% else %}2{% endif %}"
+                               value="{{ cel.pa.nota|unlocalize|default:'' }}"
+                               placeholder="PA" title="Prova Auxiliar — {{ i.nome }}"
+                               {% if not pode_lancar %}disabled{% endif %}
+                               style="width:55px; padding:4px 6px; border:1.5px solid #aebac9; border-radius:6px; text-align:center; font-size:13px; background:#fff;">
+                        <span class="pa-status" data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}"
+                              style="font-size:16px; width:16px; text-align:center;"></span>
+                    </div>
                 </td>
                 {% endif %}
                 {% endfor %}
@@ -138,7 +155,7 @@
                 {% endfor %}
                 <td style="padding:6px; text-align:center;">
                     <a href="{% url 'boletim_aluno' i.pk %}"
-                        style="padding:4px 10px; background:#16a085; color:#fff; border-radius:6px; text-decoration:none; font-size:12px; white-space:nowrap;">
+                       style="padding:4px 10px; background:#16a085; color:#fff; border-radius:6px; text-decoration:none; font-size:12px; white-space:nowrap;">
                         📄 Boletim
                     </a>
                 </td>
