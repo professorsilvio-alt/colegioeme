@@ -392,11 +392,11 @@ def calcular_stats_conteudo(prof, data_ini=None, data_fim=None, feriados=None, a
     extras_adicionais_ate_hoje = 0
     
     disciplinas_peso_2 = [
-        'Eletiva 1', 'Eletiva 2', # Nomes legados, caso existam registros
+        'Eletiva 1', 'Eletiva 2', 'Estendido', # Nomes legados
         'Sociedade e Cidadania', 'Sustentabilidade e Meio Ambiente',
         'Educação Financeira', 'Múltiplas Linguagens',
-        'Ciências da Natureza', 'Ciências Humanas', 
-        'Matemática e suas tecnologias', 'Linguagens e códigos'
+        'Aprofundamento em Matemática', 'Aprofundamento em Ciências da Natureza', 
+        'Aprofundamento em Ciências Humanas', 'Aprofundamento em Linguagens'
     ]
 
     for cp in cp_qs:
@@ -486,9 +486,11 @@ def relatorio_pendencias(request):
     # Tabela Extra - Controle de Aulas Extras
     disciplina_extra_filtro = request.GET.get('disciplina_extra', '')
     disciplinas_peso_2 = [
-        'Eletiva 1', 'Eletiva 2', 'Sociedade e Cidadania', 'Sustentabilidade e Meio Ambiente',
-        'Educação Financeira', 'Múltiplas Linguagens', 'Ciências da Natureza', 
-        'Ciências Humanas', 'Matemática e suas tecnologias', 'Linguagens e códigos'
+        'Eletiva 1', 'Eletiva 2', 'Estendido',
+        'Sociedade e Cidadania', 'Sustentabilidade e Meio Ambiente',
+        'Educação Financeira', 'Múltiplas Linguagens',
+        'Aprofundamento em Matemática', 'Aprofundamento em Ciências da Natureza', 
+        'Aprofundamento em Ciências Humanas', 'Aprofundamento em Linguagens'
     ]
     
     extras_qs = ConteudoProgramatico.objects.filter(

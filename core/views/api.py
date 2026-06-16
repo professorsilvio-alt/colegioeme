@@ -97,44 +97,12 @@ def api_disciplinas_turma(request, codigo):
     if is_extra:
         # Modo Aula Extra: ignora a grade horária.
         # Mostra as disciplinas que o professor pode lecionar (se não for admin)
-        turmas_1_ano = ['11', '12', '13']
-        turmas_2_ano = ['21', '22', '23']
-        turmas_3_ano = ['31', '32']
-        
         if prof_logado and not prof_logado.pode_ver_tudo and not prof_logado.todas_disciplinas:
             discs = prof_logado.disciplinas.all()
         else:
             discs = Disciplina.objects.all()
 
-        if codigo in turmas_1_ano:
-            areas = ['Sociedade e Cidadania', 'Sustentabilidade e Meio Ambiente']
-            extras = Disciplina.objects.filter(nome__in=areas)
-            discs = (discs | extras).distinct()
-            
-        elif codigo in turmas_2_ano:
-            areas = ['Educação Financeira', 'Múltiplas Linguagens']
-            extras = Disciplina.objects.filter(nome__in=areas)
-            discs = (discs | extras).distinct()
-            
-        elif codigo in turmas_3_ano:
-            areas = [
-                'Ciências da Natureza',
-                'Ciências Humanas',
-                'Matemática e suas tecnologias',
-                'Linguagens e códigos'
-            ]
-            extras = Disciplina.objects.filter(nome__in=areas)
-            discs = (discs | extras).distinct()
-            
-        # Remover duplicatas devido a JOINs no UNION e ordenar
-        ids_vistos = set()
-        lista_discs = []
-        for d in discs.order_by('nome').values('id', 'nome'):
-            if d['id'] not in ids_vistos:
-                ids_vistos.add(d['id'])
-                lista_discs.append(d)
-                
-        return JsonResponse(lista_discs, safe=False)
+        return JsonResponse(list(discs.order_by('nome').values('id', 'nome')), safe=False)
     else:
         qs = GradeHoraria.objects.filter(turma__codigo=codigo, turma__ano_letivo=request.ano_letivo, turma__escola=request.escola)
         if prof_logado and not prof_logado.pode_ver_tudo:
