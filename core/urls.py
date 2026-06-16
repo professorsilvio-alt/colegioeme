@@ -73,6 +73,8 @@ urlpatterns = [
     path('notas/', views.notas_index, name='notas_index'),
     path('notas/turma/<str:codigo>/<int:bimestre>/', views.notas_turma, name='notas_turma'),
     path('notas/salvar/', views.nota_salvar, name='nota_salvar'),
+    path('notas/aplicar-na/', views.aplicar_na_bimestre, name='aplicar_na_bimestre'),
+    path('notas/remover-na/', views.remover_na, name='remover_na'),
     path('notas/aluno/<int:pk>/', views.boletim_aluno, name='boletim_aluno'),
     path('notas/boletim/<str:codigo>/', views.boletim_turma, name='boletim_turma'),
 

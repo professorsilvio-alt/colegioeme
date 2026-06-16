@@ -485,6 +485,7 @@ class NotaBimestral(models.Model):
     ano_letivo    = models.ForeignKey(AnoLetivo, on_delete=models.CASCADE)
 
     nota_prova    = models.DecimalField(max_digits=4, decimal_places=1,
+                        null=True, blank=True,
                         verbose_name='Nota da Prova')
     nota_simulado = models.DecimalField(max_digits=4, decimal_places=1,
                         null=True, blank=True,
@@ -492,6 +493,11 @@ class NotaBimestral(models.Model):
     nota_final    = models.DecimalField(max_digits=4, decimal_places=1,
                         editable=False,
                         verbose_name='Nota Final (calculada)')
+    nao_avaliado  = models.BooleanField(
+                        default=False,
+                        verbose_name='Não Avaliado (ausente)',
+                        help_text='Quando verdadeiro, o aluno não realizou a avaliação. '
+                                  'A nota final é contabilizada como 0,0.')
 
     lancado_por   = models.ForeignKey(Professor, on_delete=models.SET_NULL,
                         null=True, blank=True, related_name='notas_lancadas')
@@ -510,7 +516,12 @@ class NotaBimestral(models.Model):
 
     def save(self, *args, **kwargs):
         """Calcula nota_final com bônus de simulado antes de salvar."""
-        if self.nota_simulado is not None:
+        if self.nao_avaliado:
+            # Aluno ausente: nota zerada, sem simulado
+            self.nota_prova = Decimal('0')
+            self.nota_simulado = None
+            self.nota_final = Decimal('0')
+        elif self.nota_simulado is not None:
             bonus = float(self.nota_simulado) * 0.01
             self.nota_final = min(
                 Decimal('10.0'),

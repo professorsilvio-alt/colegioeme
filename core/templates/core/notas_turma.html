@@ -78,7 +78,23 @@
             {% with celula=linha.celulas|dictsort:"aluno.nome" %}
             {% for cel in linha.celulas %}
             {% if cel.aluno.pk == i.pk %}
-            <td style="padding:6px 4px; text-align:center; vertical-align:middle;">
+            <td style="padding:6px 4px; text-align:center; vertical-align:middle;"
+                {% if cel.nota.nao_avaliado %}style="background:#fff8e1;"{% endif %}>
+                {% if cel.nota.nao_avaliado %}
+                <!-- Aluno marcado como N/A (não avaliado) -->
+                <div style="display:flex; gap:4px; align-items:center; justify-content:center;">
+                    <span class="na-badge"
+                          data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}"
+                          title="Não Avaliado — aluno ausente na avaliação"
+                          style="background:#f39c12; color:#fff; font-weight:700; font-size:12px;
+                                 padding:3px 8px; border-radius:12px; letter-spacing:.5px;">N/A</span>
+                    {% if pode_lancar %}
+                    <button type="button" onclick="removerNA({{ i.pk }}, {{ linha.disciplina.pk }}, {{ bimestre }})"
+                            title="Desfazer N/A e lançar nota"
+                            style="background:none; border:none; cursor:pointer; font-size:14px; padding:2px;">✕</button>
+                    {% endif %}
+                </div>
+                {% else %}
                 <div style="display:flex; gap:4px; align-items:center; justify-content:center; flex-wrap:nowrap;">
                     <!-- Nota da prova -->
                     <input type="number" min="0" max="10" step="0.1"
@@ -116,6 +132,7 @@
                     <span class="nota-status" data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}"
                           style="font-size:18px; width:20px; text-align:center;"></span>
                 </div>
+                {% endif %}
             </td>
             {% endif %}
             {% endfor %}
@@ -134,6 +151,30 @@
     </tbody>
 </table>
 </div>
+
+{% if prof.pode_lancar_notas %}
+<div style="margin-top:20px; padding:14px 18px; background:#fff3cd; border:1px solid #ffc107; border-radius:10px;">
+    <strong style="color:#856404;">⚠️ Aplicar N/A para ausentes</strong>
+    <p style="margin:6px 0 10px; color:#6d5507; font-size:13px;">
+        Cria registros <strong>N/A (Não Avaliado)</strong> automaticamente para todos os alunos que ainda não possuem nota
+        lançada em uma disciplina neste bimestre, indicando ausência na avaliação.
+    </p>
+    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <select id="naDiscSelect" style="padding:7px 12px; border:1px solid #ccc; border-radius:8px; font-size:13px;">
+            <option value="">Selecione a disciplina...</option>
+            {% for linha in grade %}
+            <option value="{{ linha.disciplina.pk }}">{{ linha.disciplina.nome }}</option>
+            {% endfor %}
+        </select>
+        <button type="button" onclick="aplicarNA()"
+                style="padding:7px 18px; background:#e67e22; color:#fff; border:none; border-radius:8px;
+                       font-size:13px; font-weight:600; cursor:pointer;">
+            📂 Aplicar N/A
+        </button>
+        <span id="naMsg" style="font-size:13px; color:#555;"></span>
+    </div>
+</div>
+{% endif %}
 {% endif %}
 {% endblock %}
 
@@ -233,11 +274,60 @@ if (PODE_LANCAR) {
         });
     });
 }
+
+// ── N/A — Aplicar e Remover ──
+const NA_URL      = '{% url "aplicar_na_bimestre" %}';
+const TURMA_COD   = '{{ turma.codigo }}';
+const BIMESTRE    = {{ bimestre }};
+
+function aplicarNA() {
+    const discId = document.getElementById('naDiscSelect').value;
+    const msg    = document.getElementById('naMsg');
+    if (!discId) { msg.textContent = 'Selecione uma disciplina.'; msg.style.color = '#c0392b'; return; }
+    if (!confirm('Aplicar N/A para todos os alunos sem nota lançada nesta disciplina?')) return;
+    msg.textContent = '⏳ Processando...'; msg.style.color = '#555';
+    const body = new URLSearchParams({
+        csrfmiddlewaretoken: CSRF_TOKEN,
+        turma_codigo: TURMA_COD,
+        disciplina_id: discId,
+        bimestre: BIMESTRE,
+    });
+    fetch(NA_URL, { method: 'POST', body, credentials: 'same-origin' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.ok) {
+                msg.textContent = '✓ ' + data.msg;
+                msg.style.color = '#27ae60';
+                setTimeout(() => location.reload(), 1200);
+            } else {
+                msg.textContent = '✗ ' + data.erro;
+                msg.style.color = '#c0392b';
+            }
+        })
+        .catch(() => { msg.textContent = 'Erro de conexão.'; msg.style.color = '#c0392b'; });
+}
+
+function removerNA(alunoId, discId, bimestre) {
+    if (!confirm('Remover o N/A deste aluno? Você poderá lançar a nota normalmente.')) return;
+    // Remove o registro N/A deletando via endpoint específico
+    const body = new URLSearchParams({
+        csrfmiddlewaretoken: CSRF_TOKEN,
+        aluno_id: alunoId,
+        disciplina_id: discId,
+        bimestre: bimestre,
+        acao: 'remover_na',
+    });
+    fetch('{% url "remover_na" %}', { method: 'POST', body, credentials: 'same-origin' })
+        .then(r => r.json())
+        .then(data => { if (data.ok) location.reload(); else alert('Erro: ' + data.erro); })
+        .catch(() => alert('Erro de conexão.'));
+}
 </script>
 
 <style>
     .nota-input:focus { outline:none; border-color:#003366 !important; box-shadow:0 0 0 2px rgba(0,51,102,.15); }
     .nota-input:disabled { background:#f0f0f0; color:#999; cursor:not-allowed; }
     tbody tr:hover { background:#eef4ff !important; }
+    td[style*="background:#fff8e1"] { background:#fff8e1 !important; }
 </style>
 {% endblock %}

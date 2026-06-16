@@ -10,7 +10,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from ..models import (
-    Aluno, AnoLetivo, Configuracao, Disciplina, GrupoDisciplina,
+    Aluno, AnoLetivo, Configuracao, Disciplina, GradeHoraria, GrupoDisciplina,
     NotaBimestral, Professor, Turma, turma_faz_simulado,
 )
 from ..utils import get_professor
@@ -286,6 +286,7 @@ def nota_salvar(request):
         defaults={
             'nota_prova': nota_prova,
             'nota_simulado': nota_simulado,
+            'nao_avaliado': False,  # ao lançar nota válida, limpa N/A
             'lancado_por': prof,
         }
     )
@@ -300,8 +301,9 @@ def nota_salvar(request):
     return JsonResponse({
         'ok': True,
         'nota_final': str(nota.nota_final),
-        'nota_prova': str(nota.nota_prova),
+        'nota_prova': str(nota.nota_prova) if nota.nota_prova is not None else '',
         'nota_simulado': str(nota.nota_simulado) if nota.nota_simulado is not None else '',
+        'nao_avaliado': nota.nao_avaliado,
     })
 
 
@@ -324,21 +326,29 @@ def boletim_aluno(request, pk):
         ano_letivo=request.ano_letivo,
     ).select_related('disciplina', 'disciplina__grupo')
 
-    # Organiza notas: {disciplina_pk: {bimestre: nota_final}}
+    # Organiza notas: {disciplina_pk: {bimestre: nota_final_ou_NA}}
+    # Se nao_avaliado=True, armazena a string sentinela 'NA' para o template distinguir
     notas_por_disc = defaultdict(dict)
     for nota in notas_qs:
-        notas_por_disc[nota.disciplina_id][nota.bimestre] = nota.nota_final
+        if nota.nao_avaliado:
+            notas_por_disc[nota.disciplina_id][nota.bimestre] = 'NA'
+        else:
+            notas_por_disc[nota.disciplina_id][nota.bimestre] = nota.nota_final
 
     def _medias_e_anual(disc_pks):
-        """Retorna (lista_medias_b1_b2_b3_b4, media_anual) para um conjunto de disciplinas."""
+        """Retorna (lista_medias_b1_b2_b3_b4, media_anual) para um conjunto de disciplinas.
+        N/A é contabilizado como 0,0 na média.
+        """
         medias = []
         for b in (1, 2, 3, 4):
-            valores = [
-                notas_por_disc[dpk][b]
-                for dpk in disc_pks
-                if b in notas_por_disc[dpk]
-            ]
+            valores = []
+            for dpk in disc_pks:
+                if b in notas_por_disc[dpk]:
+                    v = notas_por_disc[dpk][b]
+                    valores.append(Decimal('0') if v == 'NA' else v)
+            # None = bimestre ainda sem nenhum lançamento (nem nota, nem N/A)
             medias.append(round(sum(valores) / len(valores), 1) if valores else None)
+        # Média anual: apenas bimestres já lançados (nota ou N/A)
         vals_validos = [v for v in medias if v is not None]
         media_anual = round(sum(vals_validos) / len(vals_validos), 1) if vals_validos else None
         return medias, media_anual
@@ -408,3 +418,110 @@ def boletim_turma(request, codigo):
         'turma': turma,
         'alunos': alunos,
     })
+
+
+# ─────────────────────────────────────────────────────────────
+# APLICAR N/A — marcar ausentes automaticamente
+# ─────────────────────────────────────────────────────────────
+
+@login_required
+@require_POST
+def aplicar_na_bimestre(request):
+    """
+    Cria registros N/A (não avaliado) para todos os alunos de uma turma
+    que não possuem nota lançada em uma dada disciplina/bimestre.
+    Restrito a admins, diretores e secretaria.
+    """
+    prof = get_professor(request.user)
+    if prof and not prof.pode_lancar_notas:
+        return JsonResponse(
+            {'ok': False, 'erro': 'Sem permissão para aplicar N/A.'},
+            status=403
+        )
+
+    turma_codigo = request.POST.get('turma_codigo', '').strip()
+    disc_id      = request.POST.get('disciplina_id')
+    bimestre_str = request.POST.get('bimestre')
+
+    try:
+        turma    = Turma.objects.get(codigo=turma_codigo, escola=request.escola, ano_letivo=request.ano_letivo)
+        disc     = Disciplina.objects.get(pk=disc_id)
+        bimestre = int(bimestre_str)
+        if bimestre not in (1, 2, 3, 4):
+            raise ValueError
+    except (Turma.DoesNotExist, Disciplina.DoesNotExist, ValueError, TypeError):
+        return JsonResponse({'ok': False, 'erro': 'Dados inválidos.'}, status=400)
+
+    # Alunos da turma sem nota para esta disciplina/bimestre
+    alunos = Aluno.objects.filter(turma=turma)
+    ja_tem_nota = set(
+        NotaBimestral.objects.filter(
+            aluno__turma=turma,
+            disciplina=disc,
+            bimestre=bimestre,
+            ano_letivo=request.ano_letivo,
+        ).values_list('aluno_id', flat=True)
+    )
+
+    criados = 0
+    for aluno in alunos:
+        if aluno.pk not in ja_tem_nota:
+            NotaBimestral.objects.create(
+                aluno=aluno,
+                disciplina=disc,
+                bimestre=bimestre,
+                ano_letivo=request.ano_letivo,
+                nota_prova=Decimal('0'),
+                nota_simulado=None,
+                nota_final=Decimal('0'),
+                nao_avaliado=True,
+                lancado_por=prof,
+            )
+            criados += 1
+
+    logger.info(
+        'N/A aplicado: turma=%s disc=%s B%s criados=%d por=%s',
+        turma_codigo, disc.nome, bimestre, criados, request.user.username
+    )
+
+    return JsonResponse({
+        'ok': True,
+        'criados': criados,
+        'msg': f'{criados} registro(s) N/A criado(s) com sucesso.' if criados else 'Todos os alunos já possuem nota lançada.',
+    })
+
+
+@login_required
+@require_POST
+def remover_na(request):
+    """Remove o status N/A de um registro, permitindo que o professor lance uma nota normal."""
+    prof = get_professor(request.user)
+    config = _get_config(request)
+
+    if not _pode_lancar_notas(prof, config):
+        return JsonResponse({'ok': False, 'erro': 'Fora do período de lançamento ou sem permissão.'}, status=403)
+
+    aluno_id  = request.POST.get('aluno_id')
+    disc_id   = request.POST.get('disciplina_id')
+    bimestre  = request.POST.get('bimestre')
+
+    try:
+        aluno    = Aluno.objects.get(pk=aluno_id)
+        disc     = Disciplina.objects.get(pk=disc_id)
+        bimestre = int(bimestre)
+    except (Aluno.DoesNotExist, Disciplina.DoesNotExist, ValueError, TypeError):
+        return JsonResponse({'ok': False, 'erro': 'Dados inválidos.'}, status=400)
+
+    # Re-verifica permissão com o bimestre específico
+    if not _pode_lancar_notas(prof, config, bimestre):
+        return JsonResponse({'ok': False, 'erro': 'Fora do período de lançamento para este bimestre.'}, status=403)
+
+    deleted, _ = NotaBimestral.objects.filter(
+        aluno=aluno,
+        disciplina=disc,
+        bimestre=bimestre,
+        ano_letivo=request.ano_letivo,
+        nao_avaliado=True,
+    ).delete()
+
+    return JsonResponse({'ok': True, 'removido': deleted > 0})
