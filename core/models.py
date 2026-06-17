@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 import datetime
+from decimal import Decimal
 
 
 class Escola(models.Model):
@@ -47,14 +48,52 @@ class Turma(models.Model):
         return f'Turma {self.codigo}{ano_str}'
 
 
+class GrupoDisciplina(models.Model):
+    """Agrupa sub-disciplinas para exibição consolidada no boletim.
+    Ex: Mat. I + Mat. II + Mat. III → 'Matemática'.
+    """
+    nome_boletim    = models.CharField(max_length=100, unique=True,
+                          verbose_name='Nome no Boletim')
+    faz_simulado_ef = models.BooleanField(
+                          default=False,
+                          verbose_name='Simulado EF 8°/9°',
+                          help_text='Disciplinas deste grupo recebem bônus de simulado '
+                                    'para turmas do 8° e 9° ano do EF.')
+    ordem_boletim   = models.IntegerField(default=0, verbose_name='Ordem no Boletim')
+
+    class Meta:
+        verbose_name = 'Grupo de Disciplina'
+        verbose_name_plural = 'Grupos de Disciplinas'
+        ordering = ['ordem_boletim', 'nome_boletim']
+
+    def __str__(self):
+        return self.nome_boletim
+
+
 class Disciplina(models.Model):
     nome = models.CharField(max_length=100, unique=True)
+    grupo = models.ForeignKey(
+        GrupoDisciplina, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='disciplinas',
+        verbose_name='Grupo no Boletim'
+    )
+    faz_simulado_ef = models.BooleanField(
+        default=False,
+        verbose_name='Simulado EF 8°/9° (standalone)',
+        help_text='Usado apenas quando a disciplina não tem grupo definido.'
+    )
 
     class Meta:
         ordering = ['nome']
 
     def __str__(self):
         return self.nome
+
+    def elegivel_simulado_ef(self):
+        """Retorna True se esta disciplina qualifica para simul ado em turmas EF 8°/9°."""
+        if self.grupo:
+            return self.grupo.faz_simulado_ef
+        return self.faz_simulado_ef
 
 
 class Professor(models.Model):
@@ -63,6 +102,7 @@ class Professor(models.Model):
         ('DIRETOR', 'Diretor'),
         ('COORDENADOR', 'Coordenador'),
         ('AUX_COORD', 'Auxiliar de Coordenação'),
+        ('AUX_ADMIN', 'Auxiliar Administrativo'),
         ('ORIENTADOR', 'Orientador Educacional'),
         ('SECRETARIA', 'Secretaria'),
         ('PROFESSOR', 'Professor'),
@@ -93,6 +133,11 @@ class Professor(models.Model):
         verbose_name='E-mail de contato',
         help_text='E-mail pessoal do professor para comunicações e recuperação de senha.',
     )
+    autorizado_lancar_notas = models.BooleanField(
+        default=False,
+        verbose_name='Autorizado a lançar notas',
+        help_text='Permite que o professor lance notas dentro do período de lançamento configurado.',
+    )
 
     def __str__(self):
         return f'{self.nome} ({self.get_cargo_display()})'
@@ -100,7 +145,7 @@ class Professor(models.Model):
     @property
     def pode_ver_tudo(self):
         """Acesso global para visualização de relatórios e dados (exceto restrições específicas)."""
-        return self.cargo in ['ADMIN', 'DIRETOR', 'COORDENADOR', 'AUX_COORD', 'ORIENTADOR', 'SECRETARIA', 'INSPETOR']
+        return self.cargo in ['ADMIN', 'DIRETOR', 'COORDENADOR', 'AUX_COORD', 'AUX_ADMIN', 'ORIENTADOR', 'SECRETARIA', 'INSPETOR']
 
     @property
     def pode_ver_ocorrencias(self):
@@ -116,7 +161,12 @@ class Professor(models.Model):
 
     @property
     def pode_gerar_relatorios(self):
-        return self.cargo in ['ADMIN', 'DIRETOR', 'COORDENADOR', 'AUX_COORD', 'ORIENTADOR', 'SECRETARIA', 'INSPETOR']
+        return self.cargo in ['ADMIN', 'DIRETOR', 'COORDENADOR', 'AUX_COORD', 'AUX_ADMIN', 'ORIENTADOR', 'SECRETARIA', 'INSPETOR']
+
+    @property
+    def pode_lancar_notas(self):
+        """Retorna True para cargos com acesso irrestrito a notas."""
+        return self.cargo in ['ADMIN', 'DIRETOR', 'AUX_ADMIN']
 
     def get_turmas(self, ano_letivo=None, escola=None):
         qs = Turma.objects.all()
@@ -336,6 +386,29 @@ class Configuracao(models.Model):
     ano_letivo = models.ForeignKey(AnoLetivo, on_delete=models.CASCADE, related_name='configuracoes', null=True, blank=True)
     inicio_periodo_letivo = models.DateField(verbose_name="Início do Período Letivo", default=_default_inicio_periodo)
     fim_periodo_letivo = models.DateField(verbose_name="Fim do Período Letivo", default=_default_fim_periodo)
+
+    # ── Períodos de lançamento por bimestre ───────────────────────
+    notas_b1_ini = models.DateField(null=True, blank=True, verbose_name='B1 — Início do lançamento')
+    notas_b1_fim = models.DateField(null=True, blank=True, verbose_name='B1 — Fim do lançamento')
+    notas_b2_ini = models.DateField(null=True, blank=True, verbose_name='B2 — Início do lançamento')
+    notas_b2_fim = models.DateField(null=True, blank=True, verbose_name='B2 — Fim do lançamento')
+    notas_b3_ini = models.DateField(null=True, blank=True, verbose_name='B3 — Início do lançamento')
+    notas_b3_fim = models.DateField(null=True, blank=True, verbose_name='B3 — Fim do lançamento')
+    notas_b4_ini = models.DateField(null=True, blank=True, verbose_name='B4 — Início do lançamento')
+    notas_b4_fim = models.DateField(null=True, blank=True, verbose_name='B4 — Fim do lançamento')
+
+    # ── Período global (fallback) ─────────────────────────────────
+    periodo_notas_ini = models.DateField(
+        null=True, blank=True,
+        verbose_name='Período global — Início (fallback)',
+        help_text='Usado somente se o bimestre não tiver datas próprias configuradas.'
+    )
+    periodo_notas_fim = models.DateField(
+        null=True, blank=True,
+        verbose_name='Período global — Fim (fallback)',
+        help_text='Usado somente se o bimestre não tiver datas próprias configuradas.'
+    )
+
     feriados = models.TextField(
         blank=True,
         default='',
@@ -355,6 +428,20 @@ class Configuracao(models.Model):
         ano = self.ano_letivo.ano if self.ano_letivo else self.inicio_periodo_letivo.year
         return f"Configuração do Ano Letivo ({ano})"
 
+    def periodo_para_bimestre(self, bimestre):
+        """Retorna (ini, fim) para o bimestre dado, com fallback no período global."""
+        mapa = {
+            1: (self.notas_b1_ini, self.notas_b1_fim),
+            2: (self.notas_b2_ini, self.notas_b2_fim),
+            3: (self.notas_b3_ini, self.notas_b3_fim),
+            4: (self.notas_b4_ini, self.notas_b4_fim),
+        }
+        ini, fim = mapa.get(bimestre, (None, None))
+        if ini and fim:
+            return ini, fim
+        # fallback para período global
+        return self.periodo_notas_ini, self.periodo_notas_fim
+
     def get_feriados(self):
         """Retorna um set de datetime.date com os feriados configurados."""
         dates = set()
@@ -366,3 +453,80 @@ class Configuracao(models.Model):
                 except ValueError:
                     pass
         return dates
+
+
+# ──────────────────────────────────────────────
+# CONTROLE DE NOTAS
+# ──────────────────────────────────────────────
+
+def turma_faz_simulado(turma, disciplina):
+    """Retorna True se esta combinação turma/disciplina é elegível ao bônus de simulado."""
+    if not turma or not turma.codigo:
+        return False
+    d = turma.codigo[0]
+    if d in ('1', '2', '3'):  # Ensino Médio — todas as disciplinas
+        return True
+    if d in ('8', '9'):       # EF 8°/9° — apenas disciplinas elegíveis
+        return disciplina.elegivel_simulado_ef()
+    return False
+
+
+class NotaBimestral(models.Model):
+    BIMESTRE_CHOICES = [
+        (1, '1º Bimestre'),
+        (2, '2º Bimestre'),
+        (3, '3º Bimestre'),
+        (4, '4º Bimestre'),
+    ]
+
+    aluno         = models.ForeignKey(Aluno, on_delete=models.CASCADE, related_name='notas')
+    disciplina    = models.ForeignKey(Disciplina, on_delete=models.CASCADE)
+    bimestre      = models.IntegerField(choices=BIMESTRE_CHOICES, db_index=True)
+    ano_letivo    = models.ForeignKey(AnoLetivo, on_delete=models.CASCADE)
+
+    nota_prova    = models.DecimalField(max_digits=4, decimal_places=1,
+                        null=True, blank=True,
+                        verbose_name='Nota da Prova')
+    nota_simulado = models.DecimalField(max_digits=4, decimal_places=1,
+                        null=True, blank=True,
+                        verbose_name='Nota do Simulado (interno)')
+    nota_final    = models.DecimalField(max_digits=4, decimal_places=1,
+                        editable=False,
+                        verbose_name='Nota Final (calculada)')
+    nao_avaliado  = models.BooleanField(
+                        default=False,
+                        verbose_name='Não Avaliado (ausente)',
+                        help_text='Quando verdadeiro, o aluno não realizou a avaliação. '
+                                  'A nota final é contabilizada como 0,0.')
+
+    lancado_por   = models.ForeignKey(Professor, on_delete=models.SET_NULL,
+                        null=True, blank=True, related_name='notas_lancadas')
+    criado_em     = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Nota Bimestral'
+        verbose_name_plural = 'Notas Bimestrais'
+        unique_together = ('aluno', 'disciplina', 'bimestre', 'ano_letivo')
+        ordering = ['aluno__nome', 'bimestre']
+
+    def __str__(self):
+        return (f'{self.aluno.nome} | {self.disciplina.nome} | '
+                f'B{self.bimestre} | {self.nota_final}')
+
+    def save(self, *args, **kwargs):
+        """Calcula nota_final com bônus de simulado antes de salvar."""
+        if self.nao_avaliado:
+            # Aluno ausente: nota zerada, sem simulado
+            self.nota_prova = Decimal('0')
+            self.nota_simulado = None
+            self.nota_final = Decimal('0')
+        elif self.nota_simulado is not None:
+            bonus = float(self.nota_simulado) * 0.01
+            self.nota_final = min(
+                Decimal('10.0'),
+                self.nota_prova * Decimal(str(round(1 + bonus, 4)))
+            )
+        else:
+            self.nota_final = self.nota_prova
+        super().save(*args, **kwargs)

@@ -1,0 +1,253 @@
+{% extends 'core/base.html' %}
+{% block title %}Períodos de Lançamento — SCA{% endblock %}
+
+{% block extra_head %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    .periodos-wrapper {
+        font-family: 'Inter', sans-serif;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .periodos-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 28px;
+    }
+
+    .periodos-header h1 {
+        font-size: 24px;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0;
+    }
+
+    .periodos-header p {
+        font-size: 13px;
+        color: #64748b;
+        margin: 2px 0 0;
+    }
+
+    .bimestre-card {
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: 0 2px 12px rgba(0,0,0,.07);
+        padding: 24px 28px;
+        margin-bottom: 18px;
+        border-left: 5px solid #94a3b8;
+        transition: box-shadow 0.2s, border-color 0.2s;
+        display: flex;
+        gap: 28px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .bimestre-card.aberto     { border-left-color: #22c55e; }
+    .bimestre-card.futuro     { border-left-color: #3b82f6; }
+    .bimestre-card.encerrado  { border-left-color: #ef4444; }
+    .bimestre-card.nao_configurado { border-left-color: #94a3b8; }
+
+    .bimestre-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,.12); }
+
+    .bimestre-label {
+        flex-shrink: 0;
+        text-align: center;
+        min-width: 70px;
+    }
+
+    .bimestre-label .num {
+        font-size: 36px;
+        font-weight: 900;
+        color: #0f172a;
+        line-height: 1;
+    }
+
+    .bimestre-label .txt {
+        font-size: 11px;
+        font-weight: 600;
+        color: #94a3b8;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+
+    .bimestre-fields {
+        flex: 1;
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .field-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex: 1;
+        min-width: 160px;
+    }
+
+    .field-group label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        margin: 0;
+    }
+
+    .field-group input[type="date"] {
+        border: 1.5px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 9px 12px;
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        color: #0f172a;
+        background: #f8fafc;
+        width: 100%;
+        transition: border-color 0.2s, background 0.2s;
+        margin-top: 0;
+    }
+
+    .field-group input[type="date"]:focus {
+        outline: none;
+        border-color: #6366f1;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+    }
+
+    .status-badge {
+        flex-shrink: 0;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+    }
+
+    .badge-aberto     { background: #dcfce7; color: #16a34a; }
+    .badge-futuro     { background: #dbeafe; color: #1d4ed8; }
+    .badge-encerrado  { background: #fee2e2; color: #dc2626; }
+    .badge-nao_configurado { background: #f1f5f9; color: #64748b; }
+
+    .save-bar {
+        position: sticky;
+        bottom: 20px;
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 28px;
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, #6366f1, #4f46e5);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 14px 32px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 4px 16px rgba(99,102,241,.35);
+        margin-top: 0;
+    }
+
+    .btn-save:hover {
+        background: linear-gradient(135deg, #4f46e5, #4338ca);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(99,102,241,.45);
+    }
+
+    .info-legend {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 22px;
+        font-size: 12px;
+        color: #64748b;
+    }
+
+    .info-legend span {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .dot-aberto     { background: #22c55e; }
+    .dot-futuro     { background: #3b82f6; }
+    .dot-encerrado  { background: #ef4444; }
+    .dot-nao        { background: #94a3b8; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="periodos-wrapper">
+
+    <div class="periodos-header">
+        <div>
+            <h1>📅 Períodos de Lançamento de Notas</h1>
+            <p>Configure as janelas de data em que os professores podem lançar notas em cada bimestre.</p>
+        </div>
+        <a href="{% url 'dashboard' %}" style="margin-left:auto; padding:8px 18px; background:#f1f5f9; color:#475569; border-radius:8px; text-decoration:none; font-size:13px; font-weight:600; white-space:nowrap;">← Voltar</a>
+    </div>
+
+    <div class="info-legend">
+        <span><span class="dot dot-aberto"></span> Aberto agora</span>
+        <span><span class="dot dot-futuro"></span> Ainda não iniciou</span>
+        <span><span class="dot dot-encerrado"></span> Encerrado</span>
+        <span><span class="dot dot-nao"></span> Não configurado</span>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {% for b in bimestres %}
+        <div class="bimestre-card {{ b.status }}">
+            <div class="bimestre-label">
+                <div class="num">{{ b.numero }}º</div>
+                <div class="txt">Bimestre</div>
+            </div>
+
+            <div class="bimestre-fields">
+                <div class="field-group">
+                    <label>Início do lançamento</label>
+                    <input type="date" name="{{ b.ini_field }}"
+                           value="{{ b.ini|date:'Y-m-d'|default:'' }}">
+                </div>
+                <div class="field-group">
+                    <label>Fim do lançamento</label>
+                    <input type="date" name="{{ b.fim_field }}"
+                           value="{{ b.fim|date:'Y-m-d'|default:'' }}">
+                </div>
+            </div>
+
+            <div>
+                {% if b.status == 'aberto' %}
+                    <span class="status-badge badge-aberto">✅ Aberto agora</span>
+                {% elif b.status == 'futuro' %}
+                    <span class="status-badge badge-futuro">🔵 Futuro — abre em {{ b.ini|date:'d/m/Y' }}</span>
+                {% elif b.status == 'encerrado' %}
+                    <span class="status-badge badge-encerrado">🔴 Encerrado em {{ b.fim|date:'d/m/Y' }}</span>
+                {% else %}
+                    <span class="status-badge badge-nao_configurado">⚪ Não configurado</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="save-bar">
+            <button type="submit" class="btn-save">💾 Salvar Períodos</button>
+        </div>
+    </form>
+
+</div>
+{% endblock %}
