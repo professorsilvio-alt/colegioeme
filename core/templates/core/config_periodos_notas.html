@@ -210,33 +210,33 @@
     <form method="post">
         {% csrf_token %}
 
-        {% for b in bimestres %}
-        <div class="bimestre-card {{ b.status }}">
-            <div class="bimestre-label">
-                <div class="num">{{ b.numero }}º</div>
-                <div class="txt">Bimestre</div>
+        {% for p in periodos %}
+        <div class="bimestre-card {{ p.status }}">
+            <div class="bimestre-label" style="min-width:120px;">
+                <div class="num" style="font-size:24px;">{{ p.nome_principal }}</div>
+                <div class="txt">{{ p.nome_secundario }}</div>
             </div>
 
             <div class="bimestre-fields">
                 <div class="field-group">
                     <label>Início do lançamento</label>
-                    <input type="date" name="{{ b.ini_field }}"
-                           value="{{ b.ini|date:'Y-m-d'|default:'' }}">
+                    <input type="date" name="{{ p.ini_field }}"
+                           value="{{ p.ini|date:'Y-m-d'|default:'' }}">
                 </div>
                 <div class="field-group">
                     <label>Fim do lançamento</label>
-                    <input type="date" name="{{ b.fim_field }}"
-                           value="{{ b.fim|date:'Y-m-d'|default:'' }}">
+                    <input type="date" name="{{ p.fim_field }}"
+                           value="{{ p.fim|date:'Y-m-d'|default:'' }}">
                 </div>
             </div>
 
             <div>
-                {% if b.status == 'aberto' %}
+                {% if p.status == 'aberto' %}
                     <span class="status-badge badge-aberto">✅ Aberto agora</span>
-                {% elif b.status == 'futuro' %}
-                    <span class="status-badge badge-futuro">🔵 Futuro — abre em {{ b.ini|date:'d/m/Y' }}</span>
-                {% elif b.status == 'encerrado' %}
-                    <span class="status-badge badge-encerrado">🔴 Encerrado em {{ b.fim|date:'d/m/Y' }}</span>
+                {% elif p.status == 'futuro' %}
+                    <span class="status-badge badge-futuro">🔵 Futuro — abre em {{ p.ini|date:'d/m/Y' }}</span>
+                {% elif p.status == 'encerrado' %}
+                    <span class="status-badge badge-encerrado">🔴 Encerrado em {{ p.fim|date:'d/m/Y' }}</span>
                 {% else %}
                     <span class="status-badge badge-nao_configurado">⚪ Não configurado</span>
                 {% endif %}

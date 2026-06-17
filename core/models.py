@@ -392,10 +392,14 @@ class Configuracao(models.Model):
     notas_b1_fim = models.DateField(null=True, blank=True, verbose_name='B1 — Fim do lançamento')
     notas_b2_ini = models.DateField(null=True, blank=True, verbose_name='B2 — Início do lançamento')
     notas_b2_fim = models.DateField(null=True, blank=True, verbose_name='B2 — Fim do lançamento')
+    notas_pa1_ini = models.DateField(null=True, blank=True, verbose_name='PA1 — Início do lançamento')
+    notas_pa1_fim = models.DateField(null=True, blank=True, verbose_name='PA1 — Fim do lançamento')
     notas_b3_ini = models.DateField(null=True, blank=True, verbose_name='B3 — Início do lançamento')
     notas_b3_fim = models.DateField(null=True, blank=True, verbose_name='B3 — Fim do lançamento')
     notas_b4_ini = models.DateField(null=True, blank=True, verbose_name='B4 — Início do lançamento')
     notas_b4_fim = models.DateField(null=True, blank=True, verbose_name='B4 — Fim do lançamento')
+    notas_pa2_ini = models.DateField(null=True, blank=True, verbose_name='PA2 — Início do lançamento')
+    notas_pa2_fim = models.DateField(null=True, blank=True, verbose_name='PA2 — Fim do lançamento')
 
     # ── Período global (fallback) ─────────────────────────────────
     periodo_notas_ini = models.DateField(
@@ -428,19 +432,28 @@ class Configuracao(models.Model):
         ano = self.ano_letivo.ano if self.ano_letivo else self.inicio_periodo_letivo.year
         return f"Configuração do Ano Letivo ({ano})"
 
-    def periodo_para_bimestre(self, bimestre):
-        """Retorna (ini, fim) para o bimestre dado, com fallback no período global."""
-        mapa = {
-            1: (self.notas_b1_ini, self.notas_b1_fim),
-            2: (self.notas_b2_ini, self.notas_b2_fim),
-            3: (self.notas_b3_ini, self.notas_b3_fim),
-            4: (self.notas_b4_ini, self.notas_b4_fim),
+    def periodo_para_bimestre(self, periodo):
+        """
+        Retorna (inicio, fim) para o bimestre numérico (1,2,3,4) ou 'PA1'/'PA2'.
+        Faz fallback para `periodo_notas_ini` e `periodo_notas_fim`.
+        """
+        p = str(periodo)
+        mapping = {
+            '1': (self.notas_b1_ini, self.notas_b1_fim),
+            '2': (self.notas_b2_ini, self.notas_b2_fim),
+            'PA1': (self.notas_pa1_ini, self.notas_pa1_fim),
+            '3': (self.notas_b3_ini, self.notas_b3_fim),
+            '4': (self.notas_b4_ini, self.notas_b4_fim),
+            'PA2': (self.notas_pa2_ini, self.notas_pa2_fim),
         }
-        ini, fim = mapa.get(bimestre, (None, None))
-        if ini and fim:
-            return ini, fim
-        # fallback para período global
-        return self.periodo_notas_ini, self.periodo_notas_fim
+        
+        ini, fim = mapping.get(p, (None, None))
+        
+        # Fallback se ambos não estiverem preenchidos especificamente
+        if not ini or not fim:
+            ini = self.periodo_notas_ini
+            fim = self.periodo_notas_fim
+        return ini, fim
 
     def get_feriados(self):
         """Retorna um set de datetime.date com os feriados configurados."""
@@ -508,6 +521,31 @@ class NotaBimestral(models.Model):
         verbose_name = 'Nota Bimestral'
         verbose_name_plural = 'Notas Bimestrais'
         unique_together = ('aluno', 'disciplina', 'bimestre', 'ano_letivo')
+
+
+class ProvaAuxiliar(models.Model):
+    NUMERO_CHOICES = [
+        (1, 'PA1'),
+        (2, 'PA2'),
+    ]
+
+    aluno       = models.ForeignKey(Aluno, on_delete=models.CASCADE, related_name='provas_auxiliares')
+    disciplina  = models.ForeignKey(Disciplina, on_delete=models.CASCADE)
+    ano_letivo  = models.ForeignKey(AnoLetivo, on_delete=models.CASCADE)
+    numero_pa   = models.IntegerField(choices=NUMERO_CHOICES, verbose_name='Número da PA')
+    nota        = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True, verbose_name='Nota da PA')
+
+    lancado_por = models.ForeignKey(Professor, on_delete=models.SET_NULL, null=True, blank=True)
+    criado_em   = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Prova Auxiliar'
+        verbose_name_plural = 'Provas Auxiliares'
+        unique_together = ('aluno', 'disciplina', 'ano_letivo', 'numero_pa')
+
+    def __str__(self):
+        return f"{self.aluno.nome} - {self.disciplina.nome} - PA{self.numero_pa} - Nota: {self.nota}"
         ordering = ['aluno__nome', 'bimestre']
 
     def __str__(self):

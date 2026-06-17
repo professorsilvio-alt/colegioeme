@@ -1,41 +1,47 @@
 {% extends 'core/base.html' %}
 {% load l10n %}
 
-{% block title %}Notas — Turma {{ turma.codigo }} — B{{ bimestre }} — SCA{% endblock %}
+{% block title %}Notas — Turma {{ turma.codigo }} — {{ periodo_nome }} — SCA{% endblock %}
 
 {% block content %}
 <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:16px;">
-    <h2 style="color:#003366; margin:0;">📝 Notas — Turma {{ turma.codigo }} — {{ bimestre }}º Bimestre</h2>
+    <h2 style="color:#003366; margin:0;">📝 Notas — Turma {{ turma.codigo }} — {{ periodo_nome }}</h2>
     <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        {% for b in bimestres %}
-        <a href="{% url 'notas_turma' turma.codigo b %}"
-           style="padding:6px 14px; border-radius:20px; text-decoration:none; font-size:13px; font-weight:600;
-                  {% if b == bimestre %}background:#003366; color:#fff;{% else %}background:#e8eef5; color:#003366;{% endif %}">
-            B{{ b }}
+        {% for p in periodos_lista %}
+        <a href="{% url 'notas_turma' turma.codigo p %}"
+            style="padding:6px 14px; border-radius:20px; text-decoration:none; font-size:13px; font-weight:600;
+                  {% if p == periodo %}background:#003366; color:#fff;{% else %}background:#e8eef5; color:#003366;{% endif %}">
+            {% if p == 'PA1' or p == 'PA2' %}{{ p }}{% else %}B{{ p }}{% endif %}
         </a>
         {% endfor %}
-        <a href="{% url 'notas_index' %}" style="padding:6px 14px; border-radius:20px; background:#6c757d; color:#fff; text-decoration:none; font-size:13px; font-weight:600;">← Voltar</a>
+        <a href="{% url 'notas_index' %}"
+            style="padding:6px 14px; border-radius:20px; background:#6c757d; color:#fff; text-decoration:none; font-size:13px; font-weight:600;">←
+            Voltar</a>
     </div>
 </div>
 
 {% if not pode_lancar %}
-<div style="background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:10px 14px; margin-bottom:16px; color:#856404; font-size:13px;">
+<div
+    style="background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:10px 14px; margin-bottom:16px; color:#856404; font-size:13px;">
     ⚠️ Modo <strong>somente leitura</strong> —
     {% if periodo_b %}
-        o período de lançamento do {{ bimestre }}º bimestre é de
-        <strong>{{ periodo_b.ini|date:"d/m/Y" }}</strong> a <strong>{{ periodo_b.fim|date:"d/m/Y" }}</strong>.
-        Fora deste intervalo você pode apenas consultar.
+    o período de lançamento do {{ bimestre }}º bimestre é de
+    <strong>{{ periodo_b.ini|date:"d/m/Y" }}</strong> a <strong>{{ periodo_b.fim|date:"d/m/Y" }}</strong>.
+    Fora deste intervalo você pode apenas consultar.
     {% else %}
-        o período de lançamento para este bimestre ainda não foi configurado pela secretaria.
+    o período de lançamento para este bimestre ainda não foi configurado pela secretaria.
     {% endif %}
 </div>
 {% else %}
 <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:16px;">
-    <div style="flex:1; background:#e8f4fd; border:1px solid #b8daff; border-radius:8px; padding:10px 14px; color:#004085; font-size:13px;">
-        ℹ️ <strong>Atenção:</strong> A nota da Prova deve estar no intervalo de <strong>0,0 a 10,0</strong> e do Simulado de <strong>0 a 20</strong> (percentual). Valores fora destes limites não serão aceitos.
+    <div
+        style="flex:1; background:#e8f4fd; border:1px solid #b8daff; border-radius:8px; padding:10px 14px; color:#004085; font-size:13px;">
+        ℹ️ <strong>Atenção:</strong> A nota da Prova deve estar no intervalo de <strong>0,0 a 10,0</strong> e do
+        Simulado de <strong>0 a 20</strong> (percentual). Valores fora destes limites não serão aceitos.
     </div>
     {% if periodo_b %}
-    <div style="background:#d1fae5; border:1px solid #6ee7b7; border-radius:8px; padding:10px 14px; color:#065f46; font-size:13px; white-space:nowrap;">
+    <div
+        style="background:#d1fae5; border:1px solid #6ee7b7; border-radius:8px; padding:10px 14px; color:#065f46; font-size:13px; white-space:nowrap;">
         ✅ Lançamento aberto até <strong>{{ periodo_b.fim|date:"d/m/Y" }}</strong>
     </div>
     {% endif %}
@@ -49,114 +55,128 @@
 
 <!-- Legenda do simulado -->
 {% if tem_simulado %}
-<div style="background:#e8f0fe; border:1px solid #4a90d9; border-radius:8px; padding:8px 14px; margin-bottom:12px; font-size:13px; color:#1a3a6e;">
-    📊 Esta turma faz <strong>Simulado</strong> em algumas disciplinas. O campo "Sim." aparece para lançamento interno e <em>não aparece no boletim</em>.
+<div
+    style="background:#e8f0fe; border:1px solid #4a90d9; border-radius:8px; padding:8px 14px; margin-bottom:12px; font-size:13px; color:#1a3a6e;">
+    📊 Esta turma faz <strong>Simulado</strong> em algumas disciplinas. O campo "Sim." aparece para lançamento interno e
+    <em>não aparece no boletim</em>.
 </div>
 {% endif %}
 
 <div style="overflow-x:auto;">
-<table id="tabelaNotas" style="width:100%; border-collapse:collapse; font-size:13px;">
-    <thead>
-        <tr style="background:#003366; color:#fff;">
-            <th style="padding:10px 8px; text-align:left; position:sticky; left:0; background:#003366; min-width:180px;">Aluno</th>
-            {% for linha in grade %}
-            <th style="padding:10px 8px; text-align:center; min-width:{{ linha.faz_simulado|yesno:'220,110' }}px;">
-                {{ linha.disciplina.nome }}
-                {% if linha.faz_simulado %}<br><span style="font-size:10px; opacity:.8;">(Prova | Sim. | Final)</span>{% endif %}
-            </th>
-            {% endfor %}
-            <th style="padding:10px 8px; text-align:center; min-width:100px;">Boletim</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for i in alunos %}
-        <tr style="border-bottom:1px solid #e0e0e0; {% cycle 'background:#f9fbff;' '' %}">
-            <td style="padding:8px; font-weight:500; position:sticky; left:0; background:inherit;">
-                {{ i.nome }}
-            </td>
-            {% for linha in grade %}
-            {% with celula=linha.celulas|dictsort:"aluno.nome" %}
-            {% for cel in linha.celulas %}
-            {% if cel.aluno.pk == i.pk %}
-            <td style="padding:6px 4px; text-align:center; vertical-align:middle;"
-                {% if cel.nota.nao_avaliado %}style="background:#fff8e1;"{% endif %}>
-                {% if cel.nota.nao_avaliado %}
-                <!-- Aluno marcado como N/A (não avaliado) -->
-                <div style="display:flex; gap:4px; align-items:center; justify-content:center;">
-                    <span class="na-badge"
-                          data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}"
-                          title="Não Avaliado — aluno ausente na avaliação"
-                          style="background:#f39c12; color:#fff; font-weight:700; font-size:12px;
-                                 padding:3px 8px; border-radius:12px; letter-spacing:.5px;">N/A</span>
-                    {% if pode_lancar %}
-                    <button type="button" onclick="removerNA({{ i.pk }}, {{ linha.disciplina.pk }}, {{ bimestre }})"
-                            title="Desfazer N/A e lançar nota"
-                            style="background:none; border:none; cursor:pointer; font-size:14px; padding:2px;">✕</button>
-                    {% endif %}
-                </div>
+    <table id="tabelaNotas" style="width:100%; border-collapse:collapse; font-size:13px;">
+        <thead>
+            <tr style="background:#003366; color:#fff;">
+                <th
+                    style="padding:10px 8px; text-align:left; position:sticky; left:0; background:#003366; min-width:180px;">
+                    Aluno</th>
+                {% for linha in grade %}
+                <th style="padding:10px 8px; text-align:center; min-width:{{ linha.faz_simulado|yesno:'220,110' }}px;">
+                    {{ linha.disciplina.nome }}
+                    {% if linha.faz_simulado %}<br><span style="font-size:10px; opacity:.8;">(Prova | Sim. |
+                        Final)</span>{% endif %}
+                </th>
+                {% endfor %}
+                <th style="padding:10px 8px; text-align:center; min-width:100px;">Boletim</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in alunos %}
+            <tr style="border-bottom:1px solid #e0e0e0; {% cycle 'background:#f9fbff;' '' %}">
+                <td style="padding:8px; font-weight:500; position:sticky; left:0; background:inherit;">
+                    {{ i.nome }}
+                </td>
+                {% for linha in grade %}
+                {% with celula=linha.celulas|dictsort:"aluno.nome" %}
+                {% for cel in linha.celulas %}
+                {% if cel.aluno.pk == i.pk %}
+                {% if is_pa %}
+                <!-- Célula de PA -->
+                <td style="padding:6px 4px; text-align:center; vertical-align:middle; background:#f4f6f9;">
+                    <div style="display:flex; gap:4px; align-items:center; justify-content:center;">
+                        <input type="number" min="0" max="10" step="0.1" class="pa-input"
+                               data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}"
+                               data-pa="{{ periodo|slice:"-1:" }}"
+                               value="{{ cel.pa.nota|unlocalize|default:'' }}"
+                               placeholder="PA" title="Prova Auxiliar — {{ i.nome }}"
+                               {% if not pode_lancar %}disabled{% endif %}
+                               style="width:60px; padding:4px 6px; border:1.5px solid #aebac9; border-radius:6px; text-align:center; font-size:13px; background:#fff;">
+                        <span class="pa-status" data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}"
+                              style="font-size:16px; width:16px; text-align:center;"></span>
+                    </div>
+                </td>
                 {% else %}
-                <div style="display:flex; gap:4px; align-items:center; justify-content:center; flex-wrap:nowrap;">
-                    <!-- Nota da prova -->
-                    <input type="number" min="0" max="10" step="0.1"
-                           class="nota-input nota-prova"
-                           data-aluno="{{ i.pk }}"
-                           data-disc="{{ linha.disciplina.pk }}"
-                           data-bimestre="{{ bimestre }}"
-                           data-tipo="prova"
-                           value="{{ cel.nota.nota_prova|unlocalize|default:'' }}"
-                           placeholder="Prova"
-                           title="Nota da Prova — {{ i.nome }}"
-                           {% if not pode_lancar %}disabled{% endif %}
-                           style="width:60px; padding:4px 6px; border:1.5px solid #c5d5e8; border-radius:6px; text-align:center; font-size:13px;">
-                    <!-- Nota do simulado (interno) -->
-                    {% if linha.faz_simulado %}
-                    <input type="number" min="0" max="20" step="1"
-                           class="nota-input nota-simulado"
-                           data-aluno="{{ i.pk }}"
-                           data-disc="{{ linha.disciplina.pk }}"
-                           data-bimestre="{{ bimestre }}"
-                           data-tipo="simulado"
-                           value="{{ cel.nota.nota_simulado|unlocalize|default:'' }}"
-                           placeholder="Sim."
-                           title="Nota do Simulado (interno) — {{ i.nome }}"
-                           {% if not pode_lancar %}disabled{% endif %}
-                           style="width:55px; padding:4px 6px; border:1.5px solid #ffc107; border-radius:6px; text-align:center; font-size:13px; background:#fffde7;">
+                <td style="padding:6px 4px; text-align:center; vertical-align:middle;" {% if cel.nota.nao_avaliado %}style="background:#fff8e1;"{% endif %}>
+                    {% if cel.nota.nao_avaliado %}
+                    <!-- Aluno marcado como N/A (não avaliado) -->
+                    <div style="display:flex; gap:4px; align-items:center; justify-content:center;">
+                        <span class="na-badge" data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}"
+                              title="Não Avaliado — aluno ausente na avaliação" 
+                              style="background:#f39c12; color:#fff; font-weight:700; font-size:12px; padding:3px 8px; border-radius:12px; letter-spacing:.5px;">N/A</span>
+                        {% if pode_lancar %}
+                        <button type="button" onclick="removerNA({{ i.pk }}, {{ linha.disciplina.pk }}, '{{ periodo }}')"
+                                title="Desfazer N/A e lançar nota"
+                                style="background:none; border:none; cursor:pointer; font-size:14px; padding:2px;">✕</button>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div style="display:flex; gap:4px; align-items:center; justify-content:center; flex-wrap:nowrap;">
+                        <!-- Nota da prova -->
+                        <input type="number" min="0" max="10" step="0.1" class="nota-input nota-prova"
+                               data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}" data-periodo="{{ periodo }}"
+                               data-tipo="prova" value="{{ cel.nota.nota_prova|unlocalize|default:'' }}"
+                               placeholder="Prova" title="Nota da Prova — {{ i.nome }}" 
+                               {% if not pode_lancar %}disabled{% endif %}
+                               style="width:60px; padding:4px 6px; border:1.5px solid #c5d5e8; border-radius:6px; text-align:center; font-size:13px;">
+                        
+                        <!-- Nota do simulado (interno) -->
+                        {% if linha.faz_simulado %}
+                        <input type="number" min="0" max="20" step="1" class="nota-input nota-simulado"
+                               data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}" data-periodo="{{ periodo }}"
+                               data-tipo="simulado" value="{{ cel.nota.nota_simulado|unlocalize|default:'' }}"
+                               placeholder="Sim." title="Nota do Simulado (interno) — {{ i.nome }}" 
+                               {% if not pode_lancar %}disabled{% endif %}
+                               style="width:55px; padding:4px 6px; border:1.5px solid #ffc107; border-radius:6px; text-align:center; font-size:13px; background:#fffde7;">
+                        {% endif %}
+                        
+                        <!-- Nota final (calculada) -->
+                        <span class="nota-final-display" data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}"
+                              style="min-width:40px; font-weight:700; color:#003366; font-size:14px; display:inline-block; text-align:center;">
+                            {{ cel.nota.nota_final|unlocalize|default:'—' }}
+                        </span>
+                        
+                        <!-- Status da última ação -->
+                        <span class="nota-status" data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}"
+                              style="font-size:18px; width:20px; text-align:center;"></span>
+                    </div>
                     {% endif %}
-                    <!-- Nota final (calculada) -->
-                    <span class="nota-final-display"
-                          data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}"
-                          style="min-width:40px; font-weight:700; color:#003366; font-size:14px; display:inline-block; text-align:center;">
-                        {{ cel.nota.nota_final|unlocalize|default:'—' }}
-                    </span>
-                    <!-- Status da última ação -->
-                    <span class="nota-status" data-aluno="{{ i.pk }}" data-disc="{{ linha.disciplina.pk }}"
-                          style="font-size:18px; width:20px; text-align:center;"></span>
-                </div>
+                </td>
                 {% endif %}
-            </td>
-            {% endif %}
+                {% endif %}
+                {% endfor %}
+                {% endwith %}
+                {% endfor %}
+                <td style="padding:6px; text-align:center;">
+                    <a href="{% url 'boletim_aluno' i.pk %}"
+                       style="padding:4px 10px; background:#16a085; color:#fff; border-radius:6px; text-decoration:none; font-size:12px; white-space:nowrap;">
+                        📄 Boletim
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="100" style="text-align:center; color:#999; padding:20px;">Nenhum aluno encontrado.</td>
+            </tr>
             {% endfor %}
-            {% endwith %}
-            {% endfor %}
-            <td style="padding:6px; text-align:center;">
-                <a href="{% url 'boletim_aluno' i.pk %}"
-                   style="padding:4px 10px; background:#16a085; color:#fff; border-radius:6px; text-decoration:none; font-size:12px; white-space:nowrap;">
-                    📄 Boletim
-                </a>
-            </td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="100" style="text-align:center; color:#999; padding:20px;">Nenhum aluno encontrado.</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
+        </tbody>
+    </table>
 </div>
 
-{% if prof.pode_lancar_notas %}
+{% if prof.pode_lancar_notas and not is_pa %}
 <div style="margin-top:20px; padding:14px 18px; background:#fff3cd; border:1px solid #ffc107; border-radius:10px;">
     <strong style="color:#856404;">⚠️ Aplicar N/A para ausentes</strong>
     <p style="margin:6px 0 10px; color:#6d5507; font-size:13px;">
-        Cria registros <strong>N/A (Não Avaliado)</strong> automaticamente para todos os alunos que ainda não possuem nota
+        Cria registros <strong>N/A (Não Avaliado)</strong> automaticamente para todos os alunos que ainda não possuem
+        nota
         lançada em uma disciplina neste bimestre, indicando ausência na avaliação.
     </p>
     <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
@@ -166,8 +186,7 @@
             <option value="{{ linha.disciplina.pk }}">{{ linha.disciplina.nome }}</option>
             {% endfor %}
         </select>
-        <button type="button" onclick="aplicarNA()"
-                style="padding:7px 18px; background:#e67e22; color:#fff; border:none; border-radius:8px;
+        <button type="button" onclick="aplicarNA()" style="padding:7px 18px; background:#e67e22; color:#fff; border:none; border-radius:8px;
                        font-size:13px; font-weight:600; cursor:pointer;">
             📂 Aplicar N/A
         </button>
@@ -180,154 +199,224 @@
 
 {% block extra_js %}
 <script>
-const NOTA_SAVE_URL = '{% url "nota_salvar" %}';
-const CSRF_TOKEN    = '{{ csrf_token }}';
-const PODE_LANCAR   = {{ pode_lancar|yesno:"true,false" }};
+    const NOTA_SAVE_URL = '{% url "nota_salvar" %}';
+    const CSRF_TOKEN = '{{ csrf_token }}';
+    const PODE_LANCAR = {{ pode_lancar|yesno:"true,false" }};
 
-// Debounce para não enviar a cada tecla
-function debounce(fn, delay) {
-    let t;
-    return function(...args) { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), delay); };
-}
-
-function calcularFinalLocal(prova, simulado) {
-    if (prova === '' || isNaN(parseFloat(prova))) return '—';
-    let p = parseFloat(prova);
-    if (simulado !== '' && !isNaN(parseFloat(simulado))) {
-        let s = parseFloat(simulado);
-        let bonus = s * 0.01;
-        p = Math.min(10, p * (1 + bonus));
+    // Debounce para não enviar a cada tecla
+    function debounce(fn, delay) {
+        let t;
+        return function (...args) { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), delay); };
     }
-    return p.toFixed(1);
-}
 
-function setStatus(alunoId, discId, icon, color) {
-    const el = document.querySelector(`.nota-status[data-aluno="${alunoId}"][data-disc="${discId}"]`);
-    if (el) { el.textContent = icon; el.style.color = color; }
-}
+    function calcularFinalLocal(prova, simulado) {
+        if (prova === '' || isNaN(parseFloat(prova))) return '—';
+        let p = parseFloat(prova);
+        if (simulado !== '' && !isNaN(parseFloat(simulado))) {
+            let s = parseFloat(simulado);
+            let bonus = s * 0.01;
+            p = Math.min(10, p * (1 + bonus));
+        }
+        return p.toFixed(1);
+    }
 
-function setFinal(alunoId, discId, valor) {
-    const el = document.querySelector(`.nota-final-display[data-aluno="${alunoId}"][data-disc="${discId}"]`);
-    if (el) el.textContent = valor;
-}
+    function setStatus(alunoId, discId, icon, color) {
+        const el = document.querySelector(`.nota-status[data-aluno="${alunoId}"][data-disc="${discId}"]`);
+        if (el) { el.textContent = icon; el.style.color = color; }
+    }
 
-function salvarNota(input) {
-    const alunoId  = input.dataset.aluno;
-    const discId   = input.dataset.disc;
-    const bimestre = input.dataset.bimestre;
+    function setFinal(alunoId, discId, valor) {
+        const el = document.querySelector(`.nota-final-display[data-aluno="${alunoId}"][data-disc="${discId}"]`);
+        if (el) el.textContent = valor;
+    }
 
-    // Busca ambos os inputs da mesma célula
-    const inputProva = document.querySelector(`.nota-prova[data-aluno="${alunoId}"][data-disc="${discId}"]`);
-    const inputSim   = document.querySelector(`.nota-simulado[data-aluno="${alunoId}"][data-disc="${discId}"]`);
+    function salvarNota(input) {
+        const alunoId = input.dataset.aluno;
+        const discId = input.dataset.disc;
+        const bimestre = input.dataset.bimestre;
 
-    const notaProva = inputProva ? inputProva.value.trim() : '';
-    const notaSim   = inputSim   ? inputSim.value.trim()   : '';
+        // Busca ambos os inputs da mesma célula
+        const inputProva = document.querySelector(`.nota-prova[data-aluno="${alunoId}"][data-disc="${discId}"]`);
+        const inputSim = document.querySelector(`.nota-simulado[data-aluno="${alunoId}"][data-disc="${discId}"]`);
 
-    if (notaProva === '') { setFinal(alunoId, discId, '—'); setStatus(alunoId, discId, '', ''); return; }
+        const notaProva = inputProva ? inputProva.value.trim() : '';
+        const notaSim = inputSim ? inputSim.value.trim() : '';
 
-    // Preview local imediato
-    setFinal(alunoId, discId, calcularFinalLocal(notaProva, notaSim));
-    setStatus(alunoId, discId, '⏳', '#999');
+        if (notaProva === '') { setFinal(alunoId, discId, '—'); setStatus(alunoId, discId, '', ''); return; }
 
-    const body = new URLSearchParams({
-        csrfmiddlewaretoken: CSRF_TOKEN,
-        aluno_id: alunoId,
-        disciplina_id: discId,
-        bimestre: bimestre,
-        nota_prova: notaProva,
-        nota_simulado: notaSim,
-    });
+        // Preview local imediato
+        setFinal(alunoId, discId, calcularFinalLocal(notaProva, notaSim));
+        setStatus(alunoId, discId, '⏳', '#999');
 
-    fetch(NOTA_SAVE_URL, { method: 'POST', body, credentials: 'same-origin' })
-        .then(r => r.json())
-        .then(data => {
-            if (data.ok) {
-                setFinal(alunoId, discId, data.nota_final);
-                setStatus(alunoId, discId, '✓', '#27ae60');
-                setTimeout(() => setStatus(alunoId, discId, '', ''), 2500);
-            } else {
-                setStatus(alunoId, discId, '✗', '#e74c3c');
-                alert('Erro: ' + data.erro);
-            }
-        })
-        .catch(() => { setStatus(alunoId, discId, '✗', '#e74c3c'); });
-}
-
-function enforceRange(input) {
-    if (input.value === '') return;
-    let v = parseFloat(input.value);
-    let maxVal = input.classList.contains('nota-simulado') ? 20 : 10;
-    if (v < 0) input.value = 0;
-    if (v > maxVal) input.value = maxVal;
-}
-
-if (PODE_LANCAR) {
-    const debouncedSave = debounce(salvarNota, 600);
-    document.querySelectorAll('.nota-input').forEach(inp => {
-        inp.addEventListener('input', () => {
-            enforceRange(inp);
-            debouncedSave(inp);
+        const body = new URLSearchParams({
+            csrfmiddlewaretoken: CSRF_TOKEN,
+            aluno_id: alunoId,
+            disciplina_id: discId,
+            bimestre: bimestre,
+            nota_prova: notaProva,
+            nota_simulado: notaSim,
         });
-        inp.addEventListener('change', () => {
-            enforceRange(inp);
-            salvarNota(inp);
+
+        fetch(NOTA_SAVE_URL, { method: 'POST', body, credentials: 'same-origin' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.ok) {
+                    setFinal(alunoId, discId, data.nota_final);
+                    setStatus(alunoId, discId, '✓', '#27ae60');
+                    setTimeout(() => setStatus(alunoId, discId, '', ''), 2500);
+                } else {
+                    setStatus(alunoId, discId, '✗', '#e74c3c');
+                    alert('Erro: ' + data.erro);
+                }
+            })
+            .catch(() => { setStatus(alunoId, discId, '✗', '#e74c3c'); });
+    }
+
+    function enforceRange(input) {
+        if (input.value === '') return;
+        let v = parseFloat(input.value);
+        let maxVal = input.classList.contains('nota-simulado') ? 20 : 10;
+        if (v < 0) input.value = 0;
+        if (v > maxVal) input.value = maxVal;
+    }
+
+    if (PODE_LANCAR) {
+        const debouncedSave = debounce(salvarNota, 600);
+        document.querySelectorAll('.nota-input').forEach(inp => {
+            inp.addEventListener('input', () => {
+                enforceRange(inp);
+                debouncedSave(inp);
+            });
+            inp.addEventListener('change', () => {
+                enforceRange(inp);
+                salvarNota(inp);
+            });
         });
-    });
-}
+    }
 
-// ── N/A — Aplicar e Remover ──
-const NA_URL      = '{% url "aplicar_na_bimestre" %}';
-const TURMA_COD   = '{{ turma.codigo }}';
-const BIMESTRE    = {{ bimestre }};
+    // ── N/A — Aplicar e Remover ──
+    const NA_URL = '{% url "aplicar_na_bimestre" %}';
+    const TURMA_COD = '{{ turma.codigo }}';
+    const BIMESTRE = '{{ periodo }}';
 
-function aplicarNA() {
-    const discId = document.getElementById('naDiscSelect').value;
-    const msg    = document.getElementById('naMsg');
-    if (!discId) { msg.textContent = 'Selecione uma disciplina.'; msg.style.color = '#c0392b'; return; }
-    if (!confirm('Aplicar N/A para todos os alunos sem nota lançada nesta disciplina?')) return;
-    msg.textContent = '⏳ Processando...'; msg.style.color = '#555';
-    const body = new URLSearchParams({
-        csrfmiddlewaretoken: CSRF_TOKEN,
-        turma_codigo: TURMA_COD,
-        disciplina_id: discId,
-        bimestre: BIMESTRE,
-    });
-    fetch(NA_URL, { method: 'POST', body, credentials: 'same-origin' })
-        .then(r => r.json())
-        .then(data => {
-            if (data.ok) {
-                msg.textContent = '✓ ' + data.msg;
-                msg.style.color = '#27ae60';
-                setTimeout(() => location.reload(), 1200);
-            } else {
-                msg.textContent = '✗ ' + data.erro;
-                msg.style.color = '#c0392b';
-            }
-        })
-        .catch(() => { msg.textContent = 'Erro de conexão.'; msg.style.color = '#c0392b'; });
-}
+    function aplicarNA() {
+        if ('{{ is_pa|yesno:"true,false" }}' === 'true') return;
+        const discId = document.getElementById('naDiscSelect').value;
+        const msg = document.getElementById('naMsg');
+        if (!discId) { msg.textContent = 'Selecione uma disciplina.'; msg.style.color = '#c0392b'; return; }
+        if (!confirm('Aplicar N/A para todos os alunos sem nota lançada nesta disciplina?')) return;
+        msg.textContent = '⏳ Processando...'; msg.style.color = '#555';
+        const body = new URLSearchParams({
+            csrfmiddlewaretoken: CSRF_TOKEN,
+            turma_codigo: TURMA_COD,
+            disciplina_id: discId,
+            bimestre: BIMESTRE,
+        });
+        fetch(NA_URL, { method: 'POST', body, credentials: 'same-origin' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.ok) {
+                    msg.textContent = '✓ ' + data.msg;
+                    msg.style.color = '#27ae60';
+                    setTimeout(() => location.reload(), 1200);
+                } else {
+                    msg.textContent = '✗ ' + data.erro;
+                    msg.style.color = '#c0392b';
+                }
+            })
+            .catch(() => { msg.textContent = 'Erro de conexão.'; msg.style.color = '#c0392b'; });
+    }
 
-function removerNA(alunoId, discId, bimestre) {
-    if (!confirm('Remover o N/A deste aluno? Você poderá lançar a nota normalmente.')) return;
-    // Remove o registro N/A deletando via endpoint específico
-    const body = new URLSearchParams({
-        csrfmiddlewaretoken: CSRF_TOKEN,
-        aluno_id: alunoId,
-        disciplina_id: discId,
-        bimestre: bimestre,
-        acao: 'remover_na',
-    });
-    fetch('{% url "remover_na" %}', { method: 'POST', body, credentials: 'same-origin' })
-        .then(r => r.json())
-        .then(data => { if (data.ok) location.reload(); else alert('Erro: ' + data.erro); })
-        .catch(() => alert('Erro de conexão.'));
-}
+    function removerNA(alunoId, discId, bimestre) {
+        if (!confirm('Remover o N/A deste aluno? Você poderá lançar a nota normalmente.')) return;
+        // Remove o registro N/A deletando via endpoint específico
+        const body = new URLSearchParams({
+            csrfmiddlewaretoken: CSRF_TOKEN,
+            aluno_id: alunoId,
+            disciplina_id: discId,
+            bimestre: bimestre,
+            acao: 'remover_na',
+        });
+        fetch('{% url "remover_na" %}', { method: 'POST', body, credentials: 'same-origin' })
+            .then(r => r.json())
+            .then(data => { if (data.ok) location.reload(); else alert('Erro: ' + data.erro); })
+            .catch(() => alert('Erro de conexão.'));
+    }
+
+    // ── PA Save Logic ──
+    const PA_SAVE_URL = '{% url "pa_salvar" %}';
+    
+    function setPAStatus(alunoId, discId, icon, color) {
+        const el = document.querySelector(`.pa-status[data-aluno="${alunoId}"][data-disc="${discId}"]`);
+        if (el) { el.textContent = icon; el.style.color = color; }
+    }
+
+    function salvarPA(input) {
+        const alunoId = input.dataset.aluno;
+        const discId = input.dataset.disc;
+        const numPA = input.dataset.pa;
+        const nota = input.value.trim();
+
+        if (nota === '') { setPAStatus(alunoId, discId, '', ''); return; }
+
+        setPAStatus(alunoId, discId, '⏳', '#999');
+
+        const body = new URLSearchParams({
+            csrfmiddlewaretoken: CSRF_TOKEN,
+            aluno_id: alunoId,
+            disciplina_id: discId,
+            numero_pa: numPA,
+            nota: nota,
+        });
+
+        fetch(PA_SAVE_URL, { method: 'POST', body, credentials: 'same-origin' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.ok) {
+                    setPAStatus(alunoId, discId, '✓', '#27ae60');
+                    setTimeout(() => setPAStatus(alunoId, discId, '', ''), 2500);
+                } else {
+                    setPAStatus(alunoId, discId, '✗', '#e74c3c');
+                    alert('Erro: ' + data.erro);
+                }
+            })
+            .catch(() => { setPAStatus(alunoId, discId, '✗', '#e74c3c'); });
+    }
+
+    if (PODE_LANCAR) {
+        const debouncedSavePA = debounce(salvarPA, 600);
+        document.querySelectorAll('.pa-input').forEach(inp => {
+            inp.addEventListener('input', () => {
+                enforceRange(inp);
+                debouncedSavePA(inp);
+            });
+            inp.addEventListener('change', () => {
+                enforceRange(inp);
+                salvarPA(inp);
+            });
+        });
+    }
 </script>
 
 <style>
-    .nota-input:focus { outline:none; border-color:#003366 !important; box-shadow:0 0 0 2px rgba(0,51,102,.15); }
-    .nota-input:disabled { background:#f0f0f0; color:#999; cursor:not-allowed; }
-    tbody tr:hover { background:#eef4ff !important; }
-    td[style*="background:#fff8e1"] { background:#fff8e1 !important; }
+    .nota-input:focus {
+        outline: none;
+        border-color: #003366 !important;
+        box-shadow: 0 0 0 2px rgba(0, 51, 102, .15);
+    }
+
+    .nota-input:disabled {
+        background: #f0f0f0;
+        color: #999;
+        cursor: not-allowed;
+    }
+
+    tbody tr:hover {
+        background: #eef4ff !important;
+    }
+
+    td[style*="background:#fff8e1"] {
+        background: #fff8e1 !important;
+    }
 </style>
 {% endblock %}
