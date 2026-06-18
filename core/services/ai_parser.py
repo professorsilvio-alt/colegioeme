@@ -62,11 +62,21 @@ Deve ser puramente um array JSON de objetos, com as seguintes chaves exatas:
 ATENÇÃO: Retorne APENAS o JSON válido dentro de um bloco ```json ... ```, sem explicações adicionais.
 """
         # 4. Chamada da IA
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content(
-            [uploaded_file, prompt],
-            request_options={"timeout": 60}
-        )
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        try:
+            response = model.generate_content(
+                [uploaded_file, prompt],
+                request_options={"timeout": 60}
+            )
+        except Exception as e:
+            if '404' in str(e) or 'not found' in str(e):
+                model_pro = genai.GenerativeModel('gemini-1.5-pro-latest')
+                response = model_pro.generate_content(
+                    [uploaded_file, prompt],
+                    request_options={"timeout": 60}
+                )
+            else:
+                raise e
         
         # 5. Processar saída JSON
         text = response.text.strip()
