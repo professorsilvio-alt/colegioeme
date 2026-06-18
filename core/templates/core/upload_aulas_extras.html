@@ -92,14 +92,25 @@
         
         <div>
             <label for="arquivo_upload" style="display: block; font-weight: 600; color: #1e293b; margin-bottom: 8px;">Selecione o arquivo:</label>
-            <input type="file" name="arquivo_upload" id="arquivo_upload" accept=".xlsx, .docx, .pdf" required 
+            <input type="file" name="arquivo_upload" id="arquivo_upload" accept=".xlsx, .docx, .pdf, .jpg, .png" required 
                    style="display: block; width: 100%; padding: 12px; border: 2px dashed #94a3b8; border-radius: 6px; background: #f1f5f9; cursor: pointer;">
         </div>
 
-        <div style="display: flex; gap: 15px; margin-top: 10px;">
-            <button type="submit" style="background: #003366; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1em; transition: background 0.2s;">
+        <div style="background: #e0e7ff; padding: 15px; border-radius: 6px; border: 1px solid #c7d2fe;">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #3730a3; font-weight: 600;">
+                <input type="checkbox" name="usar_ia" id="usar_ia" value="1" style="width: 18px; height: 18px;">
+                Usar Inteligência Artificial (Google Gemini) para ler calendários visuais ou imagens
+            </label>
+            <p style="margin: 5px 0 0 28px; font-size: 0.85em; color: #4f46e5;">Ideal para PDFs fora do padrão, tabelas mescladas ou imagens. Pode levar até 20 segundos.</p>
+        </div>
+
+        <div style="display: flex; gap: 15px; margin-top: 10px; align-items: center;">
+            <button type="submit" onclick="if(document.getElementById('usar_ia').checked){ document.getElementById('loading_ai').style.display = 'inline-flex'; }" style="background: #003366; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1em; transition: background 0.2s;">
                 <i class="fas fa-search"></i> Extrair Dados e Pré-visualizar
             </button>
+            <span id="loading_ai" style="display: none; align-items: center; gap: 8px; color: #3b82f6; font-weight: bold;">
+                <i class="fas fa-spinner fa-spin"></i> A IA está lendo o arquivo...
+            </span>
             <a href="{% url 'dashboard' %}" style="display: inline-flex; align-items: center; justify-content: center; background: #64748b; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; font-size: 1em; transition: background 0.2s;">
                 Voltar
             </a>

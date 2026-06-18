@@ -84,6 +84,8 @@ def upload_aulas_extras(request):
 
         # PASSO 1: Upload e Extração
         file_obj = request.FILES.get('arquivo_upload')
+        usar_ia = request.POST.get('usar_ia') == '1'
+
         if not file_obj:
             messages.error(request, 'Por favor, selecione um arquivo.')
             return redirect('upload_aulas_extras')
@@ -95,89 +97,150 @@ def upload_aulas_extras(request):
 
         filename = file_obj.name.lower()
         rows = []
-        try:
-            if filename.endswith('.xlsx'):
-                rows = _extract_rows_from_excel(file_obj)
-            elif filename.endswith('.docx'):
-                rows = _extract_rows_from_word(file_obj)
-            elif filename.endswith('.pdf'):
-                rows = _extract_rows_from_pdf(file_obj)
-            else:
-                messages.error(request, 'Formato de arquivo inválido. Use .xlsx, .docx ou .pdf.')
-                return redirect('upload_aulas_extras')
-        except Exception as e:
-            messages.error(request, f'Erro ao ler o arquivo: Certifique-se de que é um formato válido com tabelas legíveis. Detalhe: {str(e)}')
-            return redirect('upload_aulas_extras')
-
-        # Processar linhas extraídas
+        
         valid_rows = []
         erros = []
         
-        for i, row in enumerate(rows, start=2): # Start 2 just as indicative line number
-            if not row or not any(row):
-                continue
-                
-            if len(row) < 5:
-                erros.append(f"Linha {i}: Colunas insuficientes na tabela (esperado Data, Horário, Turma, Disc, Prof).")
-                continue
-                
-            val_data = row[0]
-            val_turma = row[2]
-            val_disc = row[3]
-            val_prof = row[4]
-            
-            if not all([val_data, val_turma, val_disc, val_prof]):
-                erros.append(f"Linha {i}: Campos essenciais em branco.")
-                continue
+        if usar_ia:
+            from core.services.ai_parser import extrair_aulas_extras_com_ia
+            try:
+                dados_ia = extrair_aulas_extras_com_ia(file_obj, filename, request.ano_letivo)
+                for i, item in enumerate(dados_ia, start=1):
+                    try:
+                        # O item esperado tem: data, horario, turma, disciplina, professor
+                        val_data = item.get('data', '')
+                        val_turma = item.get('turma', '')
+                        val_disc = item.get('disciplina', '')
+                        val_prof = item.get('professor', '')
+                        
+                        if not all([val_data, val_turma, val_disc, val_prof]):
+                            erros.append(f"Registro da IA {i}: Campos essenciais ausentes na extração.")
+                            continue
 
-            # Parse Date
-            data_aula = None
-            if isinstance(val_data, datetime.datetime):
-                data_aula = val_data.date()
-            else:
-                try:
-                    val_data_str = str(val_data).strip()
-                    if '/' in val_data_str:
-                        d, m, y = val_data_str.split('/')
-                        if len(y) == 2: y = "20" + y
-                        data_aula = datetime.date(int(y), int(m), int(d))
-                    else:
-                        data_aula = datetime.date.fromisoformat(val_data_str[:10])
-                except Exception:
-                    erros.append(f"Linha {i}: Data inválida '{val_data}'. Formato exigido: DD/MM/AAAA")
+                        # Tratamento da data
+                        if '/' in val_data:
+                            d, m, y = val_data.split('/')
+                            if len(y) == 2: y = "20" + y
+                            data_aula = datetime.date(int(y), int(m), int(d))
+                        else:
+                            data_aula = datetime.date.fromisoformat(val_data[:10])
+                            
+                        # Tratamento de Modelos
+                        turma = Turma.objects.filter(codigo__iexact=str(val_turma).strip(), ano_letivo=request.ano_letivo, escola=request.escola).first()
+                        if not turma:
+                            erros.append(f"Registro IA {i}: Turma '{val_turma}' não encontrada.")
+                            continue
+                            
+                        disciplina = Disciplina.objects.filter(nome__iexact=str(val_disc).strip()).first()
+                        if not disciplina:
+                            erros.append(f"Registro IA {i}: Disciplina '{val_disc}' não encontrada.")
+                            continue
+                            
+                        professor = Professor.objects.filter(nome__iexact=str(val_prof).strip()).first()
+                        if not professor:
+                            professores = Professor.objects.filter(nome__icontains=str(val_prof).strip())
+                            if professores.count() == 1:
+                                professor = professores.first()
+                            else:
+                                erros.append(f"Registro IA {i}: Professor '{val_prof}' não encontrado unicamente.")
+                                continue
+                                
+                        display_text = f"{data_aula.strftime('%d/%m/%Y')} | {item.get('horario','')} | Turma {turma.codigo} | {disciplina.nome} | {professor.nome}"
+                        valid_rows.append({
+                            'data_str': data_aula.isoformat(),
+                            'turma_id': turma.id,
+                            'disc_id': disciplina.id,
+                            'prof_id': professor.id,
+                            'display': display_text
+                        })
+                    except Exception as e:
+                        erros.append(f"Registro IA {i}: Falha ao processar o dado - {str(e)}")
+            except Exception as e:
+                messages.error(request, f'Erro na leitura com IA: {str(e)}')
+                return redirect('upload_aulas_extras')
+                
+        else:
+            try:
+                if filename.endswith('.xlsx'):
+                    rows = _extract_rows_from_excel(file_obj)
+                elif filename.endswith('.docx'):
+                    rows = _extract_rows_from_word(file_obj)
+                elif filename.endswith('.pdf'):
+                    rows = _extract_rows_from_pdf(file_obj)
+                else:
+                    messages.error(request, 'Formato de arquivo inválido. Use .xlsx, .docx ou .pdf.')
+                    return redirect('upload_aulas_extras')
+            except Exception as e:
+                messages.error(request, f'Erro ao ler o arquivo (Modo Padrão): Certifique-se de que é um formato válido com tabelas legíveis. Detalhe: {str(e)}')
+                return redirect('upload_aulas_extras')
+
+        if not usar_ia:
+            # Processar linhas extraídas do modo padrão
+            for i, row in enumerate(rows, start=2): # Start 2 just as indicative line number
+                if not row or not any(row):
                     continue
                     
-            # Match Turma
-            turma = Turma.objects.filter(codigo__iexact=str(val_turma).strip(), ano_letivo=request.ano_letivo, escola=request.escola).first()
-            if not turma:
-                erros.append(f"Linha {i}: Turma '{val_turma}' não encontrada no ano/escola atual.")
-                continue
+                if len(row) < 5:
+                    erros.append(f"Linha {i}: Colunas insuficientes na tabela (esperado Data, Horário, Turma, Disc, Prof).")
+                    continue
+                    
+                val_data = row[0]
+                val_turma = row[2]
+                val_disc = row[3]
+                val_prof = row[4]
                 
-            # Match Disciplina
-            disciplina = Disciplina.objects.filter(nome__iexact=str(val_disc).strip()).first()
-            if not disciplina:
-                erros.append(f"Linha {i}: Disciplina '{val_disc}' não encontrada.")
-                continue
-                
-            # Match Professor
-            professor = Professor.objects.filter(nome__iexact=str(val_prof).strip()).first()
-            if not professor:
-                professores = Professor.objects.filter(nome__icontains=str(val_prof).strip())
-                if professores.count() == 1:
-                    professor = professores.first()
-                else:
-                    erros.append(f"Linha {i}: Professor '{val_prof}' não encontrado de forma única.")
+                if not all([val_data, val_turma, val_disc, val_prof]):
+                    erros.append(f"Linha {i}: Campos essenciais em branco.")
                     continue
 
-            # Add to valid list
-            display_text = f"{data_aula.strftime('%d/%m/%Y')} | {turma.codigo} | {disciplina.nome} | {professor.nome}"
-            valid_rows.append({
-                'data_str': data_aula.isoformat(),
-                'turma_id': turma.id,
-                'disc_id': disciplina.id,
-                'prof_id': professor.id,
-                'display': display_text
-            })
+                # Parse Date
+                data_aula = None
+                if isinstance(val_data, datetime.datetime):
+                    data_aula = val_data.date()
+                else:
+                    try:
+                        val_data_str = str(val_data).strip()
+                        if '/' in val_data_str:
+                            d, m, y = val_data_str.split('/')
+                            if len(y) == 2: y = "20" + y
+                            data_aula = datetime.date(int(y), int(m), int(d))
+                        else:
+                            data_aula = datetime.date.fromisoformat(val_data_str[:10])
+                    except Exception:
+                        erros.append(f"Linha {i}: Data inválida '{val_data}'. Formato exigido: DD/MM/AAAA")
+                        continue
+                        
+                # Match Turma
+                turma = Turma.objects.filter(codigo__iexact=str(val_turma).strip(), ano_letivo=request.ano_letivo, escola=request.escola).first()
+                if not turma:
+                    erros.append(f"Linha {i}: Turma '{val_turma}' não encontrada no ano/escola atual.")
+                    continue
+                    
+                # Match Disciplina
+                disciplina = Disciplina.objects.filter(nome__iexact=str(val_disc).strip()).first()
+                if not disciplina:
+                    erros.append(f"Linha {i}: Disciplina '{val_disc}' não encontrada.")
+                    continue
+                    
+                # Match Professor
+                professor = Professor.objects.filter(nome__iexact=str(val_prof).strip()).first()
+                if not professor:
+                    professores = Professor.objects.filter(nome__icontains=str(val_prof).strip())
+                    if professores.count() == 1:
+                        professor = professores.first()
+                    else:
+                        erros.append(f"Linha {i}: Professor '{val_prof}' não encontrado de forma única.")
+                        continue
+
+                # Add to valid list
+                display_text = f"{data_aula.strftime('%d/%m/%Y')} | {turma.codigo} | {disciplina.nome} | {professor.nome}"
+                valid_rows.append({
+                    'data_str': data_aula.isoformat(),
+                    'turma_id': turma.id,
+                    'disc_id': disciplina.id,
+                    'prof_id': professor.id,
+                    'display': display_text
+                })
 
         if not valid_rows and not erros:
             messages.warning(request, "O sistema não encontrou nenhuma tabela válida no documento.")
