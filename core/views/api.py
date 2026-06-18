@@ -104,7 +104,39 @@ def api_disciplinas_turma(request, codigo):
         else:
             discs = Disciplina.objects.all()
 
-        return JsonResponse(list(discs.order_by('nome').values('id', 'nome')), safe=False)
+        turmas_1_ano = ['11', '12', '13']
+        turmas_2_ano = ['21', '22', '23']
+        turmas_3_ano = ['31', '32']
+
+        if codigo in turmas_1_ano:
+            areas = ['Sociedade e Cidadania', 'Sustentabilidade e Meio Ambiente']
+            extras = Disciplina.objects.filter(nome__in=areas)
+            discs = (discs | extras).distinct()
+            
+        elif codigo in turmas_2_ano:
+            areas = ['Educação Financeira', 'Múltiplas Linguagens']
+            extras = Disciplina.objects.filter(nome__in=areas)
+            discs = (discs | extras).distinct()
+            
+        elif codigo in turmas_3_ano:
+            areas = [
+                'Aprofundamento em Matemática',
+                'Aprofundamento em Ciências da Natureza',
+                'Aprofundamento em Ciências Humanas',
+                'Aprofundamento em Linguagens'
+            ]
+            extras = Disciplina.objects.filter(nome__in=areas)
+            discs = (discs | extras).distinct()
+
+        # Remover duplicatas devido a JOINs no UNION e ordenar
+        ids_vistos = set()
+        lista_discs = []
+        for d in discs.order_by('nome').values('id', 'nome'):
+            if d['id'] not in ids_vistos:
+                ids_vistos.add(d['id'])
+                lista_discs.append(d)
+                
+        return JsonResponse(lista_discs, safe=False)
     else:
         qs = GradeHoraria.objects.filter(turma__codigo=codigo, turma__ano_letivo=request.ano_letivo, turma__escola=request.escola)
         if prof_logado and not prof_logado.pode_ver_tudo:
