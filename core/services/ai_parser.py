@@ -81,13 +81,28 @@ Ignore células com seta "←" (elas indicam que é a mesma aula da turma ao lad
             else:
                 mime_type = 'application/pdf'
 
-            response = client.models.generate_content(
-                model='gemini-2.0-flash',
-                contents=[
-                    types.Part.from_bytes(data=file_bytes, mime_type=mime_type),
-                    prompt
-                ]
-            )
+            # Tenta os modelos em ordem de prioridade (do mais leve ao mais pesado)
+            models_to_try = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash-lite', 'gemini-2.0-flash']
+            last_error = None
+            response = None
+            for model_name in models_to_try:
+                try:
+                    response = client.models.generate_content(
+                        model=model_name,
+                        contents=[
+                            types.Part.from_bytes(data=file_bytes, mime_type=mime_type),
+                            prompt
+                        ]
+                    )
+                    break  # Sucesso — sai do loop
+                except Exception as e:
+                    last_error = e
+                    if '429' in str(e) or '404' in str(e) or 'not found' in str(e).lower() or 'exhausted' in str(e).lower():
+                        continue  # Tenta o próximo modelo
+                    else:
+                        raise e  # Erro diferente — re-levanta
+            if response is None:
+                raise Exception(f"Nenhum modelo Gemini disponível: {str(last_error)}")
             text = response.text.strip()
         else:
             # Fallback: biblioteca antiga
