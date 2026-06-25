@@ -536,6 +536,58 @@
 </div><!-- /tab-conteudos -->
 {% endif %}
 
+{# ── Modal de conflito de lançamento ── #}
+<div id="modalConflito" style="
+    display:none; position:fixed; inset:0; z-index:9999;
+    background:rgba(0,0,0,.55); backdrop-filter:blur(3px);
+    align-items:center; justify-content:center;
+">
+    <div style="
+        background:#fff; border-radius:14px; max-width:520px; width:90%;
+        box-shadow:0 20px 60px rgba(0,0,0,.35); overflow:hidden;
+        font-family:inherit;
+    ">
+        <!-- Cabeçalho -->
+        <div style="background:linear-gradient(135deg,#d97706,#b45309); padding:18px 24px; display:flex; align-items:center; gap:12px;">
+            <span style="font-size:28px;">⚠️</span>
+            <div>
+                <div style="color:#fff; font-size:17px; font-weight:700;">Atenção — Conteúdo já lançado!</div>
+                <div style="color:#fde68a; font-size:12px; margin-top:2px;">A(s) turma(s) abaixo já possuem um registro nesta data.</div>
+            </div>
+        </div>
+
+        <!-- Corpo -->
+        <div style="padding:20px 24px;">
+            <p style="font-size:14px; color:#374151; margin:0 0 16px; line-height:1.6;">
+                Escolha o que fazer para cada turma com conflito:
+            </p>
+
+            <div id="listaConflitos" style="display:flex; flex-direction:column; gap:10px;"></div>
+
+            <div style="background:#fef3c7; border:1px solid #fcd34d; border-radius:8px; padding:10px 14px; margin-top:16px; font-size:12px; color:#92400e;">
+                <strong>📌 Legenda:</strong><br>
+                <b>Manter o existente</b> — o lançamento atual da turma <em>não</em> é alterado.<br>
+                <b>Sobrescrever</b> — o conteúdo desta turma será <em>substituído</em> pelo novo.
+            </div>
+        </div>
+
+        <!-- Rodapé -->
+        <div style="padding:14px 24px 20px; display:flex; justify-content:flex-end; gap:10px; border-top:1px solid #e5e7eb;">
+            <button type="button" onclick="fecharModalConflito()" style="
+                padding:9px 20px; background:#f3f4f6; color:#374151;
+                border:1px solid #d1d5db; border-radius:8px; font-size:13px;
+                font-weight:600; cursor:pointer;
+            ">✖ Cancelar</button>
+            <button type="button" onclick="confirmarResolucao()" id="btnConfirmarModal" style="
+                padding:9px 22px; background:linear-gradient(135deg,#003366,#1a5ca8);
+                color:#fff; border:none; border-radius:8px; font-size:13px;
+                font-weight:700; cursor:pointer;
+                box-shadow:0 2px 8px rgba(0,51,102,.3);
+            ">✔ Confirmar e Salvar</button>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -1016,13 +1068,33 @@
         container.innerHTML = '';
 
         conflicts.forEach(tCod => {
+            const isTurmaPrincipal = tCod === document.getElementById('turmaSelectCont').value;
+            const label = isTurmaPrincipal
+                ? `<strong>Turma ${tCod}</strong> <span style="font-size:11px; color:#6b7280;">(turma principal)</span>`
+                : `<strong>Turma ${tCod}</strong> <span style="font-size:11px; color:#6b7280;">(turma para cópia)</span>`;
+
             const item = document.createElement('div');
             item.className = 'conflict-item';
+            item.style.cssText = 'background:#fff7ed; border:1px solid #fed7aa; border-radius:10px; padding:12px 14px;';
             item.innerHTML = `
-                <div class="conflict-info">Turma ${tCod}</div>
-                <div class="conflict-actions">
-                    <button type="button" class="conflict-btn active" data-res="pular" onclick="selecionarResolucao(this, '${tCod}')">Pular</button>
-                    <button type="button" class="conflict-btn" data-res="mesclar" onclick="selecionarResolucao(this, '${tCod}')">Mesclar</button>
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                    <span style="font-size:18px;">📋</span>
+                    <div>
+                        <div style="font-size:13px; color:#1f2937;">${label}</div>
+                        <div style="font-size:11px; color:#b45309; margin-top:1px;">Já existe um lançamento nesta data para esta turma.</div>
+                    </div>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button type="button" class="conflict-btn active" data-res="pular"
+                        onclick="selecionarResolucao(this, '${tCod}')"
+                        style="flex:1; padding:8px 10px; border-radius:7px; border:2px solid #16a34a; background:#dcfce7; color:#166534; font-size:12px; font-weight:700; cursor:pointer;">
+                        ✅ Manter o existente
+                    </button>
+                    <button type="button" class="conflict-btn" data-res="sobrescrever"
+                        onclick="selecionarResolucao(this, '${tCod}')"
+                        style="flex:1; padding:8px 10px; border-radius:7px; border:2px solid #d1d5db; background:#f9fafb; color:#374151; font-size:12px; font-weight:700; cursor:pointer;">
+                        🔄 Sobrescrever
+                    </button>
                 </div>
                 <input type="hidden" name="resolucao_${tCod}" value="pular" class="res-input">
             `;
@@ -1034,10 +1106,28 @@
 
     function selecionarResolucao(btn, tCod) {
         const parent = btn.parentElement;
-        parent.querySelectorAll('.conflict-btn').forEach(b => b.classList.remove('active'));
+
+        // Resetar todos os botões do grupo para estilo inativo
+        parent.querySelectorAll('.conflict-btn').forEach(b => {
+            b.classList.remove('active');
+            b.style.border = '2px solid #d1d5db';
+            b.style.background = '#f9fafb';
+            b.style.color = '#374151';
+        });
+
+        // Ativar o botão clicado com estilo destacado
         btn.classList.add('active');
-        
         const res = btn.getAttribute('data-res');
+        if (res === 'pular') {
+            btn.style.border = '2px solid #16a34a';
+            btn.style.background = '#dcfce7';
+            btn.style.color = '#166534';
+        } else if (res === 'sobrescrever') {
+            btn.style.border = '2px solid #dc2626';
+            btn.style.background = '#fee2e2';
+            btn.style.color = '#991b1b';
+        }
+
         const hidden = btn.closest('.conflict-item').querySelector('.res-input');
         if (hidden) hidden.value = res;
     }

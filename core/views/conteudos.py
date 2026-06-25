@@ -274,7 +274,7 @@ def conteudo_criar(request):
             if res == 'pular':
                 continue
             
-            # Busca registro existente para possível mesclagem
+            # Busca registro existente para possível mesclagem/substituição
             existing = ConteudoProgramatico.objects.filter(
                 data=data,
                 professor=professor,
@@ -285,10 +285,10 @@ def conteudo_criar(request):
             if res == 'mesclar' and existing:
                 existing.descricao += f"\n\n[MESCLADO EM {datetime.date.today().strftime('%d/%m/%Y')}]: {descricao}"
                 existing.save()
-            elif not existing or not res:
-                # Se não existe ou não foi solicitada resolução (lançamento normal), cria novo.
-                # Nota: se já existia e res não veio, o comportamento antigo era duplicar. 
-                # Agora o JS deve sempre enviar res se houver conflito.
+            elif res == 'sobrescrever' and existing:
+                existing.descricao = descricao
+                existing.save()
+            elif not existing:
                 cont = ConteudoProgramatico.objects.create(
                     data=data, professor=professor, disciplina=disciplina, descricao=descricao
                 )
