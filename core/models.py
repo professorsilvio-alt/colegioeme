@@ -569,3 +569,24 @@ class ProvaAuxiliar(models.Model):
 
     def __str__(self):
         return f"{self.aluno.nome} - {self.disciplina.nome} - PA{self.numero_pa} - Nota: {self.nota}"
+
+
+# ──────────────────────────────────────────────
+# MURAL DE AVISOS
+# ──────────────────────────────────────────────
+
+class Aviso(models.Model):
+    titulo = models.CharField(max_length=200, verbose_name="Título")
+    mensagem = models.TextField(verbose_name="Mensagem")
+    autor = models.ForeignKey(Professor, on_delete=models.SET_NULL, null=True, verbose_name="Autor")
+    ativo = models.BooleanField(default=True, verbose_name="Ativo")
+    criado_em = models.DateTimeField(auto_now_add=True, verbose_name="Criado em")
+    atualizado_em = models.DateTimeField(auto_now=True, verbose_name="Atualizado em")
+
+    class Meta:
+        verbose_name = "Aviso"
+        verbose_name_plural = "Avisos"
+        ordering = ['-criado_em']
+
+    def __str__(self):
+        return self.titulo

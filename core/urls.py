@@ -11,6 +11,10 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
 
+    # Mural
+    path('mural/', views.mural_avisos, name='mural_avisos'),
+    path('mural/criar/', views.mural_criar_aviso, name='mural_criar_aviso'),
+
     # API
     path('api/alunos/<str:codigo>/', views.api_alunos_turma, name='api_alunos_turma'),
     path('api/professores/<int:disc_id>/', views.api_professores_disciplina, name='api_professores_disciplina'),

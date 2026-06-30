@@ -46,6 +46,7 @@
             {# Primeira Linha: Principais Ações #}
             <div class="nav-row">
                 <a href="{% url 'dashboard' %}" class="nav-item">🏠 Dashboard</a>
+                <a href="{% url 'mural_avisos' %}" class="nav-item">📌 Mural</a>
                 {% if not prof or prof.pode_ver_ocorrencias %}
                 <a href="{% url 'dashboard' %}?tab=ocorrencias" class="nav-item">📋 Ocorrências</a>
                 {% endif %}

@@ -8,3 +8,4 @@ from .gestao import *
 from .importacao import *
 from .notas import *
 from .periodos import *
+from .mural import *

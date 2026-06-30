@@ -1,0 +1,41 @@
+{% extends 'core/base.html' %}
+{% block title %}Mural de Avisos — SCA{% endblock %}
+
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+    <div>
+        <h2 style="color:#003366; margin:0 0 4px;">📌 Mural de Avisos</h2>
+        <p style="margin:0; color:#555; font-size:14px;">Avisos importantes da Direção e Coordenação.</p>
+    </div>
+    {% if pode_criar %}
+    <a href="{% url 'mural_criar_aviso' %}"
+       style="padding:8px 16px; background:#1a7a4a; color:#fff; border-radius:8px; text-decoration:none; font-size:14px; font-weight:600;">
+        + Criar Novo Aviso
+    </a>
+    {% endif %}
+</div>
+
+<div style="display:flex; flex-direction:column; gap:16px;">
+    {% for aviso in avisos %}
+    <div style="background:#fff; border:1px solid #e0e8f5; border-radius:12px; padding:20px; box-shadow:0 2px 6px rgba(0,51,102,.05);">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; border-bottom:1px solid #f0f0f0; padding-bottom:12px;">
+            <h3 style="margin:0; color:#003366; font-size:18px;">{{ aviso.titulo }}</h3>
+            <span style="font-size:12px; color:#888; background:#f9fbff; padding:4px 8px; border-radius:6px; border:1px solid #e0e8f5;">
+                {{ aviso.criado_em|date:"d/m/Y H:i" }}
+            </span>
+        </div>
+        <div style="color:#444; font-size:15px; line-height:1.5; white-space:pre-wrap;">{{ aviso.mensagem }}</div>
+        
+        <div style="margin-top:16px; padding-top:12px; border-top:1px dashed #e0e8f5; font-size:12px; color:#666; display:flex; align-items:center; gap:6px;">
+            <span>👤 Publicado por:</span>
+            <strong style="color:#003366;">{{ aviso.autor.nome|default:"Administração" }}</strong>
+        </div>
+    </div>
+    {% empty %}
+    <div style="text-align:center; padding:40px; background:#fff; border-radius:12px; border:1px solid #e0e8f5; color:#777;">
+        <span style="font-size:32px; display:block; margin-bottom:10px;">📭</span>
+        Nenhum aviso publicado no momento.
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

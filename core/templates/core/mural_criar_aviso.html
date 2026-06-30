@@ -1,0 +1,41 @@
+{% extends 'core/base.html' %}
+{% block title %}Novo Aviso — SCA{% endblock %}
+
+{% block content %}
+<div style="max-width:700px; margin:0 auto;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 style="color:#003366; margin:0;">📝 Publicar Novo Aviso</h2>
+        <a href="{% url 'mural_avisos' %}"
+           style="padding:8px 16px; background:#6c757d; color:#fff; border-radius:8px; text-decoration:none; font-size:13px; font-weight:600;">
+            Cancelar
+        </a>
+    </div>
+
+    <div style="background:#fff; padding:24px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.08);">
+        <form method="POST" action="{% url 'mural_criar_aviso' %}">
+            {% csrf_token %}
+            
+            <div style="margin-bottom:16px;">
+                <label for="titulo" style="display:block; margin-bottom:6px; font-weight:600; color:#444;">Título do Aviso</label>
+                <input type="text" id="titulo" name="titulo" required
+                       style="width:100%; padding:12px; border:1px solid #ccc; border-radius:8px; font-size:15px; box-sizing:border-box;"
+                       placeholder="Ex: Reunião Pedagógica, Feriado, etc.">
+            </div>
+            
+            <div style="margin-bottom:20px;">
+                <label for="mensagem" style="display:block; margin-bottom:6px; font-weight:600; color:#444;">Mensagem</label>
+                <textarea id="mensagem" name="mensagem" rows="6" required
+                          style="width:100%; padding:12px; border:1px solid #ccc; border-radius:8px; font-size:15px; box-sizing:border-box; resize:vertical;"
+                          placeholder="Digite o conteúdo do aviso aqui..."></textarea>
+            </div>
+            
+            <div style="text-align:right;">
+                <button type="submit"
+                        style="padding:12px 24px; background:#1a7a4a; color:#fff; border:none; border-radius:8px; font-size:15px; font-weight:700; cursor:pointer;">
+                    Publicar Aviso
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
