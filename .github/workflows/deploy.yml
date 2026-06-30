@@ -1,0 +1,45 @@
+name: Deploy to PythonAnywhere
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Conectar via SSH e fazer deploy no PythonAnywhere
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ssh.pythonanywhere.com
+          username: ${{ secrets.PA_USERNAME }}
+          password: ${{ secrets.PA_PASSWORD }}
+          script: |
+            set -e  # Interrompe o deploy caso algum comando falhe
+
+            # 1. Navega até a pasta do projeto no servidor
+            # Tenta entrar em colegioeme, se falhar tenta django_eme
+            cd /home/${{ secrets.PA_USERNAME }}/colegioeme || cd /home/${{ secrets.PA_USERNAME }}/django_eme
+            
+            # 2. Faz o pull das últimas alterações do GitHub
+            git pull origin main
+            
+            # [Opcional] 3. Ative seu ambiente virtual (virtualenv) se usar um.
+            # Descomente e ajuste a linha abaixo se você usar virtualenvwrapper:
+            # source /home/${{ secrets.PA_USERNAME }}/.virtualenvs/SEU_VENV/bin/activate
+            
+            # 4. Atualiza dependências (caso tenha adicionado bibliotecas novas)
+            python -m pip install -r requirements.txt
+            
+            # 5. Aplica migrações no banco de dados
+            python manage.py migrate
+            
+            # 6. Coleta arquivos estáticos silenciosamente
+            python manage.py collectstatic --noinput
+            
+            # 7. Reinicia a aplicação web para aplicar as mudanças
+            touch /var/www/${{ secrets.PA_USERNAME }}_pythonanywhere_com_wsgi.py
+            
+            echo "✅ Deploy concluído com sucesso!"
