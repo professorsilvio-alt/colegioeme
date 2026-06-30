@@ -9,7 +9,7 @@ apply_patches()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Carrega variáveis de ambiente do arquivo .env
-load_dotenv(BASE_DIR / '.env', override=True)
+load_dotenv(BASE_DIR / '.env', override=False)
 
 # Em produção, a SECRET_KEY DEVE ser definida via variável de ambiente.
 # Se não estiver definida e DEBUG=False, o sistema irá crashar imediatamente.

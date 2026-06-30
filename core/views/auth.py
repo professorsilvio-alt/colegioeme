@@ -49,9 +49,14 @@ def _verificar_recaptcha(token):
     import urllib.parse
     import json
     secret = settings.RECAPTCHA_SECRET_KEY
-    if not secret or not token:
-        # Se não configurado, permite a requisição (modo de desenvolvimento)
-        return True
+    if not secret:
+        # Chave não configurada no servidor — bloqueia por segurança
+        logger.warning('reCAPTCHA: RECAPTCHA_SECRET_KEY não configurada. Bloqueando requisição.')
+        return False
+    if not token:
+        # Token ausente — usuário não completou o reCAPTCHA
+        logger.warning('reCAPTCHA: token ausente na requisição. Bloqueando.')
+        return False
     data = urllib.parse.urlencode({
         'secret': secret,
         'response': token,
