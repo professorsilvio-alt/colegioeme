@@ -9,9 +9,9 @@ def mural_avisos(request):
     avisos = Aviso.objects.filter(ativo=True).select_related('autor').order_by('-criado_em')
     prof = get_professor(request.user)
     
-    # Checa se o professor atual tem permissão para criar avisos
+    # Checa se o usuário atual tem permissão para criar avisos
     pode_criar = False
-    if prof and prof.cargo in ('DIRETOR', 'COORDENADOR', 'AUX_COORD'):
+    if request.user.is_superuser or (prof and prof.cargo in ('DIRETOR', 'COORDENADOR', 'AUX_COORD')):
         pode_criar = True
 
     return render(request, 'core/mural_avisos.html', {
@@ -23,7 +23,7 @@ def mural_avisos(request):
 @login_required
 def mural_criar_aviso(request):
     prof = get_professor(request.user)
-    if not prof or prof.cargo not in ('DIRETOR', 'COORDENADOR', 'AUX_COORD'):
+    if not request.user.is_superuser and (not prof or prof.cargo not in ('DIRETOR', 'COORDENADOR', 'AUX_COORD')):
         messages.error(request, 'Você não tem permissão para criar avisos.')
         return redirect('mural_avisos')
 
