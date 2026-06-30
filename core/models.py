@@ -578,6 +578,7 @@ class ProvaAuxiliar(models.Model):
 class Aviso(models.Model):
     titulo = models.CharField(max_length=200, verbose_name="Título")
     mensagem = models.TextField(verbose_name="Mensagem")
+    arquivo = models.FileField(upload_to='avisos_arquivos/', null=True, blank=True, verbose_name="Anexo (PDF)")
     autor = models.ForeignKey(Professor, on_delete=models.SET_NULL, null=True, verbose_name="Autor")
     ativo = models.BooleanField(default=True, verbose_name="Ativo")
     criado_em = models.DateTimeField(auto_now_add=True, verbose_name="Criado em")

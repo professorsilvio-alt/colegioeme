@@ -30,17 +30,19 @@ def mural_criar_aviso(request):
     if request.method == 'POST':
         titulo = request.POST.get('titulo')
         mensagem = request.POST.get('mensagem')
+        arquivo = request.FILES.get('arquivo')
         
         if titulo and mensagem:
             Aviso.objects.create(
                 titulo=titulo,
                 mensagem=mensagem,
+                arquivo=arquivo,
                 autor=prof
             )
             messages.success(request, 'Aviso publicado com sucesso!')
             return redirect('mural_avisos')
         else:
-            messages.error(request, 'Preencha todos os campos.')
+            messages.error(request, 'Preencha todos os campos obrigatórios.')
 
     return render(request, 'core/mural_criar_aviso.html', {
         'prof': prof
