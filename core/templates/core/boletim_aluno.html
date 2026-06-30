@@ -9,10 +9,16 @@
             <strong>{{ aluno.nome }}</strong> — Turma <strong>{{ turma.codigo }}</strong>
         </p>
     </div>
-    <a href="{% url 'notas_turma' turma.codigo 1 %}"
-        style="padding:8px 16px; background:#003366; color:#fff; border-radius:8px; text-decoration:none; font-size:13px; font-weight:600; margin-left:auto;">
-        ← Voltar ao Lançamento
-    </a>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-left:auto; align-items:center;">
+        <a href="{% url 'exportar_boletim_aluno_pdf' aluno.pk %}"
+           style="padding:8px 16px; background:#e74c3c; color:#fff; border-radius:8px; text-decoration:none; font-size:13px; font-weight:600; white-space:nowrap;">
+            📥 Exportar PDF
+        </a>
+        <a href="{% url 'notas_turma' turma.codigo 1 %}"
+           style="padding:8px 16px; background:#003366; color:#fff; border-radius:8px; text-decoration:none; font-size:13px; font-weight:600;">
+            ← Voltar
+        </a>
+    </div>
 </div>
 
 <div style="overflow-x:auto;">
@@ -34,13 +40,16 @@
                 </td>
                 {% for v in linha.medias %}
                 <td style="padding:10px; text-align:center;">
-                    {% if v == 'NA' %}
+                    {% if v.valor == 'NA' %}
                     <span style="background:#f39c12; color:#fff; font-weight:700; font-size:12px;
                              padding:3px 8px; border-radius:12px; letter-spacing:.5px;">N/A</span>
-                    {% elif v is not None %}
-                    <span style="font-weight:600; {% if v >= 5.0 %}color:#1a7a4a;{% else %}color:#c0392b;{% endif %}">
-                        {{ v }}
+                    {% elif v.valor is not None %}
+                    <span style="font-weight:600; {% if v.valor >= 5.0 %}color:#1a7a4a;{% else %}color:#c0392b;{% endif %}">
+                        {{ v.valor }}
                     </span>
+                    {% if v.substituido_por_pa %}
+                    <br><span style="font-size:10px; color:#7c3aed; font-weight:600;">(PA)</span>
+                    {% endif %}
                     {% else %}
                     <span style="color:#bbb;">—</span>
                     {% endif %}

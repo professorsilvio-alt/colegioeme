@@ -29,7 +29,8 @@ from reportlab.platypus import (Image, Paragraph, SimpleDocTemplate, Spacer, Tab
 
 from ..models import (Aluno, AnoLetivo, ConteudoProgramatico, Disciplina,
                      Escola, GradeHoraria, Ocorrencia, Professor,
-                     SugestaoConteudo, Turma, Configuracao)
+                     SugestaoConteudo, Turma, Configuracao, NotaBimestral,
+                     ProvaAuxiliar, GrupoDisciplina)
 from ..utils import get_professor, get_feriados, get_client_ip, ordenar_por_nome
 from .ocorrencias import ocorrencias_do_usuario
 
@@ -723,3 +724,329 @@ def exportar_pendencias_pdf(request):
     elems.append(t)
     doc.build(elems, onFirstPage=_add_signature_footer, onLaterPages=_add_signature_footer)
     return _pdf_response(buf, 'pendencias.pdf')
+
+
+# ──────────────────────────────────────────────
+# BOLETINS PDF
+# ──────────────────────────────────────────────
+from decimal import Decimal
+
+@login_required
+def exportar_boletim_turma_pdf(request, codigo):
+    prof = get_professor(request.user)
+    if prof and not prof.pode_ver_tudo and prof.cargo not in ('COORDENADOR', 'AUX_COORD', 'PROFESSOR'):
+        messages.error(request, 'Sem permissão para exportar boletins.')
+        return redirect('dashboard')
+
+    turma = get_object_or_404(
+        Turma, codigo=codigo,
+        escola=request.escola, ano_letivo=request.ano_letivo
+    )
+    alunos = Aluno.objects.filter(turma=turma).order_by('nome')
+
+    notas_turma_qs = NotaBimestral.objects.filter(
+        aluno__turma=turma,
+        ano_letivo=request.ano_letivo,
+    ).select_related('aluno', 'disciplina')
+
+    pas_turma_qs = ProvaAuxiliar.objects.filter(
+        aluno__turma=turma,
+        ano_letivo=request.ano_letivo,
+    ).select_related('aluno', 'disciplina')
+
+    # Indices
+    notas_idx = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: {'valor': None, 'substituido_por_pa': False})))
+    pas_idx   = defaultdict(lambda: defaultdict(dict))
+
+    for pa in pas_turma_qs:
+        pas_idx[pa.aluno_id][pa.disciplina_id][pa.numero_pa] = pa.nota
+
+    for nota in notas_turma_qs:
+        aid, did, b = nota.aluno_id, nota.disciplina_id, nota.bimestre
+        if nota.nao_avaliado:
+            pa_num = 1 if b in (1, 2) else 2
+            pa_val = pas_idx[aid][did].get(pa_num)
+            if pa_val is not None:
+                notas_idx[aid][did][b] = {'valor': pa_val, 'substituido_por_pa': True}
+            else:
+                notas_idx[aid][did][b] = {'valor': 'NA', 'substituido_por_pa': False}
+        else:
+            notas_idx[aid][did][b] = {'valor': nota.nota_final, 'substituido_por_pa': False}
+
+    disc_ids = GradeHoraria.objects.filter(turma=turma).values_list('disciplina_id', flat=True).distinct()
+    disciplinas = list(Disciplina.objects.filter(pk__in=disc_ids).order_by('grupo__ordem_boletim', 'nome'))
+
+    def _media_anual(aluno_pk, disc_pk):
+        bims = notas_idx[aluno_pk][disc_pk]
+        vals = []
+        for b in (1, 2, 3, 4):
+            if b in bims and bims[b]['valor'] is not None:
+                v = bims[b]['valor']
+                vals.append(Decimal('0') if v == 'NA' else v)
+        if not vals:
+            return None
+        return round(sum(vals) / len(vals), 1)
+
+    # Gerar PDF
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buf,
+        pagesize=landscape(A4),
+        leftMargin=1.5*cm, rightMargin=1.5*cm,
+        topMargin=2*cm, bottomMargin=2*cm,
+        title=f"Boletim Consolidado - Turma {turma.codigo}"
+    )
+    
+    elems = []
+    styles = getSampleStyleSheet()
+    
+    # Cabeçalho
+    title_style = _get_saas_title_style(styles)
+    elems.append(Paragraph(f'Boletim Consolidado — Turma {turma.codigo}', title_style))
+    elems.append(Spacer(1, 0.5*cm))
+    
+    subtitle_style = ParagraphStyle(
+        'Subtitle',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=colors.HexColor('#666666'),
+        alignment=1,
+    )
+    elems.append(Paragraph('NA = Não Avaliado | (PA) = Substituído por PA', subtitle_style))
+    elems.append(Spacer(1, 1*cm))
+
+    # Construir tabela
+    header = ['Aluno']
+    for d in disciplinas:
+        header.append(d.nome[:15] + ('...' if len(d.nome) > 15 else '')) # Abreviar nomes longos
+    header.append('M. Geral')
+
+    data = [header]
+    
+    # Subheader para bimestres
+    sub = ['']
+    for _ in disciplinas:
+        sub.append('1 | 2 | 3 | 4 | A')
+    sub.append('')
+    data.append(sub)
+
+    for aluno in alunos:
+        linha = [aluno.nome[:25]] # Abreviar nomes longos
+        medias_anuais = []
+        for disc in disciplinas:
+            bims_aluno = notas_idx[aluno.pk][disc.pk]
+            cel_str = []
+            for b in (1, 2, 3, 4):
+                val = bims_aluno.get(b, {'valor': None, 'substituido_por_pa': False})
+                if val['valor'] == 'NA':
+                    cel_str.append('NA')
+                elif val['valor'] is not None:
+                    s = str(val['valor'])
+                    if val['substituido_por_pa']:
+                        s += '*'
+                    cel_str.append(s)
+                else:
+                    cel_str.append('-')
+            
+            ma = _media_anual(aluno.pk, disc.pk)
+            cel_str.append(str(ma) if ma is not None else '-')
+            medias_anuais.append(ma)
+            
+            linha.append(" | ".join(cel_str))
+            
+        vals_gerais = [v for v in medias_anuais if v is not None]
+        mg = round(sum(vals_gerais) / len(vals_gerais), 1) if vals_gerais else None
+        linha.append(str(mg) if mg is not None else '-')
+        data.append(linha)
+
+    # Estilizar tabela
+    col_widths = [6*cm] + [3.8*cm for _ in disciplinas] + [2*cm]
+    t = Table(data, colWidths=col_widths, repeatRows=2)
+    
+    ts = TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 1), colors.HexColor('#003366')),
+        ('TEXTCOLOR', (0, 0), (-1, 1), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('ALIGN', (0, 2), (0, -1), 'LEFT'), # Alinhar nomes a esquerda
+        ('FONTNAME', (0, 0), (-1, 1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 1), 9),
+        ('FONTSIZE', (0, 2), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, 1), 6),
+        ('TOPPADDING', (0, 0), (-1, 1), 6),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e0e8f5')),
+        ('SPAN', (0, 0), (0, 1)), # Mesclar Aluno
+        ('SPAN', (-1, 0), (-1, 1)), # Mesclar M. Geral
+    ])
+    
+    # Listrar linhas
+    for i in range(2, len(data)):
+        if i % 2 == 0:
+            ts.add('BACKGROUND', (0, i), (-1, i), colors.HexColor('#f9fbff'))
+            
+    t.setStyle(ts)
+    elems.append(t)
+    
+    doc.build(elems, onFirstPage=_add_signature_footer, onLaterPages=_add_signature_footer)
+    return _pdf_response(buf, f'boletim_turma_{turma.codigo}.pdf')
+
+
+@login_required
+def exportar_boletim_aluno_pdf(request, pk):
+    prof = get_professor(request.user)
+    if prof and not prof.pode_ver_tudo and prof.cargo not in ('COORDENADOR', 'AUX_COORD', 'PROFESSOR', 'ORIENTADOR'):
+        messages.error(request, 'Sem permissão para exportar boletins.')
+        return redirect('dashboard')
+
+    aluno = get_object_or_404(Aluno, pk=pk)
+    turma = aluno.turma
+
+    notas_qs = NotaBimestral.objects.filter(
+        aluno=aluno,
+        ano_letivo=request.ano_letivo,
+    ).select_related('disciplina', 'disciplina__grupo')
+
+    pas_qs = ProvaAuxiliar.objects.filter(
+        aluno=aluno, ano_letivo=request.ano_letivo
+    )
+    pas_por_disc = defaultdict(dict)
+    for pa in pas_qs:
+        pas_por_disc[pa.disciplina_id][pa.numero_pa] = pa.nota
+
+    notas_por_disc = defaultdict(lambda: defaultdict(lambda: {'valor': None, 'substituido_por_pa': False}))
+    
+    for nota in notas_qs:
+        disc_id = nota.disciplina_id
+        b = nota.bimestre
+        
+        if nota.nao_avaliado:
+            pa_num = 1 if b in (1, 2) else 2
+            pa_val = pas_por_disc[disc_id].get(pa_num)
+            if pa_val is not None:
+                notas_por_disc[disc_id][b] = {'valor': pa_val, 'substituido_por_pa': True}
+            else:
+                notas_por_disc[disc_id][b] = {'valor': 'NA', 'substituido_por_pa': False}
+        else:
+            notas_por_disc[disc_id][b] = {'valor': nota.nota_final, 'substituido_por_pa': False}
+
+    def _medias_e_anual(disc_pks):
+        medias = []
+        for b in (1, 2, 3, 4):
+            valores = []
+            for dpk in disc_pks:
+                if b in notas_por_disc[dpk]:
+                    v = notas_por_disc[dpk][b]['valor']
+                    if v is not None:
+                        valores.append(Decimal('0') if v == 'NA' else v)
+            medias.append(round(sum(valores) / len(valores), 1) if valores else None)
+        vals_validos = [v for v in medias if v is not None]
+        media_anual = round(sum(vals_validos) / len(vals_validos), 1) if vals_validos else None
+        return medias, media_anual
+
+    grupos_no_boletim = []
+    grupos = GrupoDisciplina.objects.prefetch_related('disciplinas').order_by('ordem_boletim')
+    for grupo in grupos:
+        disc_ids_com_nota = [d.pk for d in grupo.disciplinas.all() if d.pk in notas_por_disc]
+        if not disc_ids_com_nota: continue
+        medias, media_anual = _medias_e_anual(disc_ids_com_nota)
+        grupos_no_boletim.append({
+            'nome': grupo.nome_boletim,
+            'medias': [{'valor': m, 'substituido_por_pa': False} for m in medias],
+            'media_anual': media_anual,
+            'is_grupo': True,
+        })
+
+    discs_standalone = Disciplina.objects.filter(
+        pk__in=notas_por_disc.keys(), grupo__isnull=True
+    ).order_by('nome')
+    for disc in discs_standalone:
+        medias, media_anual = _medias_e_anual([disc.pk])
+        medias_detalhadas = []
+        for b in (1, 2, 3, 4):
+            if b in notas_por_disc[disc.pk]:
+                medias_detalhadas.append(notas_por_disc[disc.pk][b])
+            else:
+                medias_detalhadas.append({'valor': None, 'substituido_por_pa': False})
+
+        grupos_no_boletim.append({
+            'nome': disc.nome,
+            'medias': medias_detalhadas,
+            'media_anual': media_anual,
+            'is_grupo': False,
+        })
+
+    # Gerar PDF
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buf, pagesize=A4,
+        leftMargin=2*cm, rightMargin=2*cm,
+        topMargin=2*cm, bottomMargin=2*cm,
+        title=f"Boletim - {aluno.nome}"
+    )
+    
+    elems = []
+    styles = getSampleStyleSheet()
+    
+    # Cabeçalho
+    title_style = _get_saas_title_style(styles)
+    elems.append(Paragraph('Boletim Escolar', title_style))
+    elems.append(Spacer(1, 0.3*cm))
+    
+    info_style = ParagraphStyle(
+        'Info', parent=styles['Normal'],
+        fontSize=12, alignment=1, textColor=colors.HexColor('#333333')
+    )
+    elems.append(Paragraph(f'<b>Aluno:</b> {aluno.nome}', info_style))
+    elems.append(Paragraph(f'<b>Turma:</b> {turma.codigo}', info_style))
+    elems.append(Spacer(1, 1*cm))
+
+    # Tabela de notas
+    data = [['Disciplina', '1º Bim', '2º Bim', '3º Bim', '4º Bim', 'Média Anual']]
+    
+    for linha in grupos_no_boletim:
+        row = [linha['nome']]
+        for v in linha['medias']:
+            if v['valor'] == 'NA':
+                row.append('NA')
+            elif v['valor'] is not None:
+                s = str(v['valor'])
+                if v['substituido_por_pa']: s += '*'
+                row.append(s)
+            else:
+                row.append('-')
+        
+        row.append(str(linha['media_anual']) if linha['media_anual'] is not None else '-')
+        data.append(row)
+
+    t = Table(data, colWidths=[6.5*cm, 2*cm, 2*cm, 2*cm, 2*cm, 2.5*cm], repeatRows=1)
+    
+    ts = TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#003366')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e0e8f5')),
+        ('BACKGROUND', (-1, 1), (-1, -1), colors.HexColor('#eef4ff')), # Coluna de média anual
+    ])
+    
+    # Destacar grupos e pintar listrado
+    for i, linha in enumerate(grupos_no_boletim, start=1):
+        if linha['is_grupo']:
+            ts.add('FONTNAME', (0, i), (-1, i), 'Helvetica-Bold')
+        elif i % 2 == 0:
+            ts.add('BACKGROUND', (0, i), (-2, i), colors.HexColor('#f9fbff'))
+
+    t.setStyle(ts)
+    elems.append(t)
+    
+    elems.append(Spacer(1, 1*cm))
+    leg_style = ParagraphStyle('Leg', parent=styles['Normal'], fontSize=9, textColor=colors.HexColor('#666666'))
+    elems.append(Paragraph('NA = Não Avaliado (ausente) &nbsp;&nbsp;|&nbsp;&nbsp; * = Substituído por Prova Auxiliar', leg_style))
+    elems.append(Paragraph('Nota mínima para aprovação: 5,0', leg_style))
+    
+    doc.build(elems, onFirstPage=_add_signature_footer, onLaterPages=_add_signature_footer)
+    return _pdf_response(buf, f'boletim_aluno_{aluno.pk}.pdf')
+

@@ -521,31 +521,6 @@ class NotaBimestral(models.Model):
         verbose_name = 'Nota Bimestral'
         verbose_name_plural = 'Notas Bimestrais'
         unique_together = ('aluno', 'disciplina', 'bimestre', 'ano_letivo')
-
-
-class ProvaAuxiliar(models.Model):
-    NUMERO_CHOICES = [
-        (1, 'PA1'),
-        (2, 'PA2'),
-    ]
-
-    aluno       = models.ForeignKey(Aluno, on_delete=models.CASCADE, related_name='provas_auxiliares')
-    disciplina  = models.ForeignKey(Disciplina, on_delete=models.CASCADE)
-    ano_letivo  = models.ForeignKey(AnoLetivo, on_delete=models.CASCADE)
-    numero_pa   = models.IntegerField(choices=NUMERO_CHOICES, verbose_name='Número da PA')
-    nota        = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True, verbose_name='Nota da PA')
-
-    lancado_por = models.ForeignKey(Professor, on_delete=models.SET_NULL, null=True, blank=True)
-    criado_em   = models.DateTimeField(auto_now_add=True)
-    atualizado_em = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = 'Prova Auxiliar'
-        verbose_name_plural = 'Provas Auxiliares'
-        unique_together = ('aluno', 'disciplina', 'ano_letivo', 'numero_pa')
-
-    def __str__(self):
-        return f"{self.aluno.nome} - {self.disciplina.nome} - PA{self.numero_pa} - Nota: {self.nota}"
         ordering = ['aluno__nome', 'bimestre']
 
     def __str__(self):
@@ -568,3 +543,29 @@ class ProvaAuxiliar(models.Model):
         else:
             self.nota_final = self.nota_prova
         super().save(*args, **kwargs)
+
+
+class ProvaAuxiliar(models.Model):
+    NUMERO_CHOICES = [
+        (1, 'PA1'),
+        (2, 'PA2'),
+    ]
+
+    aluno       = models.ForeignKey(Aluno, on_delete=models.CASCADE, related_name='provas_auxiliares')
+    disciplina  = models.ForeignKey(Disciplina, on_delete=models.CASCADE)
+    ano_letivo  = models.ForeignKey(AnoLetivo, on_delete=models.CASCADE)
+    numero_pa   = models.IntegerField(choices=NUMERO_CHOICES, verbose_name='Número da PA')
+    nota        = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True, verbose_name='Nota da PA')
+
+    lancado_por = models.ForeignKey(Professor, on_delete=models.SET_NULL, null=True, blank=True)
+    criado_em   = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Prova Auxiliar'
+        verbose_name_plural = 'Provas Auxiliares'
+        unique_together = ('aluno', 'disciplina', 'ano_letivo', 'numero_pa')
+        ordering = ['aluno__nome']
+
+    def __str__(self):
+        return f"{self.aluno.nome} - {self.disciplina.nome} - PA{self.numero_pa} - Nota: {self.nota}"

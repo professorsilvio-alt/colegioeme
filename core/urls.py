@@ -78,6 +78,8 @@ urlpatterns = [
     path('notas/remover-na/', views.remover_na, name='remover_na'),
     path('notas/aluno/<int:pk>/', views.boletim_aluno, name='boletim_aluno'),
     path('notas/boletim/<str:codigo>/', views.boletim_turma, name='boletim_turma'),
+    path('notas/exportar/aluno/<int:pk>/pdf/', views.exportar_boletim_aluno_pdf, name='exportar_boletim_aluno_pdf'),
+    path('notas/exportar/turma/<str:codigo>/pdf/', views.exportar_boletim_turma_pdf, name='exportar_boletim_turma_pdf'),
 
     # Secretaria — Períodos de lançamento
     path('secretaria/periodos-notas/', views.config_periodos_notas, name='config_periodos_notas'),

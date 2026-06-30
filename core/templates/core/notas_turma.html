@@ -25,7 +25,7 @@
     style="background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:10px 14px; margin-bottom:16px; color:#856404; font-size:13px;">
     ⚠️ Modo <strong>somente leitura</strong> —
     {% if periodo_b %}
-    o período de lançamento do {{ bimestre }}º bimestre é de
+    o período de lançamento do <strong>{{ periodo_nome }}</strong> é de
     <strong>{{ periodo_b.ini|date:"d/m/Y" }}</strong> a <strong>{{ periodo_b.fim|date:"d/m/Y" }}</strong>.
     Fora deste intervalo você pode apenas consultar.
     {% else %}
@@ -233,7 +233,7 @@
     function salvarNota(input) {
         const alunoId = input.dataset.aluno;
         const discId = input.dataset.disc;
-        const bimestre = input.dataset.bimestre;
+        const bimestre = input.dataset.periodo;
 
         // Busca ambos os inputs da mesma célula
         const inputProva = document.querySelector(`.nota-prova[data-aluno="${alunoId}"][data-disc="${discId}"]`);

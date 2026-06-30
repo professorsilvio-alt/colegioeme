@@ -1,42 +1,132 @@
 {% extends 'core/base.html' %}
-{% block title %}Boletim — Turma {{ turma.codigo }} — SCA{% endblock %}
+{% block title %}Boletim da Turma {{ turma.codigo }} — SCA{% endblock %}
 
 {% block content %}
 <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:20px;">
     <div>
         <h2 style="color:#003366; margin:0 0 4px;">📋 Boletim da Turma {{ turma.codigo }}</h2>
-        <p style="margin:0; color:#555; font-size:14px;">Clique em um aluno para ver o boletim individual.</p>
+        <p style="margin:0; color:#555; font-size:14px;">Notas consolidadas de todos os alunos.</p>
     </div>
-    <a href="{% url 'notas_index' %}"
-       style="padding:8px 16px; background:#6c757d; color:#fff; border-radius:8px; text-decoration:none; font-size:13px; font-weight:600; margin-left:auto;">
-        ← Voltar
-    </a>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-left:auto; align-items:center;">
+        <a href="{% url 'exportar_boletim_turma_pdf' turma.codigo %}"
+           style="padding:8px 16px; background:#e74c3c; color:#fff; border-radius:8px;
+                  text-decoration:none; font-size:13px; font-weight:600; white-space:nowrap;">
+            📥 Exportar PDF
+        </a>
+        <a href="{% url 'notas_index' %}"
+           style="padding:8px 16px; background:#6c757d; color:#fff; border-radius:8px;
+                  text-decoration:none; font-size:13px; font-weight:600;">← Voltar</a>
+    </div>
 </div>
 
-<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px;">
-    {% for aluno in alunos %}
-    <a href="{% url 'boletim_aluno' aluno.pk %}"
-       style="display:flex; align-items:center; gap:12px; padding:14px 16px;
-              background:#fff; border:1.5px solid #e0e8f5; border-radius:12px;
-              text-decoration:none; color:#003366; font-weight:600; font-size:14px;
-              box-shadow:0 2px 6px rgba(0,51,102,.06); transition:all .2s;">
-        {% if aluno.foto %}
-        <img src="{{ aluno.foto.url }}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
-        {% else %}
-        <span style="width:40px;height:40px;border-radius:50%;background:#e8eef5;display:flex;align-items:center;justify-content:center;font-size:20px;">👤</span>
-        {% endif %}
-        {{ aluno.nome }}
-    </a>
-    {% empty %}
-    <p style="color:#999;">Nenhum aluno encontrado nesta turma.</p>
-    {% endfor %}
+{% if not disciplinas %}
+<p style="color:#999; padding:20px;">Nenhuma disciplina ou nota encontrada para esta turma.</p>
+{% else %}
+
+{# ── Legenda ── #}
+<div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:14px; font-size:12px; color:#555;">
+    <span><strong style="color:#1a7a4a;">Verde</strong> = ≥ 5,0</span>
+    <span><strong style="color:#c0392b;">Vermelho</strong> = &lt; 5,0</span>
+    <span><span style="background:#f39c12; color:#fff; padding:1px 6px; border-radius:8px; font-weight:700;">N/A</span> = Não Avaliado</span>
+    <span><span style="color:#7c3aed; font-weight:700;">(PA)</span> = Substituído por Prova Auxiliar</span>
 </div>
 
+<div style="overflow-x:auto;">
+<table id="tabelaBoletimTurma"
+       style="width:100%; border-collapse:collapse; font-size:12px; white-space:nowrap;">
+    <thead>
+        <tr style="background:#003366; color:#fff;">
+            <th style="padding:10px 12px; text-align:left; position:sticky; left:0;
+                       background:#003366; min-width:200px; z-index:2;">Aluno</th>
+            {% for disc in disciplinas %}
+            <th style="padding:8px 6px; text-align:center; min-width:180px; border-left:1px solid #1a5276;">
+                {{ disc.nome }}
+                <br><span style="font-size:10px; font-weight:400; opacity:.8;">B1 · B2 · B3 · B4 · Anual</span>
+            </th>
+            {% endfor %}
+            <th style="padding:8px 10px; text-align:center; min-width:90px; background:#001f3f; border-left:2px solid #fff;">
+                Média Geral
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for linha in linhas %}
+        <tr style="border-bottom:1px solid #e0e8f5; {% cycle 'background:#f9fbff;' '' %}">
+            <td style="padding:8px 12px; font-weight:500; position:sticky; left:0; background:inherit; z-index:1;">
+                <a href="{% url 'boletim_aluno' linha.aluno.pk %}"
+                   style="color:#003366; text-decoration:none;"
+                   title="Ver boletim individual">
+                    {{ linha.aluno.nome }}
+                </a>
+            </td>
+            {% for col in linha.cols %}
+            <td style="padding:6px 4px; text-align:center; border-left:1px solid #e8eef5;">
+                <div style="display:flex; gap:3px; align-items:center; justify-content:center; flex-wrap:wrap;">
+                    {# B1, B2, B3, B4 #}
+                    {% for v in col.bimestres %}
+                    {% if v.valor == 'NA' %}
+                    <span style="background:#f39c12; color:#fff; font-weight:700; font-size:10px;
+                                 padding:1px 5px; border-radius:8px;">N/A</span>
+                    {% elif v.valor is not None %}
+                    <span style="font-weight:600;
+                                 {% if v.valor >= 5.0 %}color:#1a7a4a;{% else %}color:#c0392b;{% endif %}
+                                 {% if v.substituido_por_pa %}font-style:italic;{% endif %}">
+                        {{ v.valor }}{% if v.substituido_por_pa %}<sup style="color:#7c3aed; font-size:8px;">PA</sup>{% endif %}
+                    </span>
+                    {% else %}
+                    <span style="color:#ccc; font-size:11px;">—</span>
+                    {% endif %}
+                    {% if not forloop.last %}<span style="color:#ccc;">·</span>{% endif %}
+                    {% endfor %}
+                    {# Separador + Anual #}
+                    <span style="color:#aaa; margin:0 2px;">|</span>
+                    {% if col.media_anual is not None %}
+                    <strong style="font-size:13px;
+                                   {% if col.media_anual >= 5.0 %}color:#1a7a4a;{% else %}color:#c0392b;{% endif %}">
+                        {{ col.media_anual }}
+                    </strong>
+                    {% else %}
+                    <span style="color:#ccc;">—</span>
+                    {% endif %}
+                </div>
+            </td>
+            {% endfor %}
+            {# Média geral do aluno #}
+            <td style="padding:8px 10px; text-align:center; background:#eef4ff; border-left:2px solid #c5d5e8;">
+                {% if linha.media_geral is not None %}
+                <strong style="font-size:14px;
+                               {% if linha.media_geral >= 5.0 %}color:#1a7a4a;{% else %}color:#c0392b;{% endif %}">
+                    {{ linha.media_geral }}
+                </strong>
+                {% else %}
+                <span style="color:#bbb;">—</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="100" style="text-align:center; color:#999; padding:30px;">
+                Nenhum aluno encontrado.
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<p style="margin-top:14px; color:#888; font-size:12px;">
+    ⓘ Nota mínima para aprovação: <strong>5,0</strong> — Clique no nome do aluno para ver o boletim detalhado.
+</p>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
 <style>
-a[href*="boletim_aluno"]:hover {
-    border-color: #003366;
-    box-shadow: 0 4px 12px rgba(0,51,102,.15);
-    transform: translateY(-2px);
-}
+    #tabelaBoletimTurma tbody tr:hover {
+        background: #eef4ff !important;
+    }
+    #tabelaBoletimTurma tbody tr:hover td:first-child {
+        background: #eef4ff;
+    }
 </style>
 {% endblock %}

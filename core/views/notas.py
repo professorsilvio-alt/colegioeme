@@ -521,11 +521,80 @@ def boletim_turma(request, codigo):
     )
     alunos = Aluno.objects.filter(turma=turma).order_by('nome')
 
+    # Busca todas as notas e PAs da turma de uma vez (evita N+1)
+    notas_turma_qs = NotaBimestral.objects.filter(
+        aluno__turma=turma,
+        ano_letivo=request.ano_letivo,
+    ).select_related('aluno', 'disciplina', 'disciplina__grupo')
+
+    pas_turma_qs = ProvaAuxiliar.objects.filter(
+        aluno__turma=turma,
+        ano_letivo=request.ano_letivo,
+    ).select_related('aluno', 'disciplina')
+
+    # Índices: {aluno_pk: {disc_pk: {bimestre: dict_valor}}}
+    from collections import defaultdict
+    notas_idx = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: {'valor': None, 'substituido_por_pa': False})))
+    pas_idx   = defaultdict(lambda: defaultdict(dict))  # {aluno_pk: {disc_pk: {numero_pa: nota}}}
+
+    for pa in pas_turma_qs:
+        pas_idx[pa.aluno_id][pa.disciplina_id][pa.numero_pa] = pa.nota
+
+    for nota in notas_turma_qs:
+        aid, did, b = nota.aluno_id, nota.disciplina_id, nota.bimestre
+        if nota.nao_avaliado:
+            pa_num = 1 if b in (1, 2) else 2
+            pa_val = pas_idx[aid][did].get(pa_num)
+            if pa_val is not None:
+                notas_idx[aid][did][b] = {'valor': pa_val, 'substituido_por_pa': True}
+            else:
+                notas_idx[aid][did][b] = {'valor': 'NA', 'substituido_por_pa': False}
+        else:
+            notas_idx[aid][did][b] = {'valor': nota.nota_final, 'substituido_por_pa': False}
+
+    # Descobre disciplinas presentes na turma via grade horária
+    disc_ids = GradeHoraria.objects.filter(
+        turma=turma
+    ).values_list('disciplina_id', flat=True).distinct()
+    disciplinas = Disciplina.objects.filter(pk__in=disc_ids).order_by('grupo__ordem_boletim', 'nome')
+
+    def _media_anual(aluno_pk, disc_pk):
+        bims = notas_idx[aluno_pk][disc_pk]
+        vals = []
+        for b in (1, 2, 3, 4):
+            if b in bims and bims[b]['valor'] is not None:
+                v = bims[b]['valor']
+                vals.append(Decimal('0') if v == 'NA' else v)
+        if not vals:
+            return None
+        return round(sum(vals) / len(vals), 1)
+
+    # Monta linhas: uma por aluno, colunas = disciplinas
+    linhas = []
+    for aluno in alunos:
+        cols = []
+        medias_anuais = []
+        for disc in disciplinas:
+            bims_aluno = notas_idx[aluno.pk][disc.pk]
+            bim_vals = [bims_aluno.get(b, {'valor': None, 'substituido_por_pa': False}) for b in (1, 2, 3, 4)]
+            ma = _media_anual(aluno.pk, disc.pk)
+            medias_anuais.append(ma)
+            cols.append({'bimestres': bim_vals, 'media_anual': ma})
+        # Média geral do aluno (todas disciplinas)
+        vals_gerais = [v for v in medias_anuais if v is not None]
+        media_geral = round(sum(vals_gerais) / len(vals_gerais), 1) if vals_gerais else None
+        linhas.append({'aluno': aluno, 'cols': cols, 'media_geral': media_geral})
+
     return render(request, 'core/boletim_turma.html', {
         'prof': prof,
         'turma': turma,
         'alunos': alunos,
+        'disciplinas': disciplinas,
+        'linhas': linhas,
+        'bimestres': [1, 2, 3, 4],
     })
+
+
 
 
 # ─────────────────────────────────────────────────────────────
