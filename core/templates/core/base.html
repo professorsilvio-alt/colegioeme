@@ -46,7 +46,9 @@
             {# Primeira Linha: Principais Ações #}
             <div class="nav-row">
                 <a href="{% url 'dashboard' %}" class="nav-item">🏠 Dashboard</a>
+                {% if user.is_superuser or prof.cargo == 'DIRETOR' or prof.cargo == 'COORDENADOR' or prof.cargo == 'AUX_COORD' %}
                 <a href="{% url 'mural_avisos' %}" class="nav-item">📌 Mural</a>
+                {% endif %}
                 {% if not prof or prof.pode_ver_ocorrencias %}
                 <a href="{% url 'dashboard' %}?tab=ocorrencias" class="nav-item">📋 Ocorrências</a>
                 {% endif %}

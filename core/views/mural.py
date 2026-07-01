@@ -9,6 +9,11 @@ def mural_avisos(request):
     avisos = Aviso.objects.filter(ativo=True).select_related('autor').order_by('-criado_em')
     prof = get_professor(request.user)
     
+    # Bloqueia acesso para professores comuns (temporário)
+    if not request.user.is_superuser and (not prof or prof.cargo not in ('DIRETOR', 'COORDENADOR', 'AUX_COORD')):
+        messages.error(request, 'O Mural de Avisos está temporariamente indisponível para o seu perfil.')
+        return redirect('dashboard')
+    
     # Checa se o usuário atual tem permissão para criar avisos
     pode_criar = False
     if request.user.is_superuser or (prof and prof.cargo in ('DIRETOR', 'COORDENADOR', 'AUX_COORD')):
