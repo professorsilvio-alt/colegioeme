@@ -427,7 +427,17 @@ def boletim_aluno(request, pk):
             else:
                 notas_por_disc[disc_id][b] = {'valor': 'NA', 'substituido_por_pa': False}
         else:
-            notas_por_disc[disc_id][b] = {'valor': nota.nota_final, 'substituido_por_pa': False}
+            pa_num = 1 if b in (1, 2) else 2
+            pa_val = pas_por_disc[disc_id].get(pa_num)
+            nota_final = nota.nota_final
+            if pa_val is not None:
+                media_pa = round((nota_final + pa_val) / 2, 1)
+                if media_pa > nota_final:
+                    notas_por_disc[disc_id][b] = {'valor': media_pa, 'substituido_por_pa': True}
+                else:
+                    notas_por_disc[disc_id][b] = {'valor': nota_final, 'substituido_por_pa': False}
+            else:
+                notas_por_disc[disc_id][b] = {'valor': nota_final, 'substituido_por_pa': False}
 
     def _medias_e_anual(disc_pks):
         """Retorna (lista_medias_b1_b2_b3_b4, media_anual) para um conjunto de disciplinas.
@@ -550,7 +560,17 @@ def boletim_turma(request, codigo):
             else:
                 notas_idx[aid][did][b] = {'valor': 'NA', 'substituido_por_pa': False}
         else:
-            notas_idx[aid][did][b] = {'valor': nota.nota_final, 'substituido_por_pa': False}
+            pa_num = 1 if b in (1, 2) else 2
+            pa_val = pas_idx[aid][did].get(pa_num)
+            nota_final = nota.nota_final
+            if pa_val is not None:
+                media_pa = round((nota_final + pa_val) / 2, 1)
+                if media_pa > nota_final:
+                    notas_idx[aid][did][b] = {'valor': media_pa, 'substituido_por_pa': True}
+                else:
+                    notas_idx[aid][did][b] = {'valor': nota_final, 'substituido_por_pa': False}
+            else:
+                notas_idx[aid][did][b] = {'valor': nota_final, 'substituido_por_pa': False}
 
     # Descobre disciplinas presentes na turma via grade horária
     disc_ids = GradeHoraria.objects.filter(
