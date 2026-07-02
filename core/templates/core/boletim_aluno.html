@@ -2,6 +2,13 @@
 {% block title %}Boletim — {{ aluno.nome }} — SCA{% endblock %}
 
 {% block content %}
+<style>
+    .linha-par { background: #f9fbff; }
+    .peso-grupo { font-weight: 600; }
+    .peso-normal { font-weight: 400; }
+    .cor-verde { color: #1a7a4a; }
+    .cor-vermelha { color: #c0392b; }
+</style>
 <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:20px;">
     <div>
         <h2 style="color:#003366; margin:0 0 4px;">📄 Boletim Escolar</h2>
@@ -34,8 +41,8 @@
         </thead>
         <tbody>
             {% for linha in grupos_no_boletim %}
-            <tr style="border-bottom:1px solid #e0e0e0; {% cycle 'background:#f9fbff;' '' %}">
-                <td style="padding:10px 16px; font-weight:{% if linha.is_grupo %}600{% else %}400{% endif %};">
+            <tr class="{% cycle 'linha-par' '' %}" style="border-bottom:1px solid #e0e0e0;">
+                <td class="{% if linha.is_grupo %}peso-grupo{% else %}peso-normal{% endif %}" style="padding:10px 16px;">
                     {{ linha.nome }}
                 </td>
                 {% for v in linha.medias %}
@@ -44,7 +51,7 @@
                     <span style="background:#f39c12; color:#fff; font-weight:700; font-size:12px;
                              padding:3px 8px; border-radius:12px; letter-spacing:.5px;">N/A</span>
                     {% elif v.valor is not None %}
-                    <span style="font-weight:600; {% if v.valor >= 5.0 %}color:#1a7a4a;{% else %}color:#c0392b;{% endif %}">
+                    <span class="{% if v.valor >= 5.0 %}cor-verde{% else %}cor-vermelha{% endif %}" style="font-weight:600;">
                         {{ v.valor }}
                     </span>
                     {% if v.substituido_por_pa %}
@@ -57,8 +64,7 @@
                 {% endfor %}
                 <td style="padding:10px; text-align:center; background:#eef4ff;">
                     {% if linha.media_anual is not None %}
-                    <strong style="font-size:15px;
-                    {% if linha.media_anual >= 5.0 %}color:#1a7a4a;{% else %}color:#c0392b;{% endif %}">
+                    <strong class="{% if linha.media_anual >= 5.0 %}cor-verde{% else %}cor-vermelha{% endif %}" style="font-size:15px;">
                         {{ linha.media_anual }}
                     </strong>
                     {% else %}

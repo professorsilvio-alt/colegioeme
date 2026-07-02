@@ -52,12 +52,12 @@ header {
 }
 
 .header-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+    gap: 10px;
     flex-grow: 1;
-    align-items: stretch; /* Allow rows to fill width */
     padding: 5px 0;
+    align-items: stretch;
 }
 
 .nav-row {
@@ -83,7 +83,6 @@ header {
     gap: 8px;
     background: rgba(255, 255, 255, 0.12);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    flex: 0 0 auto;
     backdrop-filter: blur(5px);
 }
 
