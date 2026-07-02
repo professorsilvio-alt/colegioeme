@@ -34,7 +34,10 @@
             {% endfor %}
         </select>
 
-        <button type="submit" id="btnAbrirNotas" style="margin-top:8px;">📋 Abrir Lançamento</button>
+        <div style="display: flex; gap: 8px;">
+            <button type="submit" id="btnAbrirNotas" style="margin-top:8px; flex:1;">📋 Lançamento</button>
+            <button type="button" id="btnBoletimTurma" style="margin-top:8px; flex:1; background:#16a085; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:bold; font-size:15px;" onclick="abrirBoletimTurma()">📄 Boletão</button>
+        </div>
     </form>
 </div>
 {% endblock %}
@@ -58,6 +61,15 @@ const COR_STATUS = {
     'encerrado':       { bg: '#fee2e2', border: '#fca5a5', text: '#991b1b', icone: '🔴' },
     'nao_configurado': { bg: '#f1f5f9', border: '#cbd5e1', text: '#475569', icone: '⚪' },
 };
+
+function abrirBoletimTurma() {
+    const turma = document.getElementById('selTurma').value;
+    if (!turma) {
+        alert('Selecione a turma primeiro para ver o boletão.');
+        return;
+    }
+    window.location.href = `/notas/boletim/${turma}/`;
+}
 
 function atualizarAlerta() {
     const p = document.getElementById('selBimestre').value;

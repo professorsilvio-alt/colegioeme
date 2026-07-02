@@ -808,6 +808,11 @@ def exportar_boletim_turma_pdf(request, codigo):
     )
     
     elems = []
+    logo = _get_logo_element()
+    if logo:
+        elems.append(logo)
+        elems.append(Spacer(1, 0.2*cm))
+        
     styles = getSampleStyleSheet()
     
     # Cabeçalho
@@ -1004,6 +1009,11 @@ def exportar_boletim_aluno_pdf(request, pk):
     )
     
     elems = []
+    logo = _get_logo_element()
+    if logo:
+        elems.append(logo)
+        elems.append(Spacer(1, 0.2*cm))
+        
     styles = getSampleStyleSheet()
     
     # Cabeçalho
