@@ -44,31 +44,45 @@
         {% if user.is_authenticated %}
         <nav class="header-nav">
             <a href="{% url 'dashboard' %}" class="nav-item">🏠 Dashboard</a>
-            {% if user.is_superuser or prof.cargo == 'DIRETOR' or prof.cargo == 'COORDENADOR' or prof.cargo == 'AUX_COORD' %}
-            <a href="{% url 'mural_avisos' %}" class="nav-item">📌 Mural</a>
+
+            {% if prof.pode_ver_tudo or user.is_superuser %}
+            <a href="{% url 'relatorio_alocacao' %}" class="nav-item">👥 Alocação</a>
             {% endif %}
-            {% if not prof or prof.pode_ver_ocorrencias %}
-            <a href="{% url 'dashboard' %}?tab=ocorrencias" class="nav-item">📋 Ocorrências</a>
-            {% endif %}
+
             {% if not prof or prof.cargo != 'INSPETOR' %}
             <a href="{% url 'dashboard' %}?tab=conteudos" class="nav-item">📚 Diário</a>
             {% endif %}
+
+            {% if prof.pode_editar_tudo or user.is_superuser %}
+            <a href="{% url 'escola_professores_list' %}" class="nav-item">👥 Equipe</a>
+            <a href="{% url 'escola_configurar' %}" class="nav-item">🎨 Escola</a>
+            <a href="{% url 'migrar_alunos' %}" class="nav-item">🚀 Migrar Alunos</a>
+            {% endif %}
+
+            {% if user.is_superuser or prof.cargo == 'DIRETOR' or prof.cargo == 'COORDENADOR' or prof.cargo == 'AUX_COORD' %}
+            <a href="{% url 'mural_avisos' %}" class="nav-item">📌 Mural</a>
+            {% endif %}
+
             {% if user.is_superuser or prof.pode_ver_tudo or prof.cargo == 'DIRETOR' or prof.cargo == 'SECRETARIA' %}
             <a href="{% url 'notas_index' %}" class="nav-item">📝 Notas</a>
             {% endif %}
+
+            {% if not prof or prof.pode_ver_ocorrencias %}
+            <a href="{% url 'dashboard' %}?tab=ocorrencias" class="nav-item">📋 Ocorrências</a>
+            {% endif %}
+
             {% if prof.pode_ver_tudo or user.is_superuser %}
-            <a href="{% url 'relatorio_alocacao' %}" class="nav-item">👥 Alocação</a>
             <a href="{% url 'relatorio_pendencias' %}" class="nav-item">📊 Pendências</a>
             {% endif %}
 
             {% if prof.pode_editar_tudo or user.is_superuser %}
-            <a href="{% url 'gerenciar_sugestoes' %}" class="nav-item">⚙️ Sugestões</a>
-            <a href="{% url 'escola_professores_list' %}" class="nav-item">👥 Equipe</a>
-            <a href="{% url 'escola_configurar' %}" class="nav-item">🎨 Escola</a>
-            <a href="{% url 'migrar_alunos' %}" class="nav-item">🚀 Migrar Alunos</a>
             <a href="{% url 'config_periodos_notas' %}" class="nav-item">📅 Períodos de Notas</a>
             {% elif prof and prof.cargo in 'SECRETARIA' %}
             <a href="{% url 'config_periodos_notas' %}" class="nav-item">📅 Períodos de Notas</a>
+            {% endif %}
+
+            {% if prof.pode_editar_tudo or user.is_superuser %}
+            <a href="{% url 'gerenciar_sugestoes' %}" class="nav-item">⚙️ Sugestões</a>
             {% endif %}
         </nav>
 
