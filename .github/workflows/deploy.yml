@@ -39,8 +39,7 @@ jobs:
             # 6. Coleta arquivos estáticos silenciosamente
             python manage.py collectstatic --noinput
             # 7. Reinicia a aplicação web para aplicar as mudanças
-            # O PythonAnywhere deixa tudo em minúsculo na pasta /var/www/
-            USER_LOWER=$(echo "${{ secrets.PA_USERNAME }}" | tr '[:upper:]' '[:lower:]')
-            touch /var/www/${USER_LOWER}_pythonanywhere_com_wsgi.py
+            # Atualiza todos os arquivos WSGI para garantir o reload independente do domínio ou maiúsculas/minúsculas
+            find /var/www/ -name "*_wsgi.py" -exec touch {} +
             
             echo "✅ Deploy concluído com sucesso!"
