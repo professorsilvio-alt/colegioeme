@@ -600,6 +600,16 @@ const TOTEM_DATA = {
             quote: "Apoiar nossos jovens rumo ao futuro com responsabilidade e amizade."
         },
         {
+            id: "neide",
+            name: "Inspetora Neide",
+            role: "Inspetora do 4º Andar (Bloco Cleydson / 9º Anos)",
+            avatar: "imagens/avatar_inspetora_neide.png",
+            floor: "4º Andar",
+            coverage: "Salas 11, 12, 13 e 14 (Turmas Integradas e 9º Ano)",
+            bio: "Atua no 4º Andar com carinho, atenção aos detalhes e dedicação constante, garantindo suporte, disciplina e acolhimento para as turmas e professores.",
+            quote: "Zelo e dedicação para que cada jovem alcance o seu melhor potencial."
+        },
+        {
             id: "mariana",
             name: "Inspetora Mariana",
             role: "Inspetora do Bloco Anexo (Térreo)",
@@ -1179,14 +1189,7 @@ function setupEventListeners() {
     const clearBtn = document.getElementById("btn-clear-search");
     const toggleKeypadBtn = document.getElementById("btn-toggle-keypad");
 
-    // Botões para abrir tela de Inspetores
-    document.getElementById("btn-open-inspectors")?.addEventListener("click", () => {
-        openInspectorsModal();
-    });
 
-    document.getElementById("btn-hero-open-inspectors")?.addEventListener("click", () => {
-        openInspectorsModal();
-    });
 
     document.getElementById("btn-close-inspectors-modal")?.addEventListener("click", () => {
         closeInspectorsModal();

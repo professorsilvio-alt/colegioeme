@@ -1041,6 +1041,23 @@ input, textarea {
     margin-top: 0.15rem;
 }
 
+.inspector-badge-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 0.2rem;
+}
+
+.modal-inspector-avatar {
+    width: 46px;
+    height: 46px;
+    border-radius: var(--radius-sm);
+    object-fit: contain;
+    background: #ffffff;
+    border: 1.5px solid var(--eme-blue-500);
+    box-shadow: 0 2px 6px rgba(0, 34, 68, 0.15);
+}
+
 .project-details-card {
     background: #f8fafc;
     border: 1px solid var(--border-light);
