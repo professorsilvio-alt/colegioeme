@@ -60,7 +60,7 @@
 }
 
 .inspetores-hero-content {
-    max-width: 720px;
+    max-width: 950px;
     position: relative;
     z-index: 2;
 }
@@ -94,44 +94,6 @@
     font-size: 1.05rem;
     color: var(--eme-blue-100);
     line-height: 1.6;
-}
-
-.inspetores-hero-stats {
-    display: flex;
-    gap: 1.25rem;
-    position: relative;
-    z-index: 2;
-}
-
-.hero-stat-box {
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: var(--radius-md);
-    padding: 1rem 1.4rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-width: 130px;
-    text-align: center;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-}
-
-.stat-num {
-    font-family: var(--font-heading);
-    font-size: 2rem;
-    font-weight: 800;
-    color: var(--eme-amber-400);
-    line-height: 1.1;
-}
-
-.stat-label {
-    font-size: 0.78rem;
-    color: #f1f5f9;
-    font-weight: 600;
-    margin-top: 0.25rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
 }
 
 /* Filtro de Pavimentos */
