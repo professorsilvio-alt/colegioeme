@@ -426,8 +426,8 @@ const TOTEM_DATA = {
             floor: "4º Andar",
             block: "Bloco Cleydson",
             floorKey: "4",
-            inspector: "Inspetora Neide",
-            inspectorAvatar: "imagens/avatar_inspetora_neide.png",
+            inspector: "Inspetor Cleidson",
+            inspectorAvatar: "imagens/avatar_inspetor_cleidson.png",
             theme: "Projetos Integrados 9º Ano (91, 92 & 93)",
             description: "Grandes projetos e apresentações integradas desenvolvidos conjuntamente pelas turmas do 9º Ano.",
             image: "imagens/sala_13.png",
@@ -514,7 +514,7 @@ const TOTEM_DATA = {
             floor: "Térreo / Área Externa",
             block: "Complexo Esportivo",
             floorKey: "0",
-            inspector: "Inspetores Araújo & Karol (Pátio)",
+            inspector: "Inspetores Araújo & Carol (Pátio)",
             inspectorAvatar: "imagens/avatar_inspetor_araujo.png",
             theme: "APRESENTAÇÃO SURPRESA",
             description: "Apresentação Surpresa imperdível e grandes demonstrações preparadas no complexo esportivo.",
@@ -529,9 +529,9 @@ const TOTEM_DATA = {
     floorsInfo: {
         "0": {
             name: "Térreo & Bloco Anexo",
-            sub: "Salas 15, 16, 17 (Turmas 61, 62, 63 com Inspetora Mariana), Pátio & Portaria (Araújo e Karol) e Quadra",
+            sub: "Salas 15, 16, 17 (Turmas 61, 62, 63 com Inspetora Mariana), Pátio & Portaria (Araújo e Carol) e Quadra",
             icon: "fa-school",
-            highlights: ["Turma 61 (Sala 15 - Anexo)", "Turma 62 (Sala 16 - Anexo)", "Turma 63 (Sala 17 - Anexo)", "Pátio & Portaria (Araújo e Karol)", "QUADRA (Apresentação Surpresa)"]
+            highlights: ["Turma 61 (Sala 15 - Anexo)", "Turma 62 (Sala 16 - Anexo)", "Turma 63 (Sala 17 - Anexo)", "Pátio & Portaria (Araújo e Carol)", "QUADRA (Apresentação Surpresa)"]
         },
         "1": {
             name: "1º Andar – Bloco Ozael",
@@ -600,16 +600,6 @@ const TOTEM_DATA = {
             quote: "Apoiar nossos jovens rumo ao futuro com responsabilidade e amizade."
         },
         {
-            id: "neide",
-            name: "Inspetora Neide",
-            role: "Inspetora do 4º Andar (Bloco Cleydson / 9º Anos)",
-            avatar: "imagens/avatar_inspetora_neide.png",
-            floor: "4º Andar",
-            coverage: "Salas 11, 12, 13 e 14 (Turmas Integradas e 9º Ano)",
-            bio: "Atua no 4º Andar com carinho, atenção aos detalhes e dedicação constante, garantindo suporte, disciplina e acolhimento para as turmas e professores.",
-            quote: "Zelo e dedicação para que cada jovem alcance o seu melhor potencial."
-        },
-        {
             id: "mariana",
             name: "Inspetora Mariana",
             role: "Inspetora do Bloco Anexo (Térreo)",
@@ -630,10 +620,10 @@ const TOTEM_DATA = {
             quote: "Apoio constante para garantir a segurança e o bem-estar de toda a escola."
         },
         {
-            id: "karol",
-            name: "Inspetora Karol",
+            id: "carol",
+            name: "Inspetora Carol",
             role: "Inspetora de Pátio, Entrada & Saída",
-            avatar: "imagens/avatar_inspetora_karol.png",
+            avatar: "imagens/avatar_inspetora_carol.png",
             floor: "Térreo / Pátio",
             coverage: "Pátio Central, Portões de Acesso, Entrada e Saída dos Alunos",
             bio: "Atua na inspetoria de pátio ao lado do Inspetor Araújo, garantindo a recepção calorosa e segura de alunos e responsáveis, além do acompanhamento diário no pátio e na entrada e saída.",
@@ -784,7 +774,7 @@ function renderFloorNavigator() {
 
     const floors = [
         { key: "all", name: "Todos os Andares", icon: "🏢" },
-        { key: "0", name: "Térreo & Anexo (Mariana, Araújo, Karol)", icon: "🌳" },
+        { key: "0", name: "Térreo & Anexo (Mariana, Araújo, Carol)", icon: "🌳" },
         { key: "1", name: "1º Andar (Ozael & Maker)", icon: "1️⃣" },
         { key: "2", name: "2º Andar (Maria)", icon: "2️⃣" },
         { key: "3", name: "3º Andar (Cláudio)", icon: "3️⃣" },

@@ -53,18 +53,6 @@ const INSPETORES_DATA = [
         accentColor: "#8b5cf6"
     },
     {
-        id: "neide",
-        name: "Inspetora Neide",
-        role: "Inspetora do 4º Andar (Bloco Cleydson / 9º Anos)",
-        avatar: "imagens/avatar_inspetora_neide.png",
-        floorCategory: "4",
-        floorBadge: "4º Andar • Bloco Cleydson",
-        coverage: "Salas 11, 12, 13 e 14 (Turmas Integradas e 9º Ano)",
-        bio: "Atua no 4º Andar com carinho, atenção aos detalhes e dedicação constante, garantindo suporte, disciplina e acolhimento para as turmas e professores.",
-        quote: "Zelo e dedicação para que cada jovem alcance o seu melhor potencial.",
-        accentColor: "#ec4899"
-    },
-    {
         id: "mariana",
         name: "Inspetora Mariana",
         role: "Inspetora do Bloco Anexo (Térreo - 6º Anos)",
@@ -89,10 +77,10 @@ const INSPETORES_DATA = [
         accentColor: "#3b82f6"
     },
     {
-        id: "karol",
-        name: "Inspetora Karol",
+        id: "carol",
+        name: "Inspetora Carol",
         role: "Inspetora de Pátio, Entrada & Saída",
-        avatar: "imagens/avatar_inspetora_karol.png",
+        avatar: "imagens/avatar_inspetora_carol.png",
         floorCategory: "terreo",
         floorBadge: "Térreo • Recepção & Pátio",
         coverage: "Pátio Central, Portões de Acesso, Entrada e Saída dos Alunos",
