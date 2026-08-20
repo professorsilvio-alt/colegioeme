@@ -54,7 +54,7 @@ const TOTEM_DATA = {
                 }
             ],
             color: "#0284c7",
-            route: "Suba até o 1º Andar. A Turma 61 está localizada na Sala 01."
+            route: "Final do hall, após o banheiro masculino, acesso pela escada à direita até o 1º Andar. A Turma 61 está localizada na Sala 01."
         },
         {
             id: "62",
@@ -107,7 +107,7 @@ const TOTEM_DATA = {
                 }
             ],
             color: "#0284c7",
-            route: "Suba até o 1º Andar. A Turma 62 fica localizada na Sala 02, ao lado da Sala 01."
+            route: "Final do hall, após o banheiro masculino, acesso pela escada à direita até o 1º Andar. A Turma 62 fica localizada na Sala 02, ao lado da Sala 01."
         },
         {
             id: "63",
@@ -502,7 +502,7 @@ const TOTEM_DATA = {
                 { src: "imagens/corredor_1_andar.png", label: "Corredor 1º Andar" }
             ],
             color: "#2563eb",
-            route: "Suba ao 1º Andar. A Sala 03 (Oficina de IA) fica localizada no corredor do 1º Andar, ao lado da Sala 02."
+            route: "Final do hall, após o banheiro masculino, acesso pela escada à direita até o 1º Andar. A Sala 03 (Oficina de IA) fica no corredor do 1º Andar, ao lado da Sala 02."
         },
         {
             id: "maker",
