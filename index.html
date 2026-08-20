@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="font-normal">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Totem Interativo – Feira das Ciências Colégio EME 2026</title>
+    <meta name="description" content="Guia interativo de navegação e localização de turmas e projetos para a Feira das Ciências 2026 do Colégio EME.">
+    <meta name="theme-color" content="#002244">
+
+    <!-- Ícones Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- Folha de Estilos do Totem -->
+    <link rel="stylesheet" href="css/styles.css?v=2">
+</head>
+<body>
+
+    <!-- CABEÇALHO DO TOTEM -->
+    <header class="totem-header" role="banner">
+        <div class="header-container">
+            <div class="brand-section">
+                <div class="school-logo-emblem" aria-hidden="true" title="Colégio EME">
+                    <img src="imagens/logo.webp" alt="Logo Oficial Colégio EME" class="official-school-logo">
+                </div>
+                <div class="brand-text">
+                    <h1>
+                        Colégio EME
+                        <span class="badge-year">2026</span>
+                    </h1>
+                    <p class="brand-tagline">
+                        <span>Feira das Ciências</span>
+                        <span class="tagline-dot"></span>
+                        <span>Totem de Autoatendimento &amp; Localização</span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="header-controls">
+                <div class="totem-clock-widget" aria-live="polite">
+                    <div class="clock-time" id="totem-clock">--:--:--</div>
+                    <div class="clock-date" id="totem-date">Carregando data...</div>
+                </div>
+
+                <div class="header-action-buttons">
+                    <button class="action-icon-btn btn-inspectors-featured" id="btn-open-inspectors" title="Conheça nossos Inspetores">
+                        <i class="fa-solid fa-user-shield"></i>
+                        <span>Nossos Inspetores</span>
+                    </button>
+                    <button class="action-icon-btn btn-home" id="btn-home-totem" title="Voltar ao início">
+                        <i class="fa-solid fa-house"></i>
+                        <span>Início</span>
+                    </button>
+                    <button class="action-icon-btn" id="btn-font-size" title="Aumentar tamanho do texto">
+                        <i class="fa-solid fa-text-height"></i>
+                        <span>Texto</span>
+                    </button>
+                    <button class="action-icon-btn" id="btn-high-contrast" title="Modo Alto Contraste">
+                        <i class="fa-solid fa-circle-half-stroke"></i>
+                        <span>Contraste</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="main-wrapper" role="main">
+
+        <!-- BANNER DE BOAS-VINDAS -->
+        <section class="totem-welcome-hero" aria-label="Boas-vindas">
+            <div class="hero-text">
+                <h2>Seja bem-vindo(a) à nossa Feira das Ciências! 👋</h2>
+                <p>Encontre a sala de cada turma, temas dos projetos, andares e instruções de rota pelo colégio.</p>
+            </div>
+            <div class="hero-actions-row">
+                <button class="btn-hero-inspectors" id="btn-hero-open-inspectors" title="Abrir galeria de inspetores">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <span>Conheça Nossos Inspetores</span>
+                </button>
+                <div class="touch-hint-pill">
+                    <i class="fa-solid fa-hand-pointer"></i>
+                    <span>Toque nos cards para ver a localização</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- BARRA DE BUSCA TOUCH -->
+        <section class="search-control-section" aria-label="Busca de turmas e temas">
+            <div class="search-icon-wrapper" aria-hidden="true">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
+            <input 
+                type="text" 
+                id="search-input" 
+                class="search-input" 
+                placeholder="Busque por turma (ex: 61, 72, 93), sala, andar ou tema (ex: Robótica, Sustentabilidade)..."
+                autocomplete="off"
+                aria-label="Buscar turma ou tema"
+            />
+            <div class="search-actions">
+                <button class="btn-clear-search" id="btn-clear-search" aria-label="Limpar busca" title="Limpar busca">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <button class="btn-keypad-toggle" id="btn-toggle-keypad" title="Abrir teclado na tela">
+                    <i class="fa-solid fa-keyboard"></i>
+                    <span>Teclado na Tela</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- NAVEGADOR & FILTROS -->
+        <section class="navigation-filters-area" aria-label="Filtros de navegação">
+            <div class="filters-header-row">
+                <span class="section-label">
+                    <i class="fa-solid fa-layer-group"></i> Selecione o Ano Escolar:
+                </span>
+                <span class="results-count-badge" id="results-count">Carregando locais...</span>
+            </div>
+
+            <!-- Abas por Ano -->
+            <nav class="grade-tabs-list" id="grade-filters" aria-label="Abas por ano"></nav>
+
+            <!-- Filtros por Andar -->
+            <div class="floor-navigator-strip" id="floors-nav-container" aria-label="Navegador por andares"></div>
+        </section>
+
+        <!-- GRID DE CARDS DAS TURMAS -->
+        <section class="cards-grid-container" id="cards-grid" aria-label="Lista de Turmas e Espaços"></section>
+
+    </main>
+
+    <!-- MODAL DE DETALHES & GUIA DE ROTA -->
+    <div class="detail-modal-container" id="detail-modal" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="modal-backdrop" id="modal-backdrop"></div>
+        <div class="modal-card">
+            <div class="modal-header-banner">
+                <div class="modal-headline">
+                    <div class="modal-code-display" id="modal-code">61</div>
+                    <div class="modal-title-group">
+                        <span class="modal-grade-tag" id="modal-grade">6º Ano • Ensino Fundamental II</span>
+                        <h3 id="modal-theme">Sustentabilidade e Ecossistemas</h3>
+                    </div>
+                </div>
+                <button class="modal-close-btn" id="modal-close-btn" aria-label="Fechar detalhes">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="modal-content-grid">
+                <!-- Coluna de Informações -->
+                <div class="modal-info-col">
+                    <div class="location-summary-card">
+                        <div class="loc-item">
+                            <span class="loc-label"><i class="fa-solid fa-door-open"></i> Sala</span>
+                            <span class="loc-value" id="modal-room">Sala 01</span>
+                        </div>
+                        <div class="loc-item">
+                            <span class="loc-label"><i class="fa-solid fa-building"></i> Andar</span>
+                            <span class="loc-value" id="modal-floor">1º Andar</span>
+                        </div>
+                        <div class="loc-item">
+                            <span class="loc-label"><i class="fa-solid fa-cubes"></i> Bloco / Ala</span>
+                            <span class="loc-value" id="modal-block">Bloco Ozael</span>
+                        </div>
+                        <div class="loc-item loc-item-inspector">
+                            <span class="loc-label"><i class="fa-solid fa-user-shield"></i> Inspetor / Apoio</span>
+                            <div class="inspector-badge-row">
+                                <img id="modal-inspector-avatar" src="imagens/avatar_inspetor_ozael.png" alt="Avatar Inspetor" class="modal-inspector-avatar">
+                                <span class="loc-value" id="modal-inspector">Equipe Ozael</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="project-details-card">
+                        <h4><i class="fa-solid fa-lightbulb"></i> Sobre o Projeto da Turma</h4>
+                        <p id="modal-desc">Carregando detalhes do projeto apresentado...</p>
+                    </div>
+
+                    <!-- Grupos e Temas da Turma -->
+                    <div class="modal-groups-section" id="modal-groups-wrapper"></div>
+
+                    <div id="modal-floor-map"></div>
+                </div>
+
+                <!-- Coluna de Mídia & Fotos Reais do Ambiente -->
+                <div class="modal-media-col">
+                    <div id="modal-image-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL / TELA DEDICADA: CONHEÇA NOSSOS INSPETORES -->
+    <div class="inspectors-modal-overlay" id="inspectors-modal" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="inspectors-modal-backdrop" id="inspectors-modal-backdrop"></div>
+        <div class="inspectors-modal-card">
+            <div class="inspectors-modal-header">
+                <div class="inspectors-header-text">
+                    <div class="inspectors-badge-pill">
+                        <i class="fa-solid fa-shield-heart"></i> Equipe de Apoio &amp; Inspetores Colégio EME
+                    </div>
+                    <h2>Conheça Nossos Inspetores</h2>
+                    <p>Os profissionais que cuidam, orientam e apoiam nossa comunidade escolar todos os dias com carinho, zelo e dedicação.</p>
+                </div>
+                <button class="modal-close-btn" id="btn-close-inspectors-modal" aria-label="Fechar tela de inspetores" title="Fechar">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Grade de Inspetores -->
+            <div class="inspectors-grid-content" id="inspectors-list-grid">
+                <!-- Renderizado dinamicamente pelo js/app.js -->
+            </div>
+        </div>
+    </div>
+
+    <!-- TECLADO VIRTUAL TOUCH (SLIDE UP) -->
+    <div class="touch-keyboard-container" id="touch-keyboard" aria-label="Teclado Virtual do Totem"></div>
+
+    <!-- RODAPÉ DO TOTEM -->
+    <footer class="totem-footer" role="contentinfo">
+        <div class="footer-inner">
+            <div class="footer-col-info">
+                <div>
+                    <strong>Colégio EME</strong> – Feira das Ciências 2026 • Avenida Doutor Mário Guimarães, Nova Iguaçu - RJ
+                </div>
+                <div class="footer-tech-credit">
+                    <img src="imagens/logo_boaz_transparent.png" alt="Logo Boaz 360" class="footer-boaz-logo">
+                    <span>Sistema desenvolvido por <strong>Boaz 360 Soluções Tecnológicas e Gestão Empresarial</strong></span>
+                </div>
+            </div>
+            <div class="footer-status-pill">
+                <span class="status-dot"></span>
+                <span>Totem Conectado &amp; Operacional</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Script Principal -->
+    <script src="js/app.js?v=2"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+# Arquivos do sistema operacional
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# Logs e arquivos temporários
+*.log
+*.tmp
