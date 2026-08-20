@@ -492,8 +492,8 @@ const TOTEM_DATA = {
             floor: "1º Andar",
             block: "1º Andar",
             floorKey: "1",
-            inspector: "Inspetora Josielma",
-            inspectorAvatar: "imagens/avatar_inspetora_josielma.png",
+            inspector: "Inspetora Mariana & Equipe de IA",
+            inspectorAvatar: "imagens/avatar_inspetora_mariana.png",
             theme: "Oficina Prática de Inteligência Artificial",
             description: "Espaço dedicado a demonstrações interativas, oficinas práticas e experimentação com ferramentas de Inteligência Artificial para todos os visitantes da Feira.",
             image: "imagens/sala_4.png",
@@ -513,8 +513,8 @@ const TOTEM_DATA = {
             floor: "1º Andar",
             block: "1º Andar",
             floorKey: "1",
-            inspector: "Inspetora Josielma & Equipe Maker",
-            inspectorAvatar: "imagens/avatar_inspetora_josielma.png",
+            inspector: "Inspetora Mariana & Equipe Maker",
+            inspectorAvatar: "imagens/avatar_inspetora_mariana.png",
             theme: "APRESENTAÇÃO SURPRESA",
             description: "Apresentação Surpresa interativa e projetos especiais de experimentação no Laboratório Maker.",
             image: "imagens/maker.png",
@@ -556,9 +556,9 @@ const TOTEM_DATA = {
         },
         "1": {
             name: "1º Andar – 6º Ano & Oficina de IA",
-            sub: "Salas 01, 02 (Turmas 61 e 62 com Inspetora Mariana), Sala 03 (Oficina de IA com Inspetora Josielma) e Sala Maker",
+            sub: "Salas 01, 02 (Turmas 61 e 62 com Inspetora Mariana), Sala 03 (Oficina de IA) e Sala Maker",
             icon: "fa-layer-group",
-            highlights: ["Turma 61 (Sala 01 - Mariana)", "Turma 62 (Sala 02 - Mariana)", "Oficina de IA (Sala 03 - Josielma)", "SALA MAKER (Apresentação Surpresa)"]
+            highlights: ["Turma 61 (Sala 01 - Mariana)", "Turma 62 (Sala 02 - Mariana)", "Oficina de IA (Sala 03)", "SALA MAKER (Apresentação Surpresa)"]
         },
         "2": {
             name: "2º Andar – 7º Ano & Turma 63",
@@ -599,16 +599,6 @@ const TOTEM_DATA = {
             coverage: "Turmas 71 (Sala 04), 72 (Sala 06), 73 (Sala 07) e apoio à Sala 05 (Turma 63)",
             bio: "Responsável pelo 2º Andar, orienta e acompanha diariamente os estudantes do 7º Ano nas Salas 04, 06 e 07, além de prestar apoio à Turma 63 na Sala 05.",
             quote: "Incentivar a criatividade, o respeito e o aprendizado prático todos os dias."
-        },
-        {
-            id: "josielma",
-            name: "Inspetora Josielma",
-            role: "Inspetora da Oficina de IA (1º Andar)",
-            avatar: "imagens/avatar_inspetora_josielma.png",
-            floor: "1º Andar",
-            coverage: "Sala 03 (Oficina de Inteligência Artificial)",
-            bio: "Responsável pela Oficina de Inteligência Artificial no 1º Andar (Sala 03), orientando e apoiando os estudantes e visitantes nas atividades práticas e demonstrações de IA.",
-            quote: "Apoiar a inovação, o conhecimento e as novas tecnologias para nossos estudantes."
         },
         {
             id: "maria",
@@ -796,7 +786,7 @@ function renderFloorNavigator() {
     const floors = [
         { key: "all", name: "Todos os Andares", icon: "🏢" },
         { key: "0", name: "Térreo & Pátio (Araújo e Carol)", icon: "🌳" },
-        { key: "1", name: "1º Andar (61, 62 & Oficina IA - Mariana e Josielma)", icon: "1️⃣" },
+        { key: "1", name: "1º Andar (61, 62 & Oficina IA - Mariana)", icon: "1️⃣" },
         { key: "2", name: "2º Andar (71, 72, 73 & 63 - Ozael e Mariana)", icon: "2️⃣" },
         { key: "3", name: "3º Andar (81, 82 & GRP 8º - Maria)", icon: "3️⃣" },
         { key: "4", name: "4º Andar (91, 92, 93 & GRP 9º - Cleidson)", icon: "4️⃣" }

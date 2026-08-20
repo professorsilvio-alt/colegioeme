@@ -29,18 +29,6 @@ const INSPETORES_DATA = [
         accentColor: "#0d9488"
     },
     {
-        id: "josielma",
-        name: "Inspetora Josielma",
-        role: "Inspetora da Oficina de IA (1º Andar)",
-        avatar: "imagens/avatar_inspetora_josielma.png",
-        floorCategory: "1",
-        floorBadge: "1º Andar • Oficina de IA",
-        coverage: "Sala 03 (Oficina de Inteligência Artificial)",
-        bio: "Responsável pela Oficina de Inteligência Artificial no 1º Andar (Sala 03), orientando e apoiando os estudantes e visitantes nas atividades práticas e demonstrações de IA.",
-        quote: "Apoiar a inovação, o conhecimento e as novas tecnologias para nossos estudantes.",
-        accentColor: "#2563eb"
-    },
-    {
         id: "maria",
         name: "Inspetora Maria",
         role: "Inspetora do 8º Ano (3º Andar)",
