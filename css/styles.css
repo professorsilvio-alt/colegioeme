@@ -304,6 +304,25 @@ input, textarea {
     box-shadow: var(--shadow-sm);
 }
 
+.hero-event-schedule-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: rgba(245, 158, 11, 0.15);
+    color: #b45309;
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-pill);
+    font-size: 0.82rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+    letter-spacing: 0.02em;
+}
+
+.hero-event-schedule-pill i {
+    color: var(--eme-amber-500);
+}
+
 .hero-text h2 {
     font-family: var(--font-heading);
     font-size: 1.35rem;
