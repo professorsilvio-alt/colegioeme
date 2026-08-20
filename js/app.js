@@ -617,7 +617,7 @@ const TOTEM_DATA = {
             avatar: "imagens/avatar_inspetor_cleidson.png",
             floor: "4º Andar",
             coverage: "Turmas 91 (Sala 12), 92 (Sala 11), 93 (Sala 14) e Projetos Integrados (Sala 13)",
-            bio: "Com diálogo próximo e postura sempre atenciosa no 4º Andar, acompanha diariamente as turmas do 9º Ano, auxiliando em todas as necessidades pedagógicas e de convivência.",
+            bio: "Sempre atencioso e com diálogo próximo no 4º Andar, acompanha diariamente todas as turmas do 9º Ano nas Salas 11, 12, 13 e 14, auxiliando em todas as necessidades pedagógicas e de convivência.",
             quote: "Apoiar nossos jovens rumo ao futuro com responsabilidade e amizade."
         },
         {
