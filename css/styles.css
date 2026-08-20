@@ -1462,7 +1462,6 @@ input, textarea {
     display: flex;
     align-items: flex-start;
     gap: 1rem;
-    margin-top: 1.25rem;
     border-left: 4px solid var(--eme-amber-500);
     box-shadow: 0 4px 14px rgba(0, 34, 68, 0.18);
 }

@@ -54,7 +54,7 @@ const TOTEM_DATA = {
                 }
             ],
             color: "#0284c7",
-            route: "Final do hall, após o banheiro masculino, acesso pela escada à direita até o 1º Andar. A Turma 61 está localizada na Sala 01."
+            route: "Final do hall de entrada, após o banheiro masculino, subir pela escada à esquerda até o 1º Andar. A Turma 61 está localizada na Sala 01."
         },
         {
             id: "62",
@@ -107,7 +107,7 @@ const TOTEM_DATA = {
                 }
             ],
             color: "#0284c7",
-            route: "Final do hall, após o banheiro masculino, acesso pela escada à direita até o 1º Andar. A Turma 62 fica localizada na Sala 02, ao lado da Sala 01."
+            route: "Final do hall de entrada, após o banheiro masculino, subir pela escada à esquerda até o 1º Andar. A Turma 62 fica localizada na Sala 02, ao lado da Sala 01."
         },
         {
             id: "63",
@@ -160,7 +160,7 @@ const TOTEM_DATA = {
                 }
             ],
             color: "#0284c7",
-            route: "Suba até o 2º Andar. A Turma 63 fica localizada na Sala 05."
+            route: "Final do hall de entrada, após o banheiro masculino, subir pela escada à esquerda até o 1º Andar. No 1º Andar, virar à esquerda para acessar a escada que leva ao 2º Andar. A Turma 63 fica localizada na Sala 05."
         },
         {
             id: "71",
@@ -201,7 +201,7 @@ const TOTEM_DATA = {
                 }
             ],
             color: "#0d9488",
-            route: "Suba até o 2º Andar. Caminhe pelo corredor do 2º Andar; a Sala 04 fica localizada no corredor das turmas do 7º Ano."
+            route: "Final do hall de entrada, após o banheiro masculino, subir pela escada à esquerda até o 1º Andar. No 1º Andar, virar à esquerda para acessar a escada que leva ao 2º Andar. A Sala 04 fica localizada no corredor das turmas do 7º Ano."
         },
         {
             id: "72",
@@ -242,7 +242,7 @@ const TOTEM_DATA = {
                 }
             ],
             color: "#0d9488",
-            route: "Suba ao 2º Andar. A Sala 06 fica no corredor do 2º Andar, próxima à Sala 07."
+            route: "Final do hall de entrada, após o banheiro masculino, subir pela escada à esquerda até o 1º Andar. No 1º Andar, virar à esquerda para acessar a escada que leva ao 2º Andar. A Sala 06 fica no corredor do 2º Andar, próxima à Sala 07."
         },
         {
             id: "73",
@@ -289,7 +289,7 @@ const TOTEM_DATA = {
                 }
             ],
             color: "#0d9488",
-            route: "Suba ao 2º Andar. A Sala 07 fica logo na entrada do corredor do 2º Andar."
+            route: "Final do hall de entrada, após o banheiro masculino, subir pela escada à esquerda até o 1º Andar. No 1º Andar, virar à esquerda para acessar a escada que leva ao 2º Andar. A Sala 07 fica logo na entrada do corredor do 2º Andar."
         },
         {
             id: "81",
@@ -310,7 +310,7 @@ const TOTEM_DATA = {
                 { src: "imagens/corredor_3_andar.png", label: "Corredor 3º Andar (Bloco Maria)" }
             ],
             color: "#d97706",
-            route: "Suba até o 3º Andar. A Sala 08 fica logo na entrada do 3º Andar, ao lado do bebedouro."
+            route: "Final do hall de entrada, após o banheiro masculino, subir pela escada à esquerda até o 1º Andar. No 1º Andar, virar à esquerda para o 2º Andar. Estando no 2º Andar, virar à esquerda para acessar a escada que leva ao 3º Andar. A Sala 08 fica logo na entrada do 3º Andar, ao lado do bebedouro."
         },
         {
             id: "82",
@@ -331,7 +331,7 @@ const TOTEM_DATA = {
                 { src: "imagens/corredor_3_andar.png", label: "Corredor 3º Andar (Bloco Maria)" }
             ],
             color: "#d97706",
-            route: "Suba até o 3º Andar. Passe a Sala 08 e continue pelo corredor até a Sala 10, à direita."
+            route: "Final do hall de entrada, após o banheiro masculino, subir pela escada à esquerda até o 1º Andar. No 1º Andar, virar à esquerda para o 2º Andar. Estando no 2º Andar, virar à esquerda para acessar a escada que leva ao 3º Andar. Passe a Sala 08 e continue pelo corredor até a Sala 10, à direita."
         },
         {
             id: "8_grp",
@@ -352,7 +352,7 @@ const TOTEM_DATA = {
                 { src: "imagens/corredor_3_andar.png", label: "Corredor 3º Andar (Bloco Maria)" }
             ],
             color: "#d97706",
-            route: "Suba até o 3º Andar. A Sala 09 fica entre a Sala 08 e a Sala 10 no 3º Andar."
+            route: "Final do hall de entrada, após o banheiro masculino, subir pela escada à esquerda até o 1º Andar. No 1º Andar, virar à esquerda para o 2º Andar. Estando no 2º Andar, virar à esquerda para acessar a escada que leva ao 3º Andar. A Sala 09 fica entre a Sala 08 e a Sala 10 no 3º Andar."
         },
         {
             id: "91",
@@ -373,7 +373,7 @@ const TOTEM_DATA = {
                 { src: "imagens/corredor_4_andar.png", label: "Corredor 4º Andar (Bloco Cleydson)" }
             ],
             color: "#7c3aed",
-            route: "Suba até o 4º Andar (recomenda-se o elevador para acessibilidade). A Sala 12 fica à direita do saguão."
+            route: "Final do hall de entrada, após o banheiro masculino, subir pela escada à esquerda até o 1º Andar. No 1º Andar, virar à esquerda para o 2º Andar. No 2º Andar, virar à esquerda para o 3º Andar. Estando no 3º Andar, dirigir-se ao final do corredor à esquerda para acessar a escada que leva ao 4º Andar. A Sala 12 fica à direita do saguão."
         },
         {
             id: "92",
@@ -394,7 +394,7 @@ const TOTEM_DATA = {
                 { src: "imagens/corredor_4_andar.png", label: "Corredor 4º Andar (Bloco Cleydson)" }
             ],
             color: "#7c3aed",
-            route: "Suba até o 4º Andar. A Sala 11 fica à esquerda logo após sair das escadas do Bloco Cleydson."
+            route: "Final do hall de entrada, após o banheiro masculino, subir pela escada à esquerda até o 1º Andar. No 1º Andar, virar à esquerda para o 2º Andar. No 2º Andar, virar à esquerda para o 3º Andar. Estando no 3º Andar, dirigir-se ao final do corredor à esquerda para acessar a escada que leva ao 4º Andar. A Sala 11 fica à esquerda logo após sair das escadas do Bloco Cleydson."
         },
         {
             id: "93",
@@ -415,7 +415,7 @@ const TOTEM_DATA = {
                 { src: "imagens/corredor_4_andar.png", label: "Corredor 4º Andar (Bloco Cleydson)" }
             ],
             color: "#7c3aed",
-            route: "Suba até o 4º Andar. Siga pelo corredor principal até o fundo; a Sala 14 é a última porta."
+            route: "Final do hall de entrada, após o banheiro masculino, subir pela escada à esquerda até o 1º Andar. No 1º Andar, virar à esquerda para o 2º Andar. No 2º Andar, virar à esquerda para o 3º Andar. Estando no 3º Andar, dirigir-se ao final do corredor à esquerda para acessar a escada que leva ao 4º Andar. Siga pelo corredor principal até o fundo; a Sala 14 é a última porta."
         },
         {
             id: "9_grp",
@@ -436,7 +436,7 @@ const TOTEM_DATA = {
                 { src: "imagens/corredor_4_andar.png", label: "Corredor 4º Andar (Bloco Cleydson)" }
             ],
             color: "#7c3aed",
-            route: "Suba até o 4º Andar. A Sala 13 fica localizada próxima à Sala 12 no Bloco Cleydson."
+            route: "Final do hall de entrada, após o banheiro masculino, subir pela escada à esquerda até o 1º Andar. No 1º Andar, virar à esquerda para o 2º Andar. No 2º Andar, virar à esquerda para o 3º Andar. Estando no 3º Andar, dirigir-se ao final do corredor à esquerda para acessar a escada que leva ao 4º Andar. A Sala 13 fica localizada próxima à Sala 12 no Bloco Cleydson."
         }
     ],
     specialSpaces: [
@@ -502,7 +502,7 @@ const TOTEM_DATA = {
                 { src: "imagens/corredor_1_andar.png", label: "Corredor 1º Andar" }
             ],
             color: "#2563eb",
-            route: "Final do hall, após o banheiro masculino, acesso pela escada à direita até o 1º Andar. A Sala 03 (Oficina de IA) fica no corredor do 1º Andar, ao lado da Sala 02."
+            route: "Final do hall de entrada, após o banheiro masculino, subir pela escada à esquerda até o 1º Andar. A Sala 03 (Oficina de IA) fica no corredor do 1º Andar, ao lado da Sala 02."
         },
         {
             id: "maker",
@@ -524,7 +524,7 @@ const TOTEM_DATA = {
                 { src: "imagens/acesso_maker.png", label: "Hall de Acesso Maker" }
             ],
             color: "#2563eb",
-            route: "Final do hall, após o banheiro masculino, acesso pela escada à direita até o 1º Andar. Siga para a ala direita na entrada identificada como Espaço Maker."
+            route: "Final do hall de entrada, após o banheiro masculino, subir pela escada à esquerda até o 1º Andar. Siga para a ala direita na entrada identificada como Espaço Maker."
         },
         {
             id: "quadra",
@@ -532,9 +532,9 @@ const TOTEM_DATA = {
             title: "Quadra Poliesportiva",
             category: "Área de Grandes Apresentações",
             room: "Quadra Coberta",
-            floor: "Térreo / Área Externa",
+            floor: "5º Andar",
             block: "Complexo Esportivo",
-            floorKey: "0",
+            floorKey: "5",
             inspector: "Inspetores Araújo & Carol (Pátio)",
             inspectorAvatar: "imagens/avatar_inspetor_araujo.png",
             theme: "APRESENTAÇÃO SURPRESA",
@@ -544,7 +544,7 @@ const TOTEM_DATA = {
                 { src: "imagens/quadra.png", label: "Quadra Poliesportiva" }
             ],
             color: "#059669",
-            route: "No piso térreo, siga em direção ao pátio externo dos fundos. A entrada da quadra estará sinalizada à frente."
+            route: "Final do hall de entrada, após o banheiro masculino, subir pela escada à esquerda até o 1º Andar. Seguir até o 4º Andar pelas escadas à esquerda em cada andar. No 4º Andar, virar à esquerda e no final do corredor subir a escada que leva ao 5º Andar, onde fica a Quadra com a apresentação surpresa do Cão Robótico."
         }
     ],
     floorsInfo: {
@@ -1172,7 +1172,13 @@ function updateMiniFloorMap(item) {
                     `;
                 }).join("")}
             </div>
+        </div>
+    `;
 
+    // Renderizar o banner de navegação abaixo da foto
+    const navBannerContainer = document.getElementById("modal-navigation-banner");
+    if (navBannerContainer) {
+        navBannerContainer.innerHTML = `
             <div class="navigation-banner">
                 <div class="banner-icon">🚶‍♂️</div>
                 <div class="banner-text">
@@ -1180,8 +1186,8 @@ function updateMiniFloorMap(item) {
                     <span>${item.route}</span>
                 </div>
             </div>
-        </div>
-    `;
+        `;
+    }
 }
 
 // Configurar Event Listeners Globais
