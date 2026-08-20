@@ -67,8 +67,8 @@ const TOTEM_DATA = {
             floorKey: "0",
             inspector: "Inspetora Mariana",
             inspectorAvatar: "imagens/avatar_inspetora_mariana.png",
-            theme: "Sustentabilidade, Efeito Estufa, Ciclo da Água e Clima",
-            description: "Projetos investigativos sobre os 5R's da sustentabilidade, efeito estufa e aquecimento global, o ciclo hidrológico e riscos climáticos urbanos.",
+            theme: "Sustentabilidade, Energia Renovável, Efeito Estufa e Clima",
+            description: "Projetos investigativos sobre os 5R's da sustentabilidade, efeito estufa e aquecimento global, o ciclo hidrológico, energia renovável e clima, e riscos climáticos urbanos.",
             image: "imagens/sala_16.png",
             images: [
                 { src: "imagens/sala_16.png", label: "Entrada Sala 16 (Turma 62)" },
@@ -96,7 +96,7 @@ const TOTEM_DATA = {
                 {
                     number: "04",
                     name: "GRUPO 04",
-                    theme: "Práticas e Consciência Ambiental",
+                    theme: "Energia renovável e o clima",
                     members: ["Maria Luiza", "Maria Carolina", "Sara", "Manuela", "Maria Clara"]
                 },
                 {
