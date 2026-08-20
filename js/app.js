@@ -524,7 +524,7 @@ const TOTEM_DATA = {
                 { src: "imagens/acesso_maker.png", label: "Hall de Acesso Maker" }
             ],
             color: "#2563eb",
-            route: "Suba ao 1º Andar. Siga para a ala direita do 1º Andar, logo na entrada identificada como Espaço Maker."
+            route: "Final do hall, após o banheiro masculino, acesso pela escada à direita até o 1º Andar. Siga para a ala direita na entrada identificada como Espaço Maker."
         },
         {
             id: "quadra",
