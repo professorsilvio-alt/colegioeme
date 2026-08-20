@@ -1237,21 +1237,6 @@ function setupEventListeners() {
         }
     });
 
-    document.getElementById("btn-high-contrast")?.addEventListener("click", () => {
-        SoundFX.playTap();
-        AppState.highContrast = !AppState.highContrast;
-        document.documentElement.classList.toggle("high-contrast", AppState.highContrast);
-    });
-
-    document.getElementById("btn-font-size")?.addEventListener("click", () => {
-        SoundFX.playTap();
-        AppState.fontSizeLevel = (AppState.fontSizeLevel + 1) % 3;
-        document.documentElement.classList.remove("font-normal", "font-large", "font-xlarge");
-        if (AppState.fontSizeLevel === 0) document.documentElement.classList.add("font-normal");
-        if (AppState.fontSizeLevel === 1) document.documentElement.classList.add("font-large");
-        if (AppState.fontSizeLevel === 2) document.documentElement.classList.add("font-xlarge");
-    });
-
     document.getElementById("btn-home-totem")?.addEventListener("click", () => {
         SoundFX.playTap();
         resetTotemToHome();
