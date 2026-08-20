@@ -14,18 +14,18 @@ const TOTEM_DATA = {
             code: "61",
             grade: "6º Ano",
             segment: "Ensino Fundamental II",
-            room: "Sala 15",
-            floor: "Térreo (Bloco Anexo)",
-            block: "Bloco Anexo",
-            floorKey: "0",
+            room: "Sala 01",
+            floor: "1º Andar",
+            block: "1º Andar",
+            floorKey: "1",
             inspector: "Inspetora Mariana",
             inspectorAvatar: "imagens/avatar_inspetora_mariana.png",
             theme: "Estudos Atmosféricos, Meteorologia e Sustentabilidade",
             description: "Projetos investigativos sobre uso de drones no monitoramento atmosférico, meteorologia e chuvas, desmatamento ilegal e poluição urbana.",
-            image: "imagens/sala_15.png",
+            image: "imagens/sala_1.png",
             images: [
-                { src: "imagens/sala_15.png", label: "Entrada Sala 15 (Turma 61)" },
-                { src: "imagens/terreo.png", label: "Acesso Bloco Anexo (Térreo)" }
+                { src: "imagens/sala_1.png", label: "Entrada Sala 01 (Turma 61)" },
+                { src: "imagens/corredor_1_andar.png", label: "Corredor 1º Andar" }
             ],
             groups: [
                 {
@@ -54,25 +54,25 @@ const TOTEM_DATA = {
                 }
             ],
             color: "#0284c7",
-            route: "No piso térreo, dirija-se ao Bloco Anexo. A Sala 15 é a primeira porta de acesso às salas dos 6º anos no anexo."
+            route: "Suba até o 1º Andar. A Turma 61 está localizada na Sala 01."
         },
         {
             id: "62",
             code: "62",
             grade: "6º Ano",
             segment: "Ensino Fundamental II",
-            room: "Sala 16",
-            floor: "Térreo (Bloco Anexo)",
-            block: "Bloco Anexo",
-            floorKey: "0",
+            room: "Sala 02",
+            floor: "1º Andar",
+            block: "1º Andar",
+            floorKey: "1",
             inspector: "Inspetora Mariana",
             inspectorAvatar: "imagens/avatar_inspetora_mariana.png",
             theme: "Sustentabilidade, Energia Renovável, Efeito Estufa e Clima",
             description: "Projetos investigativos sobre os 5R's da sustentabilidade, efeito estufa e aquecimento global, o ciclo hidrológico, energia renovável e clima, e riscos climáticos urbanos.",
-            image: "imagens/sala_16.png",
+            image: "imagens/sala_2.png",
             images: [
-                { src: "imagens/sala_16.png", label: "Entrada Sala 16 (Turma 62)" },
-                { src: "imagens/terreo.png", label: "Acesso Bloco Anexo (Térreo)" }
+                { src: "imagens/sala_2.png", label: "Entrada Sala 02 (Turma 62)" },
+                { src: "imagens/corredor_1_andar.png", label: "Corredor 1º Andar" }
             ],
             groups: [
                 {
@@ -107,25 +107,25 @@ const TOTEM_DATA = {
                 }
             ],
             color: "#0284c7",
-            route: "No piso térreo, dirija-se ao Bloco Anexo. A Sala 16 fica posicionada no corredor central do anexo, ao lado da Sala 15."
+            route: "Suba até o 1º Andar. A Turma 62 fica localizada na Sala 02, ao lado da Sala 01."
         },
         {
             id: "63",
             code: "63",
             grade: "6º Ano",
             segment: "Ensino Fundamental II",
-            room: "Sala 17",
-            floor: "Térreo (Bloco Anexo)",
-            block: "Bloco Anexo",
-            floorKey: "0",
-            inspector: "Inspetora Mariana",
+            room: "Sala 05",
+            floor: "2º Andar",
+            block: "2º Andar",
+            floorKey: "2",
+            inspector: "Inspetora Mariana & Inspetor Ozael",
             inspectorAvatar: "imagens/avatar_inspetora_mariana.png",
             theme: "Conforto Térmico, Clima, Transição Energética e Adaptação",
             description: "Projetos investigativos sobre conforto térmico urbano, fenômenos climáticos extremos, estudos climáticos por desenhos, transição energética e estratégias de adaptação.",
-            image: "imagens/sala_17.png",
+            image: "imagens/sala_5.png",
             images: [
-                { src: "imagens/sala_17.png", label: "Entrada Sala 17 (Turma 63)" },
-                { src: "imagens/terreo.png", label: "Acesso Bloco Anexo (Térreo)" }
+                { src: "imagens/sala_5.png", label: "Entrada Sala 05 (Turma 63)" },
+                { src: "imagens/corredor_2_andar.png", label: "Corredor 2º Andar" }
             ],
             groups: [
                 {
@@ -160,7 +160,7 @@ const TOTEM_DATA = {
                 }
             ],
             color: "#0284c7",
-            route: "No piso térreo, siga até o Bloco Anexo. A Sala 17 fica logo após a Sala 16 no corredor do anexo."
+            route: "Suba até o 2º Andar. A Turma 63 fica localizada na Sala 05."
         },
         {
             id: "71",
@@ -169,16 +169,16 @@ const TOTEM_DATA = {
             segment: "Ensino Fundamental II",
             room: "Sala 04",
             floor: "2º Andar",
-            block: "Bloco Maria",
+            block: "Bloco Ozael",
             floorKey: "2",
-            inspector: "Inspetora Maria",
-            inspectorAvatar: "imagens/avatar_inspetora_maria.png",
+            inspector: "Inspetor Ozael",
+            inspectorAvatar: "imagens/avatar_inspetor_ozael.png",
             theme: "A Nova Era Sonora",
             description: "Exploração da Inteligência Artificial aplicada ao áudio e à música: sensibilidade musical artificial, composição generativa de canções e testes auditivos de identificação de autoria.",
             image: "imagens/sala_4.png",
             images: [
                 { src: "imagens/sala_4.png", label: "Entrada Sala 04 (Turma 71)" },
-                { src: "imagens/corredor_2_andar.png?v=2", label: "Corredor 2º Andar (Bloco Maria)" }
+                { src: "imagens/corredor_2_andar.png?v=2", label: "Corredor 2º Andar (Bloco Ozael)" }
             ],
             groups: [
                 {
@@ -201,7 +201,7 @@ const TOTEM_DATA = {
                 }
             ],
             color: "#0d9488",
-            route: "Suba até o 2º Andar pelo Bloco Maria. Caminhe até o final do corredor; a Sala 04 fica localizada exatamente no fundo do corredor."
+            route: "Suba até o 2º Andar. Caminhe pelo corredor do 2º Andar; a Sala 04 fica localizada no corredor das turmas do 7º Ano."
         },
         {
             id: "72",
@@ -210,16 +210,16 @@ const TOTEM_DATA = {
             segment: "Ensino Fundamental II",
             room: "Sala 06",
             floor: "2º Andar",
-            block: "Bloco Maria",
+            block: "Bloco Ozael",
             floorKey: "2",
-            inspector: "Inspetora Maria",
-            inspectorAvatar: "imagens/avatar_inspetora_maria.png",
+            inspector: "Inspetor Ozael",
+            inspectorAvatar: "imagens/avatar_inspetor_ozael.png",
             theme: "A Revolução Visual",
             description: "Investigação sobre IA generativa de imagens, engenharia de prompts criativos, debates conceituais sobre arte e pixels, e games comparando fotos reais e geradas por IA.",
             image: "imagens/sala_6.png",
             images: [
                 { src: "imagens/sala_6.png", label: "Entrada Sala 06 (Turma 72)" },
-                { src: "imagens/corredor_2_andar.png?v=2", label: "Corredor 2º Andar (Bloco Maria)" }
+                { src: "imagens/corredor_2_andar.png?v=2", label: "Corredor 2º Andar (Bloco Ozael)" }
             ],
             groups: [
                 {
@@ -242,7 +242,7 @@ const TOTEM_DATA = {
                 }
             ],
             color: "#0d9488",
-            route: "Suba ao 2º Andar pelo Bloco Maria. A Sala 06 fica no corredor logo à frente da Sala 07."
+            route: "Suba ao 2º Andar. A Sala 06 fica no corredor do 2º Andar, próxima à Sala 07."
         },
         {
             id: "73",
@@ -251,16 +251,16 @@ const TOTEM_DATA = {
             segment: "Ensino Fundamental II",
             room: "Sala 07",
             floor: "2º Andar",
-            block: "Bloco Maria",
+            block: "Bloco Ozael",
             floorKey: "2",
-            inspector: "Inspetora Mariana",
-            inspectorAvatar: "imagens/avatar_inspetora_mariana.png",
+            inspector: "Inspetor Ozael",
+            inspectorAvatar: "imagens/avatar_inspetor_ozael.png",
             theme: "IA no Audiovisual",
             description: "Apresentações sobre deepfakes e manipulação de imagem, detecção de vídeos sintéticos, direção de vídeos e animações com IA e o Game 'Tribunal da IA'.",
             image: "imagens/sala_7.png",
             images: [
                 { src: "imagens/sala_7.png", label: "Entrada Sala 07 (Turma 73)" },
-                { src: "imagens/corredor_2_andar.png?v=2", label: "Corredor 2º Andar (Bloco Maria)" }
+                { src: "imagens/corredor_2_andar.png?v=2", label: "Corredor 2º Andar (Bloco Ozael)" }
             ],
             groups: [
                 {
@@ -289,7 +289,7 @@ const TOTEM_DATA = {
                 }
             ],
             color: "#0d9488",
-            route: "Suba ao 2º Andar pelo Bloco Maria. A Sala 07 fica logo na entrada do corredor, na primeira porta à direita."
+            route: "Suba ao 2º Andar. A Sala 07 fica logo na entrada do corredor do 2º Andar."
         },
         {
             id: "81",
@@ -298,19 +298,19 @@ const TOTEM_DATA = {
             segment: "Ensino Fundamental II",
             room: "Sala 08",
             floor: "3º Andar",
-            block: "Bloco Cláudio",
+            block: "Bloco Maria",
             floorKey: "3",
-            inspector: "Inspetor Cláudio",
-            inspectorAvatar: "imagens/avatar_inspetor_claudio.png",
+            inspector: "Inspetora Maria",
+            inspectorAvatar: "imagens/avatar_inspetora_maria.png",
             theme: "Astronomia, Telescópios e a Corrida Espacial",
             description: "Planetário portátil, modelos do sistema solar em escala e simulação de órbitas gravitacionais.",
             image: "imagens/sala_8.png",
             images: [
                 { src: "imagens/sala_8.png", label: "Entrada Sala 08 (Turma 81)" },
-                { src: "imagens/corredor_3_andar.png", label: "Corredor 3º Andar (Bloco Cláudio)" }
+                { src: "imagens/corredor_3_andar.png", label: "Corredor 3º Andar (Bloco Maria)" }
             ],
             color: "#d97706",
-            route: "Suba até o 3º Andar. A Sala 08 fica logo na entrada do Bloco Cláudio, ao lado do bebedouro."
+            route: "Suba até o 3º Andar. A Sala 08 fica logo na entrada do 3º Andar, ao lado do bebedouro."
         },
         {
             id: "82",
@@ -319,16 +319,16 @@ const TOTEM_DATA = {
             segment: "Ensino Fundamental II",
             room: "Sala 10",
             floor: "3º Andar",
-            block: "Bloco Cláudio",
+            block: "Bloco Maria",
             floorKey: "3",
-            inspector: "Inspetor Cláudio",
-            inspectorAvatar: "imagens/avatar_inspetor_claudio.png",
+            inspector: "Inspetora Maria",
+            inspectorAvatar: "imagens/avatar_inspetora_maria.png",
             theme: "Inteligência Artificial e Tecnologias do Futuro",
             description: "Demonstrações com visão computacional, reconhecimento de voz e debates éticos sobre IA.",
             image: "imagens/sala_10.png",
             images: [
                 { src: "imagens/sala_10.png", label: "Entrada Sala 10 (Turma 82)" },
-                { src: "imagens/corredor_3_andar.png", label: "Corredor 3º Andar (Bloco Cláudio)" }
+                { src: "imagens/corredor_3_andar.png", label: "Corredor 3º Andar (Bloco Maria)" }
             ],
             color: "#d97706",
             route: "Suba até o 3º Andar. Passe a Sala 08 e continue pelo corredor até a Sala 10, à direita."
@@ -340,19 +340,19 @@ const TOTEM_DATA = {
             segment: "Ensino Fundamental II",
             room: "Sala 09",
             floor: "3º Andar",
-            block: "Bloco Cláudio",
+            block: "Bloco Maria",
             floorKey: "3",
-            inspector: "Inspetor Cláudio",
-            inspectorAvatar: "imagens/avatar_inspetor_claudio.png",
+            inspector: "Inspetora Maria",
+            inspectorAvatar: "imagens/avatar_inspetora_maria.png",
             theme: "Projetos Integrados 8º Ano (81 & 82)",
             description: "Apresentações e projetos integrados desenvolvidos conjuntamente pelas turmas 81 e 82.",
             image: "imagens/sala_9.png",
             images: [
                 { src: "imagens/sala_9.png", label: "Entrada Sala 09 (Turmas 81/82)" },
-                { src: "imagens/corredor_3_andar.png", label: "Corredor 3º Andar (Bloco Cláudio)" }
+                { src: "imagens/corredor_3_andar.png", label: "Corredor 3º Andar (Bloco Maria)" }
             ],
             color: "#d97706",
-            route: "Suba até o 3º Andar. A Sala 09 fica entre a Sala 08 e a Sala 10 no Bloco Cláudio."
+            route: "Suba até o 3º Andar. A Sala 09 fica entre a Sala 08 e a Sala 10 no 3º Andar."
         },
         {
             id: "91",
@@ -449,8 +449,8 @@ const TOTEM_DATA = {
             floor: "Térreo",
             block: "Portaria Principal",
             floorKey: "0",
-            inspector: "Inspetora Mariana & Recepção",
-            inspectorAvatar: "imagens/avatar_inspetora_mariana.png",
+            inspector: "Inspetores Araújo & Carol",
+            inspectorAvatar: "imagens/avatar_inspetor_araujo.png",
             theme: "Credenciamento, Totem de Informações e Acolhimento",
             description: "Ponto de partida do visitante. Aqui você encontra totens interativos de consulta, mapas e orientação geral da Feira das Ciências.",
             image: "imagens/fachada.png",
@@ -471,7 +471,7 @@ const TOTEM_DATA = {
             floor: "Térreo",
             block: "Área Central",
             floorKey: "0",
-            inspector: "Inspetor Araújo & Apoio",
+            inspector: "Inspetores Araújo & Carol",
             inspectorAvatar: "imagens/avatar_inspetor_araujo.png",
             theme: "Área de Convivência, Painéis Culturais e Escadaria Motivacional",
             description: "Amplo espaço de convivência estudantil com mesas de estudo, escadaria temática com frases inspiradoras e painéis de Ciência & Inovação.",
@@ -484,16 +484,37 @@ const TOTEM_DATA = {
             route: "A partir da entrada, siga em frente pelo corredor de acesso principal até o amplo hall do Pátio Central."
         },
         {
+            id: "oficina_ia",
+            code: "Oficina IA",
+            title: "Oficina de Inteligência Artificial",
+            category: "Espaço Especial & Demonstrações",
+            room: "Sala 03",
+            floor: "1º Andar",
+            block: "1º Andar",
+            floorKey: "1",
+            inspector: "Inspetora Josielma",
+            inspectorAvatar: "imagens/avatar_inspetora_josielma.png",
+            theme: "Oficina Prática de Inteligência Artificial",
+            description: "Espaço dedicado a demonstrações interativas, oficinas práticas e experimentação com ferramentas de Inteligência Artificial para todos os visitantes da Feira.",
+            image: "imagens/sala_4.png",
+            images: [
+                { src: "imagens/sala_4.png", label: "Entrada Sala 03 (Oficina de IA)" },
+                { src: "imagens/corredor_1_andar.png", label: "Corredor 1º Andar" }
+            ],
+            color: "#2563eb",
+            route: "Suba ao 1º Andar. A Sala 03 (Oficina de IA) fica localizada no corredor do 1º Andar, ao lado da Sala 02."
+        },
+        {
             id: "maker",
             code: "SALA Maker",
             title: "SALA Maker EME",
             category: "Espaço Especial",
             room: "Sala Maker",
             floor: "1º Andar",
-            block: "Bloco Ozael",
+            block: "1º Andar",
             floorKey: "1",
-            inspector: "Inspetor Ozael & Equipe Maker",
-            inspectorAvatar: "imagens/avatar_inspetor_ozael.png",
+            inspector: "Inspetora Josielma & Equipe Maker",
+            inspectorAvatar: "imagens/avatar_inspetora_josielma.png",
             theme: "APRESENTAÇÃO SURPRESA",
             description: "Apresentação Surpresa interativa e projetos especiais de experimentação no Laboratório Maker.",
             image: "imagens/maker.png",
@@ -503,7 +524,7 @@ const TOTEM_DATA = {
                 { src: "imagens/acesso_maker.png", label: "Hall de Acesso Maker" }
             ],
             color: "#2563eb",
-            route: "Suba ao 1º Andar. Siga para a ala direita do Bloco Ozael, logo na entrada identificada como Espaço Maker."
+            route: "Suba ao 1º Andar. Siga para a ala direita do 1º Andar, logo na entrada identificada como Espaço Maker."
         },
         {
             id: "quadra",
@@ -528,105 +549,105 @@ const TOTEM_DATA = {
     ],
     floorsInfo: {
         "0": {
-            name: "Térreo & Bloco Anexo",
-            sub: "Salas 15, 16, 17 (Turmas 61, 62, 63 com Inspetora Mariana), Pátio & Portaria (Araújo e Carol) e Quadra",
+            name: "Térreo & Complexo Esportivo",
+            sub: "Pátio Central, Portaria & Recepção (Araújo e Carol) e Quadra Poliesportiva",
             icon: "fa-school",
-            highlights: ["Turma 61 (Sala 15 - Anexo)", "Turma 62 (Sala 16 - Anexo)", "Turma 63 (Sala 17 - Anexo)", "Pátio & Portaria (Araújo e Carol)", "QUADRA (Apresentação Surpresa)"]
+            highlights: ["Pátio Central & Portaria (Araújo e Carol)", "QUADRA POLIESPORTIVA (Apresentação Surpresa)", "Entrada & Credenciamento"]
         },
         "1": {
-            name: "1º Andar – Bloco Ozael",
-            sub: "Salas 01, 02, 03, 18, 19 e 20 (7º Ano e 2ª Série EM) & SALA Maker",
+            name: "1º Andar – 6º Ano & Oficina de IA",
+            sub: "Salas 01, 02 (Turmas 61 e 62 com Inspetora Mariana), Sala 03 (Oficina de IA com Inspetora Josielma) e Sala Maker",
             icon: "fa-layer-group",
-            highlights: ["SALA Maker (Apresentação Surpresa)", "Salas 01, 02 e 03 (7º Ano)", "Salas 18, 19 e 20 (2ª Série EM)"]
+            highlights: ["Turma 61 (Sala 01 - Mariana)", "Turma 62 (Sala 02 - Mariana)", "Oficina de IA (Sala 03 - Josielma)", "SALA MAKER (Apresentação Surpresa)"]
         },
         "2": {
-            name: "2º Andar – Bloco Maria",
-            sub: "Salas 04, 05, 06 e 07 (7º, 8º Anos e 3ª Série EM)",
+            name: "2º Andar – 7º Ano & Turma 63",
+            sub: "Salas 04, 06, 07 (Turmas 71, 72, 73 com Inspetor Ozael) e Sala 05 (Turma 63 com Mariana & Ozael)",
             icon: "fa-flask",
-            highlights: ["Turma 71 (Sala 04)", "Turma 72 (Sala 06)", "Turma 73 (Sala 07)", "Sala 05 (8º Ano / 3ª Série EM)"]
+            highlights: ["Turma 71 (Sala 04 - Ozael)", "Turma 63 (Sala 05 - Mariana & Ozael)", "Turma 72 (Sala 06 - Ozael)", "Turma 73 (Sala 07 - Ozael)"]
         },
         "3": {
-            name: "3º Andar – Bloco Cláudio",
-            sub: "Salas 08, 09 e 10 (9º Ano, 1ª e 3ª Séries EM)",
+            name: "3º Andar – 8º Ano (Bloco Maria)",
+            sub: "Salas 08, 09 e 10 (Turmas 81, 82 e Projetos Integrados com Inspetora Maria)",
             icon: "fa-satellite",
-            highlights: ["Turma 81 (Sala 08)", "Turmas 81/82 (Sala 09)", "Turma 82 (Sala 10)"]
+            highlights: ["Turma 81 (Sala 08 - Maria)", "Turmas 81/82 Integradas (Sala 09 - Maria)", "Turma 82 (Sala 10 - Maria)"]
         },
         "4": {
-            name: "4º Andar – Bloco Cleydson",
-            sub: "Salas 11, 12, 13 e 14 (9º Ano e 1ª Série EM)",
+            name: "4º Andar – 9º Ano (Bloco Cleydson)",
+            sub: "Salas 11, 12, 13 e 14 (Turmas 91, 92, 93 e Projetos Integrados com Inspetor Cleidson)",
             icon: "fa-microchip",
-            highlights: ["Turma 92 (Sala 11)", "Turma 91 (Sala 12)", "Turmas 91/92/93 (Sala 13)", "Turma 93 (Sala 14)"]
+            highlights: ["Turma 92 (Sala 11 - Cleidson)", "Turma 91 (Sala 12 - Cleidson)", "Turmas 91/92/93 Integradas (Sala 13 - Cleidson)", "Turma 93 (Sala 14 - Cleidson)"]
         }
     },
     inspectors: [
         {
+            id: "mariana",
+            name: "Inspetora Mariana",
+            role: "Inspetora do 6º Ano (1º e 2º Andares)",
+            avatar: "imagens/avatar_inspetora_mariana.png",
+            floor: "1º e 2º Andares",
+            coverage: "Turma 61 (Sala 01), Turma 62 (Sala 02) e Turma 63 (Sala 05)",
+            bio: "Responsável pelo acompanhamento das turmas do 6º Ano (61 na Sala 01, 62 na Sala 02 e 63 na Sala 05), acolhendo e orientando com carinho, paciência e atenção aos estudantes.",
+            quote: "Receber com um sorriso e fazer cada aluno se sentir seguro e acolhido."
+        },
+        {
             id: "ozael",
             name: "Inspetor Ozael",
-            role: "Inspetor do 1º Andar (Bloco Ozael) & Sala Maker",
+            role: "Inspetor do 7º Ano (2º Andar)",
             avatar: "imagens/avatar_inspetor_ozael.png",
-            floor: "1º Andar",
-            coverage: "Salas 01, 02, 03, 18, 19, 20 (7º Ano e 2ª Série EM) & Sala Maker",
-            bio: "Responsável pelo 1º Andar e pela Sala Maker, acompanha diariamente os estudantes do 7º Ano e da 2ª Série do Ensino Médio, além de incentivar as atividades práticas e projetos inovadores do Espaço Maker.",
+            floor: "2º Andar",
+            coverage: "Turmas 71 (Sala 04), 72 (Sala 06), 73 (Sala 07) e apoio à Sala 05 (Turma 63)",
+            bio: "Responsável pelo 2º Andar, orienta e acompanha diariamente os estudantes do 7º Ano nas Salas 04, 06 e 07, além de prestar apoio à Turma 63 na Sala 05.",
             quote: "Incentivar a criatividade, o respeito e o aprendizado prático todos os dias."
+        },
+        {
+            id: "josielma",
+            name: "Inspetora Josielma",
+            role: "Inspetora da Oficina de IA (1º Andar)",
+            avatar: "imagens/avatar_inspetora_josielma.png",
+            floor: "1º Andar",
+            coverage: "Sala 03 (Oficina de Inteligência Artificial)",
+            bio: "Responsável pela Oficina de Inteligência Artificial no 1º Andar (Sala 03), orientando e apoiando os estudantes e visitantes nas atividades práticas e demonstrações de IA.",
+            quote: "Apoiar a inovação, o conhecimento e as novas tecnologias para nossos estudantes."
         },
         {
             id: "maria",
             name: "Inspetora Maria",
-            role: "Inspetora do 2º Andar (Bloco Maria)",
+            role: "Inspetora do 8º Ano (3º Andar)",
             avatar: "imagens/avatar_inspetora_maria.png",
-            floor: "2º Andar",
-            coverage: "Salas 04, 05, 06 e 07 (7º, 8º Anos e 3ª Série EM)",
-            bio: "Muito querida por toda a comunidade escolar, cuida com dedicação e carinho das salas do 2º Andar, orientando as turmas do 7º e 8º Anos e da 3ª Série do Ensino Médio em um ambiente acolhedor e harmonioso.",
-            quote: "Cuidar de cada aluno como parte da nossa grande família EME."
-        },
-        {
-            id: "claudio",
-            name: "Inspetor Cláudio",
-            role: "Inspetor do 3º Andar (Bloco Cláudio)",
-            avatar: "imagens/avatar_inspetor_claudio.png",
             floor: "3º Andar",
-            coverage: "Salas 08, 09 e 10 (9º Ano, 1ª e 3ª Séries EM)",
-            bio: "Com presença marcante e liderança positiva no 3º Andar, apoia de perto os estudantes do 9º Ano e as turmas de Ensino Médio (1ª e 3ª séries), fortalecendo a disciplina e a união escolar.",
-            quote: "Educação, respeito e disciplina caminham juntos na formação do estudante."
+            coverage: "Turma 81 (Sala 08), Turma 82 (Sala 10) e Projetos Integrados (Sala 09)",
+            bio: "Muito querida por toda a comunidade escolar, cuida com dedicação e carinho das salas do 3º Andar, orientando as turmas do 8º Ano em um ambiente acolhedor e harmonioso.",
+            quote: "Cuidar de cada aluno como parte da nossa grande família EME."
         },
         {
             id: "cleidson",
             name: "Inspetor Cleidson",
-            role: "Inspetor do 4º Andar (Bloco Cleydson)",
+            role: "Inspetor do 9º Ano (4º Andar)",
             avatar: "imagens/avatar_inspetor_cleidson.png",
             floor: "4º Andar",
-            coverage: "Salas 11, 12, 13 e 14 (9º Ano e 1ª Série EM)",
-            bio: "Com diálogo próximo e postura sempre atenciosa no 4º Andar, acompanha diariamente as turmas do 9º Ano e da 1ª Série do Ensino Médio, auxiliando em todas as necessidades pedagógicas e de convivência.",
+            coverage: "Turmas 91 (Sala 12), 92 (Sala 11), 93 (Sala 14) e Projetos Integrados (Sala 13)",
+            bio: "Com diálogo próximo e postura sempre atenciosa no 4º Andar, acompanha diariamente as turmas do 9º Ano, auxiliando em todas as necessidades pedagógicas e de convivência.",
             quote: "Apoiar nossos jovens rumo ao futuro com responsabilidade e amizade."
-        },
-        {
-            id: "mariana",
-            name: "Inspetora Mariana",
-            role: "Inspetora do Bloco Anexo (Térreo)",
-            avatar: "imagens/avatar_inspetora_mariana.png",
-            floor: "Térreo (Anexo)",
-            coverage: "Salas 15, 16 e 17 (Turmas dos 6º Anos: 61, 62 e 63)",
-            bio: "Responsável pelo Bloco Anexo no piso térreo, acolhe e orienta diariamente os estudantes dos 6º Anos (Turmas 61, 62 e 63) nas salas 15, 16 e 17 com enorme carinho, paciência e atenção.",
-            quote: "Receber com um sorriso e fazer cada aluno se sentir seguro e acolhido."
         },
         {
             id: "araujo",
             name: "Inspetor Araújo",
-            role: "Inspetor de Pátio, Entrada & Saída",
+            role: "Inspetor de Pátio, Portaria & Segurança",
             avatar: "imagens/avatar_inspetor_araujo.png",
             floor: "Térreo / Pátio",
             coverage: "Pátio Central, Portões de Acesso, Entrada e Saída dos Alunos",
-            bio: "Atua no pátio central e na portaria do colégio, cuidando da segurança, da organização no fluxo de entrada e saída e do convívio saudável de todos os estudantes nos intervalos e eventos.",
+            bio: "Atua no pátio central e na portaria do colégio, cuidando da segurança, da organização no fluxo de entrada e saída e do convívio saudável de todos os estudantes.",
             quote: "Apoio constante para garantir a segurança e o bem-estar de toda a escola."
         },
         {
             id: "carol",
             name: "Inspetora Carol",
-            role: "Inspetora de Pátio, Entrada & Saída",
+            role: "Inspetora de Pátio, Recepção & Entrada/Saída",
             avatar: "imagens/avatar_inspetora_carol.png",
             floor: "Térreo / Pátio",
             coverage: "Pátio Central, Portões de Acesso, Entrada e Saída dos Alunos",
-            bio: "Atua na inspetoria de pátio ao lado do Inspetor Araújo, garantindo a recepção calorosa e segura de alunos e responsáveis, além do acompanhamento diário no pátio e na entrada e saída.",
+            bio: "Atua na inspetoria de pátio e recepção ao lado do Inspetor Araújo, garantindo a recepção calorosa e segura de alunos e responsáveis, além do acompanhamento diário no pátio e na entrada e saída.",
             quote: "Cuidado, atenção e acolhimento em cada momento da rotina escolar."
         }
     ]
@@ -774,11 +795,11 @@ function renderFloorNavigator() {
 
     const floors = [
         { key: "all", name: "Todos os Andares", icon: "🏢" },
-        { key: "0", name: "Térreo & Anexo (Mariana, Araújo, Carol)", icon: "🌳" },
-        { key: "1", name: "1º Andar (Ozael & Maker)", icon: "1️⃣" },
-        { key: "2", name: "2º Andar (Maria)", icon: "2️⃣" },
-        { key: "3", name: "3º Andar (Cláudio)", icon: "3️⃣" },
-        { key: "4", name: "4º Andar (Cleydson)", icon: "4️⃣" }
+        { key: "0", name: "Térreo & Pátio (Araújo e Carol)", icon: "🌳" },
+        { key: "1", name: "1º Andar (61, 62 & Oficina IA - Mariana e Josielma)", icon: "1️⃣" },
+        { key: "2", name: "2º Andar (71, 72, 73 & 63 - Ozael e Mariana)", icon: "2️⃣" },
+        { key: "3", name: "3º Andar (81, 82 & GRP 8º - Maria)", icon: "3️⃣" },
+        { key: "4", name: "4º Andar (91, 92, 93 & GRP 9º - Cleidson)", icon: "4️⃣" }
     ];
 
     container.innerHTML = floors.map(floor => `
