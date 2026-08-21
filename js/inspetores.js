@@ -21,7 +21,7 @@ const INSPETORES_DATA = [
         name: "Inspetor Ozael",
         role: "Inspetor do 7º Ano (2º Andar)",
         avatar: "imagens/avatar_inspetor_ozael.png",
-        audio: "audio/recado_ozael.mp4",
+        audio: "audio/recado_ozael.mp3",
         floorCategory: "2",
         floorBadge: "2º Andar • 7º Ano",
         coverage: "Turmas 71 (Sala 04), 72 (Sala 06), 73 (Sala 07) e apoio à Sala 05 (Turma 63)",
