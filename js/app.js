@@ -692,7 +692,6 @@ const TOTEM_DATA = {
             name: "Inspetor Ozael",
             role: "Inspetor do 7º Ano (2º Andar)",
             avatar: "imagens/avatar_inspetor_ozael.png",
-            audio: "audio/recado_ozael.mp3",
             floor: "2º Andar",
             coverage: "Turmas 71 (Sala 04), 72 (Sala 06), 73 (Sala 07) e apoio à Sala 05 (Turma 63)",
             bio: "Responsável pelo 2º Andar, orienta e acompanha diariamente os estudantes do 7º Ano nas Salas 04, 06 e 07, além de prestar apoio à Turma 63 na Sala 05.",
@@ -1219,20 +1218,6 @@ function renderInspectorsGrid() {
                 </div>
             </div>
 
-            ${insp.audio ? `
-                <!-- Player de Recado de Voz -->
-                <div class="insp-audio-player-box">
-                    <button class="btn-insp-audio-play modal-audio-btn" data-audio="${insp.audio}" data-name="${insp.name}" aria-label="Ouvir recado de voz do ${insp.name}">
-                        <i class="fa-solid fa-circle-play play-icon"></i>
-                        <span class="audio-btn-text">Ouvir Recado de Voz</span>
-                        <div class="audio-eq-bars" aria-hidden="true">
-                            <span></span><span></span><span></span><span></span>
-                        </div>
-                    </button>
-                    <span class="audio-duration-badge"><i class="fa-solid fa-microphone-lines"></i> Recado do Inspetor</span>
-                </div>
-            ` : ''}
-
             <div class="inspector-bio-box">
                 <p>${insp.bio}</p>
             </div>
@@ -1243,83 +1228,6 @@ function renderInspectorsGrid() {
             </div>
         </article>
     `).join("");
-
-    setupModalAudioButtons();
-}
-
-// Controle de Áudio no Modal de Inspetores
-let currentModalAudio = null;
-let currentModalAudioBtn = null;
-
-function setupModalAudioButtons() {
-    const audioBtns = document.querySelectorAll(".modal-audio-btn");
-    audioBtns.forEach(btn => {
-        btn.addEventListener("click", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            resetIdleTimer();
-
-            const audioSrc = btn.getAttribute("data-audio");
-            if (!audioSrc) return;
-
-            if (currentModalAudio && currentModalAudioBtn === btn) {
-                if (!currentModalAudio.paused) {
-                    currentModalAudio.pause();
-                    setModalAudioBtnState(btn, false);
-                    return;
-                } else {
-                    currentModalAudio.play();
-                    setModalAudioBtnState(btn, true);
-                    return;
-                }
-            }
-
-            if (currentModalAudio) {
-                currentModalAudio.pause();
-                currentModalAudio.currentTime = 0;
-                if (currentModalAudioBtn) {
-                    setModalAudioBtnState(currentModalAudioBtn, false);
-                }
-            }
-
-            currentModalAudio = new Audio(audioSrc);
-            currentModalAudioBtn = btn;
-            setModalAudioBtnState(btn, true);
-
-            currentModalAudio.play().catch(err => {
-                console.error("Erro ao reproduzir áudio:", err);
-                setModalAudioBtnState(btn, false);
-            });
-
-            currentModalAudio.onended = () => {
-                setModalAudioBtnState(btn, false);
-                currentModalAudio = null;
-                currentModalAudioBtn = null;
-            };
-
-            currentModalAudio.onerror = () => {
-                setModalAudioBtnState(btn, false);
-                currentModalAudio = null;
-                currentModalAudioBtn = null;
-            };
-        });
-    });
-}
-
-function setModalAudioBtnState(btn, isPlaying) {
-    if (!btn) return;
-    const icon = btn.querySelector(".play-icon");
-    const text = btn.querySelector(".audio-btn-text");
-
-    if (isPlaying) {
-        btn.classList.add("playing");
-        if (icon) icon.className = "fa-solid fa-circle-pause play-icon";
-        if (text) text.textContent = "Pausar Recado";
-    } else {
-        btn.classList.remove("playing");
-        if (icon) icon.className = "fa-solid fa-circle-play play-icon";
-        if (text) text.textContent = "Ouvir Recado de Voz";
-    }
 }
 
 // Abrir Modal / Tela de Inspetores
@@ -1337,11 +1245,6 @@ function openInspectorsModal() {
 // Fechar Modal de Inspetores
 function closeInspectorsModal() {
     SoundFX.playTap();
-    if (currentModalAudio) {
-        currentModalAudio.pause();
-        currentModalAudio = null;
-        currentModalAudioBtn = null;
-    }
     const modal = document.getElementById("inspectors-modal");
     if (modal) {
         modal.classList.remove("active");

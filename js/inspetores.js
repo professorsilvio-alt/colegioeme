@@ -21,7 +21,6 @@ const INSPETORES_DATA = [
         name: "Inspetor Ozael",
         role: "Inspetor do 7º Ano (2º Andar)",
         avatar: "imagens/avatar_inspetor_ozael.png",
-        audio: "audio/recado_ozael.mp3",
         floorCategory: "2",
         floorBadge: "2º Andar • 7º Ano",
         coverage: "Turmas 71 (Sala 04), 72 (Sala 06), 73 (Sala 07) e apoio à Sala 05 (Turma 63)",
@@ -160,20 +159,6 @@ function renderInspectors(filter) {
                     <span class="insp-full-role">${insp.role}</span>
                 </div>
 
-                ${insp.audio ? `
-                    <!-- Player de Recado de Voz -->
-                    <div class="insp-audio-player-box">
-                        <button class="btn-insp-audio-play" data-audio="${insp.audio}" data-name="${insp.name}" aria-label="Ouvir recado de voz do ${insp.name}">
-                            <i class="fa-solid fa-circle-play play-icon"></i>
-                            <span class="audio-btn-text">Ouvir Recado de Voz</span>
-                            <div class="audio-eq-bars" aria-hidden="true">
-                                <span></span><span></span><span></span><span></span>
-                            </div>
-                        </button>
-                        <span class="audio-duration-badge"><i class="fa-solid fa-microphone-lines"></i> Recado do Inspetor</span>
-                    </div>
-                ` : ''}
-
                 <div class="insp-coverage-block">
                     <span class="coverage-title"><i class="fa-solid fa-door-open"></i> Salas e Áreas de Atuação:</span>
                     <span class="coverage-rooms">${insp.coverage}</span>
@@ -195,86 +180,6 @@ function renderInspectors(filter) {
             </div>
         </article>
     `).join("");
-
-    setupAudioButtons();
-}
-
-// Controle de Reprodução de Áudio do Inspetor
-let currentPlayingAudio = null;
-let currentPlayingBtn = null;
-
-function setupAudioButtons() {
-    const audioBtns = document.querySelectorAll(".btn-insp-audio-play");
-    audioBtns.forEach(btn => {
-        btn.addEventListener("click", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            resetIdleTimer();
-
-            const audioSrc = btn.getAttribute("data-audio");
-            if (!audioSrc) return;
-
-            // Se já está tocando este mesmo áudio, pausar/retomar
-            if (currentPlayingAudio && currentPlayingBtn === btn) {
-                if (!currentPlayingAudio.paused) {
-                    currentPlayingAudio.pause();
-                    setButtonPlayingState(btn, false);
-                    return;
-                } else {
-                    currentPlayingAudio.play();
-                    setButtonPlayingState(btn, true);
-                    return;
-                }
-            }
-
-            // Parar o áudio anterior se houver
-            if (currentPlayingAudio) {
-                currentPlayingAudio.pause();
-                currentPlayingAudio.currentTime = 0;
-                if (currentPlayingBtn) {
-                    setButtonPlayingState(currentPlayingBtn, false);
-                }
-            }
-
-            // Criar e iniciar novo áudio
-            currentPlayingAudio = new Audio(audioSrc);
-            currentPlayingBtn = btn;
-            setButtonPlayingState(btn, true);
-
-            currentPlayingAudio.play().catch(err => {
-                console.error("Erro ao reproduzir áudio:", err);
-                setButtonPlayingState(btn, false);
-            });
-
-            currentPlayingAudio.onended = () => {
-                setButtonPlayingState(btn, false);
-                currentPlayingAudio = null;
-                currentPlayingBtn = null;
-            };
-
-            currentPlayingAudio.onerror = () => {
-                setButtonPlayingState(btn, false);
-                currentPlayingAudio = null;
-                currentPlayingBtn = null;
-            };
-        });
-    });
-}
-
-function setButtonPlayingState(btn, isPlaying) {
-    if (!btn) return;
-    const icon = btn.querySelector(".play-icon");
-    const text = btn.querySelector(".audio-btn-text");
-
-    if (isPlaying) {
-        btn.classList.add("playing");
-        if (icon) icon.className = "fa-solid fa-circle-pause play-icon";
-        if (text) text.textContent = "Pausar Recado";
-    } else {
-        btn.classList.remove("playing");
-        if (icon) icon.className = "fa-solid fa-circle-play play-icon";
-        if (text) text.textContent = "Ouvir Recado de Voz";
-    }
 }
 
 // Configuração dos Botões de Filtro
@@ -282,13 +187,6 @@ function setupFilterButtons() {
     const buttons = document.querySelectorAll(".insp-filter-btn");
     buttons.forEach(btn => {
         btn.addEventListener("click", () => {
-            // Parar qualquer áudio tocando ao mudar filtro
-            if (currentPlayingAudio) {
-                currentPlayingAudio.pause();
-                currentPlayingAudio = null;
-                currentPlayingBtn = null;
-            }
-
             buttons.forEach(b => b.classList.remove("active"));
             btn.classList.add("active");
 
@@ -313,11 +211,6 @@ function setupIdleManager() {
 function resetIdleTimer() {
     clearTimeout(idleTimer);
     idleTimer = setTimeout(() => {
-        if (currentPlayingAudio && !currentPlayingAudio.paused) {
-            // Se o áudio ainda estiver tocando, aguardar
-            resetIdleTimer();
-            return;
-        }
         window.location.href = "index.html";
     }, 60000);
 }
