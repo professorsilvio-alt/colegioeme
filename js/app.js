@@ -310,7 +310,7 @@ const TOTEM_DATA = {
                 { src: "imagens/corredor_3_andar.png", label: "Corredor 3º Andar (Bloco Maria)" }
             ],
             color: "#d97706",
-            route: "No final do hall de entrada, pegar a escada à esquerda que leva direto ao 2º Andar. Estando no 2º Andar, virar à esquerda para acessar a escada que leva ao 3º Andar. A Sala 08 fica logo na entrada do 3º Andar, ao lado do bebedouro."
+            route: "No final do hall de entrada, pegar a escada à esquerda que leva direto ao 2º Andar. Estando no 2º Andar, virar à direita e no final do corredor estará a escada que dá acesso ao 3º Andar. A Sala 08 fica logo na entrada do 3º Andar, ao lado do bebedouro."
         },
         {
             id: "82",
@@ -331,7 +331,7 @@ const TOTEM_DATA = {
                 { src: "imagens/corredor_3_andar.png", label: "Corredor 3º Andar (Bloco Maria)" }
             ],
             color: "#d97706",
-            route: "No final do hall de entrada, pegar a escada à esquerda que leva direto ao 2º Andar. Estando no 2º Andar, virar à esquerda para acessar a escada que leva ao 3º Andar. Passe a Sala 08 e continue pelo corredor até a Sala 10, à direita."
+            route: "No final do hall de entrada, pegar a escada à esquerda que leva direto ao 2º Andar. Estando no 2º Andar, virar à direita e no final do corredor estará a escada que dá acesso ao 3º Andar. Passe a Sala 08 e continue pelo corredor até a Sala 10, à direita."
         },
         {
             id: "8_grp",
@@ -352,7 +352,7 @@ const TOTEM_DATA = {
                 { src: "imagens/corredor_3_andar.png", label: "Corredor 3º Andar (Bloco Maria)" }
             ],
             color: "#d97706",
-            route: "No final do hall de entrada, pegar a escada à esquerda que leva direto ao 2º Andar. Estando no 2º Andar, virar à esquerda para acessar a escada que leva ao 3º Andar. A Sala 09 fica entre a Sala 08 e a Sala 10 no 3º Andar."
+            route: "No final do hall de entrada, pegar a escada à esquerda que leva direto ao 2º Andar. Estando no 2º Andar, virar à direita e no final do corredor estará a escada que dá acesso ao 3º Andar. A Sala 09 fica entre a Sala 08 e a Sala 10 no 3º Andar."
         },
         {
             id: "91",
@@ -373,7 +373,7 @@ const TOTEM_DATA = {
                 { src: "imagens/corredor_4_andar.png", label: "Corredor 4º Andar (Bloco Cleydson)" }
             ],
             color: "#7c3aed",
-            route: "No final do hall de entrada, pegar a escada à esquerda que leva direto ao 2º Andar. No 2º Andar, virar à esquerda para o 3º Andar. Estando no 3º Andar, dirigir-se ao final do corredor à esquerda para acessar a escada que leva ao 4º Andar. A Sala 12 fica à direita do saguão."
+            route: "No final do hall de entrada, pegar a escada à esquerda que leva direto ao 2º Andar. No 2º Andar, virar à direita e no final do corredor estará a escada que dá acesso ao 3º Andar. Estando no 3º Andar, dirigir-se ao final do corredor à esquerda para acessar a escada que leva ao 4º Andar. A Sala 12 fica à direita do saguão."
         },
         {
             id: "92",
@@ -394,7 +394,7 @@ const TOTEM_DATA = {
                 { src: "imagens/corredor_4_andar.png", label: "Corredor 4º Andar (Bloco Cleydson)" }
             ],
             color: "#7c3aed",
-            route: "No final do hall de entrada, pegar a escada à esquerda que leva direto ao 2º Andar. No 2º Andar, virar à esquerda para o 3º Andar. Estando no 3º Andar, dirigir-se ao final do corredor à esquerda para acessar a escada que leva ao 4º Andar. A Sala 11 fica à esquerda logo após sair das escadas do Bloco Cleydson."
+            route: "No final do hall de entrada, pegar a escada à esquerda que leva direto ao 2º Andar. No 2º Andar, virar à direita e no final do corredor estará a escada que dá acesso ao 3º Andar. Estando no 3º Andar, dirigir-se ao final do corredor à esquerda para acessar a escada que leva ao 4º Andar. A Sala 11 fica à esquerda logo após sair das escadas do Bloco Cleydson."
         },
         {
             id: "93",
@@ -415,7 +415,7 @@ const TOTEM_DATA = {
                 { src: "imagens/corredor_4_andar.png", label: "Corredor 4º Andar (Bloco Cleydson)" }
             ],
             color: "#7c3aed",
-            route: "No final do hall de entrada, pegar a escada à esquerda que leva direto ao 2º Andar. No 2º Andar, virar à esquerda para o 3º Andar. Estando no 3º Andar, dirigir-se ao final do corredor à esquerda para acessar a escada que leva ao 4º Andar. Siga pelo corredor principal até o fundo; a Sala 14 é a última porta."
+            route: "No final do hall de entrada, pegar a escada à esquerda que leva direto ao 2º Andar. No 2º Andar, virar à direita e no final do corredor estará a escada que dá acesso ao 3º Andar. Estando no 3º Andar, dirigir-se ao final do corredor à esquerda para acessar a escada que leva ao 4º Andar. Siga pelo corredor principal até o fundo; a Sala 14 é a última porta."
         },
         {
             id: "9_grp",
@@ -436,7 +436,7 @@ const TOTEM_DATA = {
                 { src: "imagens/corredor_4_andar.png", label: "Corredor 4º Andar (Bloco Cleydson)" }
             ],
             color: "#7c3aed",
-            route: "No final do hall de entrada, pegar a escada à esquerda que leva direto ao 2º Andar. No 2º Andar, virar à esquerda para o 3º Andar. Estando no 3º Andar, dirigir-se ao final do corredor à esquerda para acessar a escada que leva ao 4º Andar. A Sala 13 fica localizada próxima à Sala 12 no Bloco Cleydson."
+            route: "No final do hall de entrada, pegar a escada à esquerda que leva direto ao 2º Andar. No 2º Andar, virar à direita e no final do corredor estará a escada que dá acesso ao 3º Andar. Estando no 3º Andar, dirigir-se ao final do corredor à esquerda para acessar a escada que leva ao 4º Andar. A Sala 13 fica localizada próxima à Sala 12 no Bloco Cleydson."
         }
     ],
     specialSpaces: [
@@ -544,7 +544,7 @@ const TOTEM_DATA = {
                 { src: "imagens/quadra.png", label: "Quadra Poliesportiva" }
             ],
             color: "#059669",
-            route: "No final do hall de entrada, pegar a escada à esquerda que leva direto ao 2º Andar. Seguir até o 4º Andar pelas escadas à esquerda em cada andar. No 4º Andar, virar à esquerda e no final do corredor subir a escada que leva ao 5º Andar, onde fica a Quadra com a apresentação surpresa do Cão Robótico."
+            route: "No final do hall de entrada, pegar a escada à esquerda que leva direto ao 2º Andar. No 2º Andar, virar à direita e no final do corredor estará a escada que dá acesso ao 3º Andar. Estando no 3º Andar, dirigir-se ao final do corredor à esquerda para acessar a escada que leva ao 4º Andar. No 4º Andar, virar à esquerda e no final do corredor subir a escada que leva ao 5º Andar, onde fica a Quadra com a apresentação surpresa do Cão Robótico."
         }
     ],
     floorsInfo: {
