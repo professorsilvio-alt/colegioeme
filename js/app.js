@@ -323,12 +323,37 @@ const TOTEM_DATA = {
             floorKey: "3",
             inspector: "Inspetora Maria",
             inspectorAvatar: "imagens/avatar_inspetora_maria.png",
-            theme: "Inteligência Artificial e Tecnologias do Futuro",
-            description: "Demonstrações com visão computacional, reconhecimento de voz e debates éticos sobre IA.",
+            theme: "Inteligência Artificial: Saúde, Funcionamento e Fake News",
+            description: "Projetos investigativos sobre como a IA funciona, o impacto da inteligência artificial na saúde e os desafios da IA no combate e propagação de fake news.",
             image: "imagens/sala_10.png",
             images: [
                 { src: "imagens/sala_10.png", label: "Entrada Sala 10 (Turma 82)" },
                 { src: "imagens/corredor_3_andar.png", label: "Corredor 3º Andar (Bloco Maria)" }
+            ],
+            groups: [
+                {
+                    number: "01",
+                    name: "GRUPO 01 (DINIZ)",
+                    theme: "Como a IA Funciona • IA e Saúde",
+                    members: [
+                        "Maria Eduarda Ramos (82)",
+                        "Laura Loiola (81)",
+                        "Valentina Ramos (81)",
+                        "Maria Alice Gonzaga (81)"
+                    ]
+                },
+                {
+                    number: "02",
+                    name: "GRUPO 02",
+                    theme: "IA e as Fake News",
+                    members: [
+                        "João Pedro",
+                        "Miguel Vieira",
+                        "Gael Gaio",
+                        "Davi Gonçalves",
+                        "Marcelo Andrade"
+                    ]
+                }
             ],
             color: "#d97706",
             route: "No final do hall de entrada, pegar a escada à esquerda que leva direto ao 2º Andar. Estando no 2º Andar, virar à direita e no final do corredor estará a escada que dá acesso ao 3º Andar. Passe a Sala 08 e continue pelo corredor até a Sala 10, à direita."
@@ -609,8 +634,8 @@ const TOTEM_DATA = {
             floor: "5º Andar",
             block: "Complexo Esportivo",
             floorKey: "5",
-            inspector: "Inspetores Araújo & Carol (Pátio)",
-            inspectorAvatar: "imagens/avatar_inspetor_araujo.png",
+            inspector: "Inspetor Cláudio (Quadra)",
+            inspectorAvatar: "imagens/avatar_inspetor_claudio.png",
             theme: "APRESENTAÇÃO SURPRESA",
             description: "Apresentação Surpresa imperdível e grandes demonstrações preparadas no complexo esportivo.",
             image: "imagens/quadra.png",
@@ -717,12 +742,12 @@ const TOTEM_DATA = {
         {
             id: "claudio",
             name: "Inspetor Cláudio",
-            role: "Inspetor de Pátio, Apoio & Convivência Escolar",
+            role: "Inspetor da Quadra Poliesportiva",
             avatar: "imagens/avatar_inspetor_claudio.png",
-            floor: "Térreo / Pátio",
-            coverage: "Pátio Central, Áreas de Convivência, Entrada e Saída dos Alunos",
-            bio: "Atua no apoio geral, pátio central e convivência escolar, zelando pela segurança, acolhimento e orientação dos estudantes em toda a rotina escolar e eventos do Colégio EME.",
-            quote: "Estar presente para apoiar, orientar e cuidar com zelo de cada estudante."
+            floor: "5º Andar / Quadra",
+            coverage: "Quadra Poliesportiva (Porta de Alumínio da Quadra) – Organizando as descidas para as apresentações",
+            bio: "Responsável pela Quadra Poliesportiva, posicionado na porta de alumínio da quadra, organizando com zelo o fluxo e as descidas dos estudantes e visitantes para as grandes apresentações.",
+            quote: "Organização e dedicação para garantir a segurança e o sucesso de todas as apresentações."
         }
     ]
 };

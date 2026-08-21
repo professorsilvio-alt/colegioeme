@@ -79,14 +79,14 @@ const INSPETORES_DATA = [
     {
         id: "claudio",
         name: "Inspetor Cláudio",
-        role: "Inspetor de Pátio, Apoio & Convivência Escolar",
+        role: "Inspetor da Quadra Poliesportiva",
         avatar: "imagens/avatar_inspetor_claudio.png",
         floorCategory: "terreo",
-        floorBadge: "Térreo • Pátio & Apoio",
-        coverage: "Pátio Central, Áreas de Convivência, Entrada e Saída dos Alunos",
-        bio: "Atua no apoio geral, pátio central e convivência escolar, zelando pela segurança, acolhimento e orientação dos estudantes em toda a rotina escolar e eventos do Colégio EME.",
-        quote: "Estar presente para apoiar, orientar e cuidar com zelo de cada estudante.",
-        accentColor: "#0284c7"
+        floorBadge: "5º Andar • Quadra Poliesportiva",
+        coverage: "Quadra Poliesportiva (Porta de Alumínio da Quadra)",
+        bio: "Responsável pela Quadra Poliesportiva, posicionado na porta de alumínio da quadra, organizando com zelo o fluxo e as descidas dos estudantes e visitantes para as grandes apresentações.",
+        quote: "Organização e dedicação para garantir a segurança e o sucesso de todas as apresentações.",
+        accentColor: "#059669"
     }
 ];
 
