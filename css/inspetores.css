@@ -385,6 +385,34 @@
     box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
 }
 
+.btn-matricula-header {
+    background: linear-gradient(135deg, #15803d 0%, #16a34a 100%) !important;
+    border: 1.5px solid #facc15 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 14px rgba(22, 163, 74, 0.4) !important;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    animation: matriculaPulse 3s infinite ease-in-out;
+}
+
+.btn-matricula-header:hover {
+    background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(22, 163, 74, 0.55) !important;
+}
+
+@keyframes matriculaPulse {
+    0%, 100% {
+        box-shadow: 0 4px 14px rgba(22, 163, 74, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(250, 204, 21, 0.7), 0 0 10px rgba(22, 163, 74, 0.6);
+    }
+}
+
 /* Responsividade */
 @media (max-width: 1024px) {
     .inspetores-hero-banner {
