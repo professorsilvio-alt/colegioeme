@@ -831,6 +831,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderFloorNavigator();
     renderCards();
     setupEventListeners();
+    setupFullscreenManager();
     setupIdleManager();
     setupKeyboard();
 });
@@ -1409,6 +1410,69 @@ function setupEventListeners() {
             resetIdleTimer();
         }, { passive: true });
     });
+}
+
+// Gerenciador de Modo Tela Cheia (Botão Touch + Atalhos F12 / F11)
+function setupFullscreenManager() {
+    const fullscreenBtn = document.getElementById("btn-toggle-fullscreen");
+    
+    const toggleFullscreen = () => {
+        SoundFX.playTap();
+        const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+        
+        if (!isFullscreen) {
+            const docEl = document.documentElement;
+            if (docEl.requestFullscreen) {
+                docEl.requestFullscreen().catch(err => console.log("Fullscreen request error:", err));
+            } else if (docEl.webkitRequestFullscreen) {
+                docEl.webkitRequestFullscreen();
+            } else if (docEl.msRequestFullscreen) {
+                docEl.msRequestFullscreen();
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen().catch(err => console.log("Exit fullscreen error:", err));
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
+        }
+    };
+
+    if (fullscreenBtn) {
+        fullscreenBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            toggleFullscreen();
+        });
+    }
+
+    // Atalhos de Teclado F12 e F11
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "F12" || e.key === "F11") {
+            e.preventDefault();
+            toggleFullscreen();
+        }
+    });
+
+    const updateFullscreenUI = () => {
+        const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+        const icon = document.getElementById("icon-fullscreen");
+        const text = document.getElementById("text-fullscreen");
+        if (icon) {
+            icon.className = isFullscreen ? "fa-solid fa-compress" : "fa-solid fa-expand";
+        }
+        if (text) {
+            text.textContent = isFullscreen ? "Sair Tela Cheia" : "Tela Cheia";
+        }
+        if (fullscreenBtn) {
+            fullscreenBtn.classList.toggle("active", isFullscreen);
+        }
+    };
+
+    document.addEventListener("fullscreenchange", updateFullscreenUI);
+    document.addEventListener("webkitfullscreenchange", updateFullscreenUI);
+    document.addEventListener("msfullscreenchange", updateFullscreenUI);
 }
 
 function clearSearch() {

@@ -264,6 +264,19 @@ input, textarea {
     transform: translateY(-2px);
 }
 
+.btn-fullscreen {
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    color: #ffffff;
+    cursor: pointer;
+}
+
+.btn-fullscreen:hover, .btn-fullscreen.active {
+    background: var(--eme-blue-500);
+    border-color: var(--eme-blue-300);
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.45);
+}
+
 .btn-home {
     background: var(--eme-amber-500);
     color: var(--eme-navy-900);

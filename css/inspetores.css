@@ -413,6 +413,19 @@
     }
 }
 
+.btn-fullscreen {
+    background: rgba(255, 255, 255, 0.16) !important;
+    border: 1px solid rgba(255, 255, 255, 0.28) !important;
+    color: #ffffff !important;
+    cursor: pointer;
+}
+
+.btn-fullscreen:hover, .btn-fullscreen.active {
+    background: var(--eme-blue-500) !important;
+    border-color: var(--eme-blue-300) !important;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.45) !important;
+}
+
 /* Responsividade */
 @media (max-width: 1024px) {
     .inspetores-hero-banner {
