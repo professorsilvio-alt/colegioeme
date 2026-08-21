@@ -365,12 +365,32 @@ const TOTEM_DATA = {
             floorKey: "4",
             inspector: "Inspetor Cleidson",
             inspectorAvatar: "imagens/avatar_inspetor_cleidson.png",
-            theme: "Soluções Sustentáveis para Grandes Metrópoles",
-            description: "Projetos de arquitetura bioclimática, tratamento de efluentes e mobilidade urbana inteligente.",
+            theme: "Deepfakes — Como identificar vídeos feitos por Inteligência Artificial",
+            description: "Apresentação investigativa sobre deepfakes e técnicas práticas para identificar vídeos gerados por Inteligência Artificial.",
             image: "imagens/sala_12.png",
             images: [
                 { src: "imagens/sala_12.png", label: "Entrada Sala 12 (Turma 91)" },
                 { src: "imagens/corredor_4_andar.png", label: "Corredor 4º Andar (Bloco Cleydson)" }
+            ],
+            groups: [
+                {
+                    number: "01",
+                    name: "GRUPO 01",
+                    theme: "Deepfakes — Como identificar vídeos feitos por Inteligência Artificial",
+                    members: [
+                        "Maria Luiza Zerbin",
+                        "Arthur Corredeira Guimarães",
+                        "Maria Eduarda Franco Teixeira",
+                        "Helena Lofrano",
+                        "Felipe Maselo",
+                        "Maria Fernanda Pires",
+                        "Arthur Reis",
+                        "Guilherme Ferreira",
+                        "Gabriel Vieira",
+                        "Victor Hugo Rosa",
+                        "Bruno Orsolon"
+                    ]
+                }
             ],
             color: "#7c3aed",
             route: "No final do hall de entrada, pegar a escada à esquerda que leva direto ao 2º Andar. No 2º Andar, virar à direita e no final do corredor estará a escada que dá acesso ao 3º Andar. Estando no 3º Andar, dirigir-se ao final do corredor à esquerda para acessar a escada que leva ao 4º Andar. A Sala 12 fica à direita do saguão."
@@ -386,12 +406,27 @@ const TOTEM_DATA = {
             floorKey: "4",
             inspector: "Inspetor Cleidson",
             inspectorAvatar: "imagens/avatar_inspetor_cleidson.png",
-            theme: "Mudanças Climáticas e a Acidificação dos Oceanos",
-            description: "Simulação de corais marinhos, sensores de qualidade do ar e monitoramento de dióxido de carbono.",
+            theme: "Deepfakes: a história da IA e como identificar imagens fakes",
+            description: "Apresentações sobre a evolução histórica da Inteligência Artificial e métodos para identificar imagens fakes.",
             image: "imagens/sala_11.png",
             images: [
                 { src: "imagens/sala_11.png", label: "Entrada Sala 11 (Turma 92)" },
                 { src: "imagens/corredor_4_andar.png", label: "Corredor 4º Andar (Bloco Cleydson)" }
+            ],
+            groups: [
+                {
+                    number: "01",
+                    name: "GRUPO 01",
+                    theme: "Deepfakes: a história da IA e como identificar imagens fakes",
+                    members: [
+                        "Laura Russo",
+                        "Gabriel Terra",
+                        "Ana Clara Ramos",
+                        "Giovanna Barreto",
+                        "Marianna Souza",
+                        "Maria Isabele"
+                    ]
+                }
             ],
             color: "#7c3aed",
             route: "No final do hall de entrada, pegar a escada à esquerda que leva direto ao 2º Andar. No 2º Andar, virar à direita e no final do corredor estará a escada que dá acesso ao 3º Andar. Estando no 3º Andar, dirigir-se ao final do corredor à esquerda para acessar a escada que leva ao 4º Andar. A Sala 11 fica à esquerda logo após sair das escadas do Bloco Cleydson."
@@ -407,12 +442,51 @@ const TOTEM_DATA = {
             floorKey: "4",
             inspector: "Inspetor Cleidson",
             inspectorAvatar: "imagens/avatar_inspetor_cleidson.png",
-            theme: "Engenharia Biomédica e Próteses Biônicas",
-            description: "Demonstração de sensores mioelétricos, próteses impressas em 3D e tecnologia em saúde.",
+            theme: "Inteligência Artificial: Futuro do Trabalho, Deepfakes e Dependência Digital",
+            description: "Projetos investigativos sobre o impacto da IA generativa nas profissões, identificação de vídeos falsos e estudos sobre dependência da IA.",
             image: "imagens/sala_14.png",
             images: [
                 { src: "imagens/sala_14.png", label: "Entrada Sala 14 (Turma 93)" },
                 { src: "imagens/corredor_4_andar.png", label: "Corredor 4º Andar (Bloco Cleydson)" }
+            ],
+            groups: [
+                {
+                    number: "01",
+                    name: "GRUPO 01",
+                    theme: "O Futuro do Trabalho: Quais profissões vão mudar com a chegada da IA generativa?",
+                    members: [
+                        "Manuela Morais Mesquita",
+                        "Lídia Precce Gonzalez",
+                        "Mighel Pereira Sant'Anna Utrini",
+                        "Sofia El Warrak Gama",
+                        "Alice de Brito Brum"
+                    ]
+                },
+                {
+                    number: "02",
+                    name: "GRUPO 02",
+                    theme: "Deepfakes: Real ou Fake? Como identificar vídeos falsos criados por inteligência artificial.",
+                    members: [
+                        "Carlos Eduardo Calábria Gioseffi",
+                        "Júlia Zhao Tam",
+                        "Henrique Barbosa Martins Passos",
+                        "Gustavo Fontes Lira",
+                        "Valentina Martins Coimbra"
+                    ]
+                },
+                {
+                    number: "03",
+                    name: "GRUPO 03",
+                    theme: "O Dilema das Redes: Um estudo sobre como a IA pode viciar o cérebro humano. \"Dependência da Inteligência Artificial e a escolha é sua: Ferramenta ou dependência?\"",
+                    members: [
+                        "Samara Ribeiro Soares",
+                        "Pedro De Oliveira Mello",
+                        "Pedro Simonato Barros",
+                        "Maria Luiza Tadeu Cipriano Rocha Pereira",
+                        "Anna Sofia Ramos Reis",
+                        "Isadora Souza Soares de Carvalho"
+                    ]
+                }
             ],
             color: "#7c3aed",
             route: "No final do hall de entrada, pegar a escada à esquerda que leva direto ao 2º Andar. No 2º Andar, virar à direita e no final do corredor estará a escada que dá acesso ao 3º Andar. Estando no 3º Andar, dirigir-se ao final do corredor à esquerda para acessar a escada que leva ao 4º Andar. Siga pelo corredor principal até o fundo; a Sala 14 é a última porta."
