@@ -678,46 +678,6 @@ const TOTEM_DATA = {
     },
     inspectors: [
         {
-            id: "mariana",
-            name: "Inspetora Mariana",
-            role: "Inspetora do 6º Ano (1º e 2º Andares)",
-            avatar: "imagens/avatar_inspetora_mariana.png",
-            floor: "1º e 2º Andares",
-            coverage: "Turma 61 (Sala 01), Turma 62 (Sala 02) e Turma 63 (Sala 05)",
-            bio: "Responsável pelo acompanhamento das turmas do 6º Ano (61 na Sala 01, 62 na Sala 02 e 63 na Sala 05), acolhendo e orientando com carinho, paciência e atenção aos estudantes.",
-            quote: "Receber com um sorriso e fazer cada aluno se sentir seguro e acolhido."
-        },
-        {
-            id: "ozael",
-            name: "Inspetor Ozael",
-            role: "Inspetor do 7º Ano (2º Andar)",
-            avatar: "imagens/avatar_inspetor_ozael.png",
-            floor: "2º Andar",
-            coverage: "Turmas 71 (Sala 04), 72 (Sala 06), 73 (Sala 07) e apoio à Sala 05 (Turma 63)",
-            bio: "Responsável pelo 2º Andar, orienta e acompanha diariamente os estudantes do 7º Ano nas Salas 04, 06 e 07, além de prestar apoio à Turma 63 na Sala 05.",
-            quote: "Incentivar a criatividade, o respeito e o aprendizado prático todos os dias."
-        },
-        {
-            id: "maria",
-            name: "Inspetora Maria",
-            role: "Inspetora do 8º Ano (3º Andar)",
-            avatar: "imagens/avatar_inspetora_maria.png",
-            floor: "3º Andar",
-            coverage: "Turma 81 (Sala 08), Turma 82 (Sala 10) e Projetos Integrados (Sala 09)",
-            bio: "Muito querida por toda a comunidade escolar, cuida com dedicação e carinho das salas do 3º Andar, orientando as turmas do 8º Ano em um ambiente acolhedor e harmonioso.",
-            quote: "Cuidar de cada aluno como parte da nossa grande família EME."
-        },
-        {
-            id: "cleidson",
-            name: "Inspetor Cleidson",
-            role: "Inspetor do 9º Ano (4º Andar)",
-            avatar: "imagens/avatar_inspetor_cleidson.png",
-            floor: "4º Andar",
-            coverage: "Turmas 91 (Sala 12), 92 (Sala 11), 93 (Sala 14) e Projetos Integrados (Sala 13)",
-            bio: "Sempre atencioso e com diálogo próximo no 4º Andar, acompanha diariamente todas as turmas do 9º Ano nas Salas 11, 12, 13 e 14, auxiliando em todas as necessidades pedagógicas e de convivência.",
-            quote: "Apoiar nossos jovens rumo ao futuro com responsabilidade e amizade."
-        },
-        {
             id: "araujo",
             name: "Inspetor Araújo",
             role: "Inspetor de Pátio, Portaria & Segurança",
@@ -746,6 +706,46 @@ const TOTEM_DATA = {
             coverage: "Quadra Poliesportiva (Porta de Alumínio da Quadra) – Organizando as descidas para as apresentações",
             bio: "Responsável pela Quadra Poliesportiva, posicionado na porta de alumínio da quadra, organizando com zelo o fluxo e as descidas dos estudantes e visitantes para as grandes apresentações.",
             quote: "Organização e dedicação para garantir a segurança e o sucesso de todas as apresentações."
+        },
+        {
+            id: "cleidson",
+            name: "Inspetor Cleidson",
+            role: "Inspetor do 9º Ano (4º Andar)",
+            avatar: "imagens/avatar_inspetor_cleidson.png",
+            floor: "4º Andar",
+            coverage: "Turmas 91 (Sala 12), 92 (Sala 11), 93 (Sala 14) e Projetos Integrados (Sala 13)",
+            bio: "Sempre atencioso e com diálogo próximo no 4º Andar, acompanha diariamente todas as turmas do 9º Ano nas Salas 11, 12, 13 e 14, auxiliando em todas as necessidades pedagógicas e de convivência.",
+            quote: "Apoiar nossos jovens rumo ao futuro com responsabilidade e amizade."
+        },
+        {
+            id: "maria",
+            name: "Inspetora Maria",
+            role: "Inspetora do 8º Ano (3º Andar)",
+            avatar: "imagens/avatar_inspetora_maria.png",
+            floor: "3º Andar",
+            coverage: "Turma 81 (Sala 08), Turma 82 (Sala 10) e Projetos Integrados (Sala 09)",
+            bio: "Muito querida por toda a comunidade escolar, cuida com dedicação e carinho das salas do 3º Andar, orientando as turmas do 8º Ano em um ambiente acolhedor e harmonioso.",
+            quote: "Cuidar de cada aluno como parte da nossa grande família EME."
+        },
+        {
+            id: "mariana",
+            name: "Inspetora Mariana",
+            role: "Inspetora do 6º Ano (1º e 2º Andares)",
+            avatar: "imagens/avatar_inspetora_mariana.png",
+            floor: "1º e 2º Andares",
+            coverage: "Turma 61 (Sala 01), Turma 62 (Sala 02) e Turma 63 (Sala 05)",
+            bio: "Responsável pelo acompanhamento das turmas do 6º Ano (61 na Sala 01, 62 na Sala 02 e 63 na Sala 05), acolhendo e orientando com carinho, paciência e atenção aos estudantes.",
+            quote: "Receber com um sorriso e fazer cada aluno se sentir seguro e acolhido."
+        },
+        {
+            id: "ozael",
+            name: "Inspetor Ozael",
+            role: "Inspetor do 7º Ano (2º Andar)",
+            avatar: "imagens/avatar_inspetor_ozael.png",
+            floor: "2º Andar",
+            coverage: "Turmas 71 (Sala 04), 72 (Sala 06), 73 (Sala 07) e apoio à Sala 05 (Turma 63)",
+            bio: "Responsável pelo 2º Andar, orienta e acompanha diariamente os estudantes do 7º Ano nas Salas 04, 06 e 07, além de prestar apoio à Turma 63 na Sala 05.",
+            quote: "Incentivar a criatividade, o respeito e o aprendizado prático todos os dias."
         }
     ]
 };
