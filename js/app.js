@@ -618,12 +618,10 @@ const TOTEM_DATA = {
             description: "Apresentação Surpresa interativa e projetos especiais de experimentação no Laboratório Maker.",
             image: "imagens/maker.png",
             images: [
-                { src: "imagens/maker.png", label: "Espaço Maker EME" },
-                { src: "imagens/corredor_maker.png", label: "Corredor Espaço Maker" },
-                { src: "imagens/acesso_maker.png", label: "Hall de Acesso Maker" }
+                { src: "imagens/maker.png", label: "Espaço Maker EME" }
             ],
             color: "#2563eb",
-            route: "Final do hall de entrada, após o banheiro masculino, subir pela escada à direita até o 1º Andar. Siga para a ala direita na entrada identificada como Espaço Maker."
+            route: "Final do hall de entrada, após o banheiro masculino, subir pela escada à direita até o 1º Andar. A Sala Maker fica localizada no 1º Andar, logo após a subida da escada, ao lado do elevador (nosso elevador dá acesso a todos os andares)."
         },
         {
             id: "quadra",
@@ -1293,6 +1291,10 @@ function updateMiniFloorMap(item) {
                 <div class="banner-text">
                     <strong>Como Chegar a partir do Totem:</strong>
                     <span>${item.route}</span>
+                    <div class="elevator-info-pill">
+                        <i class="fa-solid fa-elevator"></i>
+                        <span><strong>Acessibilidade:</strong> Nosso elevador dá acesso a todos os andares.</span>
+                    </div>
                 </div>
             </div>
         `;

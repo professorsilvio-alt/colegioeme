@@ -1494,6 +1494,25 @@ input, textarea {
     color: #f1f5f9;
 }
 
+.elevator-info-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius-pill);
+    font-size: 0.8rem;
+    color: var(--eme-blue-100);
+    margin-top: 0.4rem;
+    width: fit-content;
+}
+
+.elevator-info-pill i {
+    color: var(--eme-amber-400);
+    font-size: 0.85rem;
+}
+
 /* ==========================================================================
    MODAL / TELA: CONHEÇA NOSSOS INSPETORES
    ========================================================================== */
