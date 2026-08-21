@@ -523,7 +523,7 @@ const TOTEM_DATA = {
             floor: "Térreo",
             block: "Portaria Principal",
             floorKey: "0",
-            inspector: "Inspetores Araújo & Carol",
+            inspector: "Inspetores Araújo, Carol & Cláudio",
             inspectorAvatar: "imagens/avatar_inspetor_araujo.png",
             theme: "Credenciamento, Totem de Informações e Acolhimento",
             description: "Ponto de partida do visitante. Aqui você encontra totens interativos de consulta, mapas e orientação geral da Feira das Ciências.",
@@ -545,7 +545,7 @@ const TOTEM_DATA = {
             floor: "Térreo",
             block: "Área Central",
             floorKey: "0",
-            inspector: "Inspetores Araújo & Carol",
+            inspector: "Inspetores Araújo, Carol & Cláudio",
             inspectorAvatar: "imagens/avatar_inspetor_araujo.png",
             theme: "Área de Convivência, Painéis Culturais e Escadaria Motivacional",
             description: "Amplo espaço de convivência estudantil com mesas de estudo, escadaria temática com frases inspiradoras e painéis de Ciência & Inovação.",
@@ -624,9 +624,9 @@ const TOTEM_DATA = {
     floorsInfo: {
         "0": {
             name: "Térreo & Complexo Esportivo",
-            sub: "Pátio Central, Portaria & Recepção (Araújo e Carol) e Quadra Poliesportiva",
+            sub: "Pátio Central, Portaria & Recepção (Araújo, Carol e Cláudio) e Quadra Poliesportiva",
             icon: "fa-school",
-            highlights: ["Pátio Central & Portaria (Araújo e Carol)", "QUADRA POLIESPORTIVA (Apresentação Surpresa)", "Entrada & Credenciamento"]
+            highlights: ["Pátio Central & Portaria (Araújo, Carol e Cláudio)", "QUADRA POLIESPORTIVA (Apresentação Surpresa)", "Entrada & Credenciamento"]
         },
         "1": {
             name: "1º Andar – 6º Ano & Oficina de IA",
@@ -713,6 +713,16 @@ const TOTEM_DATA = {
             coverage: "Pátio Central, Portões de Acesso, Entrada e Saída dos Alunos",
             bio: "Atua na inspetoria de pátio e recepção ao lado do Inspetor Araújo, garantindo a recepção calorosa e segura de alunos e responsáveis, além do acompanhamento diário no pátio e na entrada e saída.",
             quote: "Cuidado, atenção e acolhimento em cada momento da rotina escolar."
+        },
+        {
+            id: "claudio",
+            name: "Inspetor Cláudio",
+            role: "Inspetor de Pátio, Apoio & Convivência Escolar",
+            avatar: "imagens/avatar_inspetor_claudio.png",
+            floor: "Térreo / Pátio",
+            coverage: "Pátio Central, Áreas de Convivência, Entrada e Saída dos Alunos",
+            bio: "Atua no apoio geral, pátio central e convivência escolar, zelando pela segurança, acolhimento e orientação dos estudantes em toda a rotina escolar e eventos do Colégio EME.",
+            quote: "Estar presente para apoiar, orientar e cuidar com zelo de cada estudante."
         }
     ]
 };

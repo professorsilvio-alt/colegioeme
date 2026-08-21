@@ -75,6 +75,18 @@ const INSPETORES_DATA = [
         bio: "Atua na inspetoria de pátio e recepção ao lado do Inspetor Araújo, garantindo a recepção calorosa e segura de alunos e responsáveis, além do acompanhamento diário no pátio e na entrada e saída.",
         quote: "Cuidado, atenção e acolhimento em cada momento da rotina escolar.",
         accentColor: "#14b8a6"
+    },
+    {
+        id: "claudio",
+        name: "Inspetor Cláudio",
+        role: "Inspetor de Pátio, Apoio & Convivência Escolar",
+        avatar: "imagens/avatar_inspetor_claudio.png",
+        floorCategory: "terreo",
+        floorBadge: "Térreo • Pátio & Apoio",
+        coverage: "Pátio Central, Áreas de Convivência, Entrada e Saída dos Alunos",
+        bio: "Atua no apoio geral, pátio central e convivência escolar, zelando pela segurança, acolhimento e orientação dos estudantes em toda a rotina escolar e eventos do Colégio EME.",
+        quote: "Estar presente para apoiar, orientar e cuidar com zelo de cada estudante.",
+        accentColor: "#0284c7"
     }
 ];
 
