@@ -918,6 +918,18 @@ function renderFloorNavigator() {
     });
 }
 
+// Normalizador robusto de busca para o Totem
+function normalizeSearchText(str) {
+    if (!str) return "";
+    return String(str)
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[\u00b4\u0060\u0027\u2019\u2018"“”«»\-_.:,;/\\()ºª°!@#$%¨&*=+]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
 // Renderizar Cards de Turmas e Espaços
 function renderCards() {
     const grid = document.getElementById("cards-grid");
@@ -925,31 +937,23 @@ function renderCards() {
     if (!grid) return;
 
     let items = [];
-    if (AppState.activeGradeFilter === "special") {
-        items = [...TOTEM_DATA.specialSpaces];
-    } else {
-        items = [...TOTEM_DATA.classes];
-        if (AppState.activeGradeFilter === "all") {
-            items = [...TOTEM_DATA.classes, ...TOTEM_DATA.specialSpaces];
-        }
-    }
+    const hasSearchQuery = AppState.searchQuery && AppState.searchQuery.trim() !== "";
 
-    if (AppState.activeGradeFilter !== "all" && AppState.activeGradeFilter !== "special") {
-        items = items.filter(item => item.grade && item.grade.startsWith(AppState.activeGradeFilter));
-    }
+    if (hasSearchQuery) {
+        // Quando há termo digitado, a busca é GLOBAL em todas as turmas, projetos e espaços do colégio
+        items = [...TOTEM_DATA.classes, ...TOTEM_DATA.specialSpaces];
 
-    if (AppState.activeFloorFilter !== "all") {
-        items = items.filter(item => item.floorKey === AppState.activeFloorFilter);
-    }
+        const rawQuery = AppState.searchQuery.trim();
+        const normQuery = normalizeSearchText(rawQuery);
+        const queryTokens = normQuery.split(" ").filter(t => t.length > 0);
+        const queryCompact = normQuery.replace(/\s+/g, "");
 
-    if (AppState.searchQuery.trim() !== "") {
-        const query = AppState.searchQuery.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         items = items.filter(item => {
-            const groupsText = item.groups 
+            const groupsText = (item.groups && item.groups.length > 0)
                 ? item.groups.map(g => `${g.number || ''} ${g.name || ''} ${g.theme || ''} ${(g.members || []).join(' ')}`).join(' ')
                 : '';
 
-            const searchableText = [
+            const fullSearchText = [
                 item.code || "",
                 item.title || "",
                 item.grade || "",
@@ -959,11 +963,42 @@ function renderCards() {
                 item.inspector || "",
                 item.theme || "",
                 item.description || "",
+                item.category || "",
+                item.route || "",
                 groupsText
-            ].join(" ").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            ].join(" ");
 
-            return searchableText.includes(query);
+            const normFullText = normalizeSearchText(fullSearchText);
+            const compactFullText = normFullText.replace(/\s+/g, "");
+
+            // 1. Coincidência direta contínua (ex: "5r" dentro de "os5rs" ou "robótica")
+            if (compactFullText.includes(queryCompact)) return true;
+
+            // 2. Todos os termos digitados devem estar presentes no card (ex: "ia saude" ou "82 diniz")
+            if (queryTokens.length > 0 && queryTokens.every(token => normFullText.includes(token) || compactFullText.includes(token))) {
+                return true;
+            }
+
+            return false;
         });
+    } else {
+        // Sem busca: aplica os filtros de categoria de turma e pavimento selecionados
+        if (AppState.activeGradeFilter === "special") {
+            items = [...TOTEM_DATA.specialSpaces];
+        } else {
+            items = [...TOTEM_DATA.classes];
+            if (AppState.activeGradeFilter === "all") {
+                items = [...TOTEM_DATA.classes, ...TOTEM_DATA.specialSpaces];
+            }
+        }
+
+        if (AppState.activeGradeFilter !== "all" && AppState.activeGradeFilter !== "special") {
+            items = items.filter(item => item.grade && item.grade.startsWith(AppState.activeGradeFilter));
+        }
+
+        if (AppState.activeFloorFilter !== "all") {
+            items = items.filter(item => item.floorKey === AppState.activeFloorFilter);
+        }
     }
 
     if (countBadge) {
@@ -1318,14 +1353,20 @@ function setupEventListeners() {
     });
 
     if (searchInput) {
-        searchInput.addEventListener("input", (e) => {
-            AppState.searchQuery = e.target.value;
+        const onSearchInput = () => {
+            AppState.searchQuery = searchInput.value;
             if (clearBtn) {
                 clearBtn.style.display = AppState.searchQuery ? "flex" : "none";
             }
             resetIdleTimer();
             renderCards();
-        });
+        };
+
+        searchInput.addEventListener("input", onSearchInput);
+        searchInput.addEventListener("keyup", onSearchInput);
+        searchInput.addEventListener("change", onSearchInput);
+        searchInput.addEventListener("paste", () => setTimeout(onSearchInput, 50));
+        searchInput.addEventListener("search", onSearchInput);
 
         searchInput.addEventListener("focus", () => {
             resetIdleTimer();
