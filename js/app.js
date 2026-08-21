@@ -1389,6 +1389,8 @@ function setupEventListeners() {
     }
 
     document.getElementById("modal-close-btn")?.addEventListener("click", closeDetailModal);
+    document.getElementById("modal-back-btn")?.addEventListener("click", closeDetailModal);
+    document.getElementById("modal-bottom-return-btn")?.addEventListener("click", closeDetailModal);
     document.getElementById("modal-backdrop")?.addEventListener("click", closeDetailModal);
 
     // Tecla ESC para fechar modais
