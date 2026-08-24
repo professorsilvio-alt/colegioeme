@@ -270,6 +270,37 @@ class Ocorrencia(models.Model):
         return ', '.join(a.nome for a in self.alunos.all())
 
 
+class AcaoCoordenacao(models.Model):
+    TIPO_ACAO_CHOICES = [
+        ('ORIENTACAO', 'Orientação ao Aluno'),
+        ('COMUNICADO_FAMILIA', 'Comunicado enviado à Família'),
+        ('REUNIAO_RESPONSAVEIS', 'Reunião com os Responsáveis'),
+        ('ADVERTENCIA', 'Advertência Escrita'),
+        ('SUSPENSAO', 'Suspensão'),
+        ('OUTRO', 'Outra Ação'),
+    ]
+
+    aluno = models.ForeignKey(Aluno, on_delete=models.CASCADE, related_name='acoes_coordenacao', verbose_name='Aluno')
+    coordenador = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='acoes_coordenacao_registradas', verbose_name='Registrado por'
+    )
+    tipo_acao = models.CharField(max_length=50, choices=TIPO_ACAO_CHOICES, default='ORIENTACAO', verbose_name='Tipo de Ação')
+    descricao = models.TextField(blank=True, verbose_name='Observações / Detalhes da Ação')
+    data_acao = models.DateField(default=datetime.date.today, verbose_name='Data da Ação')
+    criado_em = models.DateTimeField(auto_now_add=True, verbose_name='Criado em')
+    ocorrencias = models.ManyToManyField(Ocorrencia, blank=True, related_name='acoes_coordenacao', verbose_name='Ocorrências Vinculadas')
+
+    class Meta:
+        verbose_name = 'Ação da Coordenação'
+        verbose_name_plural = 'Ações da Coordenação'
+        ordering = ['-data_acao', '-criado_em']
+
+    def __str__(self):
+        return f'{self.get_tipo_acao_display()} - {self.aluno.nome} ({self.data_acao})'
+
+
+
 class ConteudoProgramatico(models.Model):
     data = models.DateField()
     turmas = models.ManyToManyField(Turma)

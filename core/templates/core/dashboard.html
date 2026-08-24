@@ -19,6 +19,19 @@
         <h3>Ocorrências Resolvidas</h3>
         <p>{{ resolvidas }}</p>
     </div>
+    {% if pode_ver_kpi_coordenacao %}
+    <a href="{% url 'ocorrencias_alunos_criticos' %}" class="card card-kpi-alerta" style="text-decoration: none; cursor: pointer; border-left: 4px solid {% if total_alunos_criticos > 0 %}#e74c3c{% else %}#f39c12{% endif %}; background: {% if total_alunos_criticos > 0 %}linear-gradient(135deg, #871c1c, #b32d2e){% else %}linear-gradient(135deg, #1e3a8a, #2c3e50){% endif %}; transition: transform 0.2s, box-shadow 0.2s;">
+        <h3 style="color: #ffd1d1; display: flex; align-items: center; justify-content: center; gap: 4px;">
+            ⚠️ Alunos com ≥ 3 Ocorrências
+        </h3>
+        <p style="color: #ffffff; font-size: 20px;">
+            {{ total_alunos_criticos }}
+            <span style="font-size: 11px; display: block; font-weight: normal; color: #ffcccc; margin-top: 2px;">
+                {% if total_alunos_criticos > 0 %}🔍 Clique para revisar{% else %}Nenhum em alerta{% endif %}
+            </span>
+        </p>
+    </a>
+    {% endif %}
     {% endif %}
 </div>
 

@@ -1,0 +1,141 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block title %}Alunos com 3+ Ocorrências - Coordenação - SCA{% endblock %}
+
+{% block content %}
+<div class="tabs">
+    <a href="{% url 'dashboard' %}" class="tab-btn" style="text-decoration: none;">⬅ Voltar ao Dashboard</a>
+    <a href="{% url 'dashboard' %}?tab=ocorrencias" class="tab-btn" style="text-decoration: none;">📋 Todas Ocorrências</a>
+</div>
+
+<div class="content-container" style="max-width: 1200px; margin: 20px auto; padding: 0 15px;">
+    
+    <!-- HEADER DA PÁGINA -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; background: #fff; padding: 22px 25px; border-radius: 10px; box-shadow: 0 3px 12px rgba(0,0,0,0.08); border-left: 6px solid #c0392b; margin-bottom: 20px;">
+        <div>
+            <h1 style="margin: 0; color: #781d1d; font-size: 1.6em; display: flex; align-items: center; gap: 10px;">
+                <span>⚠️</span> Alunos com 3 ou Mais Ocorrências
+            </h1>
+            <p style="margin: 6px 0 0; color: #666; font-size: 0.95em;">
+                Painel da Coordenação para identificação prioritária e acompanhamento disciplinar/pedagógico.
+            </p>
+        </div>
+        <div style="background: #fdf2f2; border: 1px solid #f8b4b4; padding: 10px 18px; border-radius: 8px; text-align: center;">
+            <span style="display: block; font-size: 11px; color: #9b1c1c; font-weight: bold; text-transform: uppercase;">Total em Alerta</span>
+            <span style="font-size: 24px; font-weight: bold; color: #c0392b;">{{ total_criticos }}</span>
+        </div>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="filters-bar" style="background: #fff; padding: 18px 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 20px;">
+        <form method="get" action="" style="display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end;">
+            <div style="flex: 1; min-width: 180px;">
+                <label style="display: block; font-size: 12px; font-weight: bold; color: #444; margin-bottom: 5px;">Filtrar por Turma</label>
+                <select name="filtro_turma" onchange="this.form.submit()" style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; background: #fff;">
+                    <option value="">Todas as Turmas</option>
+                    {% for t in turmas %}
+                    <option value="{{ t.codigo }}" {% if filtro_turma == t.codigo %}selected{% endif %}>Turma {{ t.codigo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="flex: 2; min-width: 240px;">
+                <label style="display: block; font-size: 12px; font-weight: bold; color: #444; margin-bottom: 5px;">Buscar por Nome do Aluno</label>
+                <input type="text" name="busca" value="{{ busca }}" placeholder="Digite o nome do aluno..." style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box;">
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+                <button type="submit" class="btn-primary" style="padding: 9px 18px; font-weight: 600; border-radius: 6px; background: #003366; color: #fff; border: none; cursor: pointer;">🔍 Filtrar</button>
+                {% if filtro_turma or busca %}
+                <a href="{% url 'ocorrencias_alunos_criticos' %}" class="btn-gray" style="padding: 9px 14px; text-decoration: none; border-radius: 6px; display: inline-flex; align-items: center;">Limpar</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- TABELA DE ALUNOS -->
+    <div style="background: #fff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); overflow: hidden;">
+        <div style="overflow-x: auto; width: 100%;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                        <th style="padding: 14px 18px; color: #334155; font-size: 13px; text-transform: uppercase; font-weight: 700;">Aluno</th>
+                        <th style="padding: 14px 18px; color: #334155; font-size: 13px; text-transform: uppercase; font-weight: 700;">Turma</th>
+                        <th style="padding: 14px 18px; color: #334155; font-size: 13px; text-transform: uppercase; font-weight: 700; text-align: center;">Total Ocorrências</th>
+                        <th style="padding: 14px 18px; color: #334155; font-size: 13px; text-transform: uppercase; font-weight: 700;">Última Ocorrência</th>
+                        <th style="padding: 14px 18px; color: #334155; font-size: 13px; text-transform: uppercase; font-weight: 700;">Ação da Coordenação</th>
+                        <th style="padding: 14px 18px; color: #334155; font-size: 13px; text-transform: uppercase; font-weight: 700; text-align: center;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in alunos_data %}
+                    <tr style="border-bottom: 1px solid #edf2f7; transition: background 0.15s;" onmouseover="this.style.background='#fdf8f8'" onmouseout="this.style.background='transparent'">
+                        <td style="padding: 14px 18px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                {% if item.aluno.foto %}
+                                <img src="{{ item.aluno.foto.url }}" alt="{{ item.aluno.nome }}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #ddd;">
+                                {% else %}
+                                <div style="width: 40px; height: 40px; border-radius: 50%; background: #e2e8f0; color: #64748b; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">
+                                    {{ item.aluno.nome|slice:":2"|upper }}
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <a href="{% url 'ocorrencia_revisao_aluno' item.aluno.pk %}" style="color: #003366; font-weight: 700; text-decoration: none; font-size: 15px;">
+                                        {{ item.aluno.nome }}
+                                    </a>
+                                    {% if item.aluno.email_responsavel %}
+                                    <div style="font-size: 11px; color: #888;">✉ {{ item.aluno.email_responsavel }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td style="padding: 14px 18px; font-weight: 600; color: #334155;">
+                            Turma {{ item.aluno.turma.codigo }}
+                        </td>
+                        <td style="padding: 14px 18px; text-align: center;">
+                            <span style="display: inline-block; padding: 4px 12px; border-radius: 16px; font-weight: 800; font-size: 14px; background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;">
+                                {{ item.total_ocorrencias }}
+                            </span>
+                            <div style="font-size: 11px; color: #64748b; margin-top: 3px;">
+                                <span style="color: #d97706; font-weight: 600;">{{ item.ocorrencias_abertas }} abertas</span> | 
+                                <span style="color: #16a34a;">{{ item.ocorrencias_resolvidas }} resolvidas</span>
+                            </div>
+                        </td>
+                        <td style="padding: 14px 18px; color: #475569; font-size: 13px;">
+                            {{ item.ultima_ocorrencia|date:"d/m/Y"|default:"-" }}
+                        </td>
+                        <td style="padding: 14px 18px;">
+                            {% if item.ultima_acao %}
+                            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 5px 10px; font-size: 12px; color: #166534; display: inline-block;">
+                                <strong>✓ {{ item.ultima_acao.get_tipo_acao_display }}</strong>
+                                <span style="color: #64748b; font-size: 11px; display: block;">{{ item.ultima_acao.data_acao|date:"d/m/Y" }} por {{ item.ultima_acao.coordenador.first_name|default:item.ultima_acao.coordenador.username }}</span>
+                            </div>
+                            {% else %}
+                            <span style="background: #fffbeb; border: 1px solid #fef3c7; color: #b45309; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; display: inline-block;">
+                                ⏳ Pendente de Ação
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 14px 18px; text-align: center;">
+                            <a href="{% url 'ocorrencia_revisao_aluno' item.aluno.pk %}" class="btn-sm" style="background: #003366; color: white; text-decoration: none; padding: 7px 14px; border-radius: 6px; font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 5px rgba(0,51,102,0.2);">
+                                📋 Revisar Ocorrências
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 45px 20px; color: #64748b;">
+                            <div style="font-size: 40px; margin-bottom: 10px;">🎉</div>
+                            <h3 style="margin: 0; color: #334155;">Nenhum aluno com 3 ou mais ocorrências encontrado.</h3>
+                            <p style="margin: 5px 0 0; font-size: 13px; color: #94a3b8;">
+                                {% if filtro_turma or busca %}Tente limpar os filtros para ver todos os registros.{% else %}A escola não possui alunos no limite crítico de ocorrências no momento.{% endif %}
+                            </p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

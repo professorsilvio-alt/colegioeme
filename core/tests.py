@@ -332,3 +332,94 @@ class CriteriosNotasTests(TestCase):
         self.assertEqual(linha['situacao'], 'Aprovado pelo Conselho')
         self.assertTrue(linha['promovido_conselho'])
 
+
+class AlertaOcorrenciasCoordenacaoTests(TestCase):
+    def setUp(self):
+        from .models import Escola, AnoLetivo, AcaoCoordenacao
+        self.client = Client()
+        self.escola = Escola.objects.create(nome='Escola Central')
+        self.ano_letivo = AnoLetivo.objects.create(ano=2026, atual=True)
+        self.turma = Turma.objects.create(codigo='91', escola=self.escola, ano_letivo=self.ano_letivo)
+        
+        self.aluno_critico = Aluno.objects.create(nome='Carlos Eduardo', turma=self.turma)
+        self.aluno_normal = Aluno.objects.create(nome='Lucas Pereira', turma=self.turma)
+        
+        self.disc1 = Disciplina.objects.create(nome='História')
+        self.disc2 = Disciplina.objects.create(nome='Geografia')
+        
+        self.u_coord = User.objects.create_user(username='coord_teste', password='123')
+        self.prof_coord = Professor.objects.create(user=self.u_coord, nome='Coordenadora Ana', cargo='COORDENADOR')
+        self.prof_coord.escolas.add(self.escola)
+
+        self.u_prof = User.objects.create_user(username='prof_teste', password='123')
+        self.prof_comum = Professor.objects.create(user=self.u_prof, nome='Prof Roberto', cargo='PROFESSOR')
+        self.prof_comum.escolas.add(self.escola)
+
+    def test_kpi_tres_ou_mais_ocorrencias(self):
+        # 2 ocorrências para o aluno Carlos: ainda não é crítico (total < 3)
+        oc1 = Ocorrencia.objects.create(data='2026-04-10', turma=self.turma, professor=self.prof_comum, disciplina=self.disc1, descricao='Sem material', status='Aberta')
+        oc1.alunos.add(self.aluno_critico)
+        oc2 = Ocorrencia.objects.create(data='2026-04-15', turma=self.turma, professor=self.prof_comum, disciplina=self.disc2, descricao='Conversando', status='Aberta')
+        oc2.alunos.add(self.aluno_critico)
+
+        self.client.login(username='coord_teste', password='123')
+        response = self.client.get(reverse('dashboard'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['total_alunos_criticos'], 0)
+
+        # 3ª ocorrência para o aluno Carlos (por outro professor ou disciplina)
+        oc3 = Ocorrencia.objects.create(data='2026-04-20', turma=self.turma, professor=self.prof_comum, disciplina=self.disc1, descricao='Uso de celular', status='Aberta')
+        oc3.alunos.add(self.aluno_critico)
+
+        response = self.client.get(reverse('dashboard'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['total_alunos_criticos'], 1)
+        self.assertIn('Alunos com ≥ 3 Ocorrências', response.content.decode('utf-8'))
+
+    def test_listar_alunos_criticos_e_pagina_revisao(self):
+        # Criar 3 ocorrências para Carlos
+        for i in range(3):
+            oc = Ocorrencia.objects.create(data=f'2026-05-0{i+1}', turma=self.turma, professor=self.prof_comum, disciplina=self.disc1, descricao=f'Motivo {i}', status='Aberta')
+            oc.alunos.add(self.aluno_critico)
+
+        self.client.login(username='coord_teste', password='123')
+        # Acessar listagem de atenção
+        response = self.client.get(reverse('ocorrencias_alunos_criticos'))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('Carlos Eduardo', response.content.decode('utf-8'))
+        self.assertNotIn('Lucas Pereira', response.content.decode('utf-8'))
+
+        # Acessar tela de revisão do aluno Carlos
+        response_rev = self.client.get(reverse('ocorrencia_revisao_aluno', kwargs={'aluno_pk': self.aluno_critico.pk}))
+        self.assertEqual(response_rev.status_code, 200)
+        self.assertIn('Histórico de Ocorrências do Aluno', response_rev.content.decode('utf-8'))
+        self.assertIn('Registrar Ação da Coordenação', response_rev.content.decode('utf-8'))
+
+    def test_registrar_acao_coordenacao(self):
+        from .models import AcaoCoordenacao
+        # Criar 3 ocorrências abertas para Carlos
+        for i in range(3):
+            oc = Ocorrencia.objects.create(data=f'2026-05-0{i+1}', turma=self.turma, professor=self.prof_comum, disciplina=self.disc1, descricao=f'Motivo {i}', status='Aberta')
+            oc.alunos.add(self.aluno_critico)
+
+        self.client.login(username='coord_teste', password='123')
+        response = self.client.post(reverse('ocorrencia_revisao_aluno', kwargs={'aluno_pk': self.aluno_critico.pk}), {
+            'tipo_acao': 'COMUNICADO_FAMILIA',
+            'data_acao': '2026-05-05',
+            'descricao': 'Enviado comunicado oficial para a mãe e reunião agendada.',
+            'marcar_resolvidas': '1'
+        })
+        self.assertEqual(response.status_code, 302)
+
+        # Verifica criação do registro AcaoCoordenacao
+        acao = AcaoCoordenacao.objects.filter(aluno=self.aluno_critico).first()
+        self.assertIsNotNone(acao)
+        self.assertEqual(acao.tipo_acao, 'COMUNICADO_FAMILIA')
+        self.assertEqual(acao.coordenador, self.u_coord)
+        self.assertEqual(acao.ocorrencias.count(), 3)
+
+        # Ocorrências devem ter sido marcadas como resolvidas
+        ocorrencias_abertas = Ocorrencia.objects.filter(alunos=self.aluno_critico, status='Aberta')
+        self.assertEqual(ocorrencias_abertas.count(), 0)
+
+

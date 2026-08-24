@@ -15,7 +15,7 @@ from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import Q, Max
+from django.db.models import Q, Max, Count
 from django.shortcuts import get_object_or_404, redirect, render
 from django.http import FileResponse, HttpResponse, JsonResponse
 from django.views.decorators.http import require_POST
@@ -238,7 +238,18 @@ def dashboard(request):
         lancadas_ids = cont_qs.values_list('disciplina_id', flat=True).distinct()
         disciplinas_tab_c = (disciplinas_tab_c | Disciplina.objects.filter(pk__in=lancadas_ids)).distinct()
 
-    professores_tab_c = ordenar_por_nome(professores_tab_c)
+    # Alunos com 3 ou mais ocorrências para atenção da coordenação
+    total_alunos_criticos = 0
+    pode_ver_kpi_coordenacao = False
+    if not prof or prof.pode_ver_tudo or prof.cargo in ['COORDENADOR', 'AUX_COORD', 'ORIENTADOR', 'DIRETOR', 'ADMIN']:
+        pode_ver_kpi_coordenacao = True
+        alunos_criticos_qs = Aluno.objects.filter(
+            turma__escola=request.escola,
+            turma__ano_letivo=request.ano_letivo
+        ).annotate(
+            total_ocorrencias=Count('ocorrencia')
+        ).filter(total_ocorrencias__gte=3)
+        total_alunos_criticos = alunos_criticos_qs.count()
 
     context = {
         'prof': prof,
@@ -251,6 +262,8 @@ def dashboard(request):
         'total': total,
         'abertas': abertas,
         'resolvidas': resolvidas,
+        'total_alunos_criticos': total_alunos_criticos,
+        'pode_ver_kpi_coordenacao': pode_ver_kpi_coordenacao,
         'ocorrencias': oc_filtradas,
         'conteudos': cont_filtrados,
         'filtro_turma': request.GET.get('filtro_turma', ''),

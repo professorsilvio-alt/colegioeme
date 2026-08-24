@@ -15,7 +15,7 @@ from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.db import transaction
-from django.db.models import Q, Max
+from django.db.models import Q, Max, Count
 from django.shortcuts import get_object_or_404, redirect, render
 from django.http import FileResponse, HttpResponse, JsonResponse
 from django.views.decorators.http import require_POST
@@ -28,7 +28,7 @@ from reportlab.platypus import (Image, Paragraph, SimpleDocTemplate, Spacer, Tab
                                 TableStyle)
 
 from ..models import (Aluno, AnoLetivo, ConteudoProgramatico, Disciplina,
-                     Escola, GradeHoraria, Ocorrencia, Professor,
+                     Escola, GradeHoraria, Ocorrencia, AcaoCoordenacao, Professor,
                      SugestaoConteudo, Turma, Configuracao)
 from ..utils import get_professor, get_feriados, get_client_ip, ordenar_por_nome
 
@@ -402,4 +402,135 @@ def ocorrencia_mudar_status_direto(request, pk):
     logger.info('STATUS ALTERADO: OC-%04d para %s por usuário=%s', oc.pk, oc.status, request.user.username)
     messages.success(request, f'Status da OC-{oc.pk:04d} alterado para {oc.status}.')
     return redirect('dashboard')
+
+
+@login_required
+def ocorrencias_alunos_criticos(request):
+    prof = get_professor(request.user)
+    if prof and not prof.pode_ver_ocorrencias:
+        messages.error(request, 'Você não tem permissão para acessar esta área.')
+        return redirect('dashboard')
+
+    filtro_turma = request.GET.get('filtro_turma', '')
+    busca = request.GET.get('busca', '').strip()
+
+    qs = Aluno.objects.filter(
+        turma__escola=request.escola,
+        turma__ano_letivo=request.ano_letivo
+    ).annotate(
+        total_ocorrencias=Count('ocorrencia', filter=Q(ocorrencia__turma__escola=request.escola, ocorrencia__turma__ano_letivo=request.ano_letivo)),
+        ocorrencias_abertas=Count('ocorrencia', filter=Q(ocorrencia__status='Aberta', ocorrencia__turma__escola=request.escola, ocorrencia__turma__ano_letivo=request.ano_letivo)),
+        ocorrencias_resolvidas=Count('ocorrencia', filter=Q(ocorrencia__status='Resolvida', ocorrencia__turma__escola=request.escola, ocorrencia__turma__ano_letivo=request.ano_letivo)),
+        ultima_ocorrencia=Max('ocorrencia__data')
+    ).filter(total_ocorrencias__gte=3).select_related('turma').prefetch_related('acoes_coordenacao')
+
+    if filtro_turma:
+        qs = qs.filter(turma__codigo=filtro_turma)
+    if busca:
+        qs = qs.filter(nome__icontains=busca)
+
+    qs = qs.order_by('-total_ocorrencias', 'turma__ordem_exibicao', 'turma__codigo', 'nome')
+
+    turmas = Turma.objects.filter(escola=request.escola, ano_letivo=request.ano_letivo).order_by('ordem_exibicao', 'codigo')
+
+    alunos_data = []
+    for aluno in qs:
+        ultima_acao = aluno.acoes_coordenacao.first()
+        alunos_data.append({
+            'aluno': aluno,
+            'total_ocorrencias': aluno.total_ocorrencias,
+            'ocorrencias_abertas': aluno.ocorrencias_abertas,
+            'ocorrencias_resolvidas': aluno.ocorrencias_resolvidas,
+            'ultima_ocorrencia': aluno.ultima_ocorrencia,
+            'ultima_acao': ultima_acao,
+        })
+
+    context = {
+        'prof': prof,
+        'alunos_data': alunos_data,
+        'turmas': turmas,
+        'filtro_turma': filtro_turma,
+        'busca': busca,
+        'total_criticos': len(alunos_data),
+    }
+    return render(request, 'core/ocorrencias_alunos_criticos.html', context)
+
+
+@login_required
+def ocorrencia_revisao_aluno(request, aluno_pk):
+    aluno = get_object_or_404(Aluno, pk=aluno_pk)
+    prof = get_professor(request.user)
+
+    if prof and not prof.pode_ver_ocorrencias:
+        messages.error(request, 'Você não tem permissão para acessar esta área.')
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        # Permissão para registrar ação da coordenação
+        if prof and prof.cargo not in ['ADMIN', 'DIRETOR', 'COORDENADOR', 'AUX_COORD', 'ORIENTADOR', 'AUX_ADMIN']:
+            messages.error(request, 'Seu cargo não possui permissão para registrar ações da coordenação.')
+            return redirect('ocorrencia_revisao_aluno', aluno_pk=aluno.pk)
+
+        tipo_acao = request.POST.get('tipo_acao', 'ORIENTACAO')
+        descricao = request.POST.get('descricao', '').strip()
+        data_acao_str = request.POST.get('data_acao', '')
+        marcar_resolvidas = request.POST.get('marcar_resolvidas') == '1'
+
+        try:
+            data_acao = datetime.datetime.strptime(data_acao_str, '%Y-%m-%d').date() if data_acao_str else date.today()
+        except ValueError:
+            data_acao = date.today()
+
+        acao = AcaoCoordenacao.objects.create(
+            aluno=aluno,
+            coordenador=request.user,
+            tipo_acao=tipo_acao,
+            descricao=descricao,
+            data_acao=data_acao
+        )
+
+        # Vincular todas as ocorrências do aluno até esta data
+        ocorrencias_aluno = Ocorrencia.objects.filter(
+            alunos=aluno,
+            turma__escola=request.escola,
+            turma__ano_letivo=request.ano_letivo
+        )
+        acao.ocorrencias.set(ocorrencias_aluno)
+
+        if marcar_resolvidas:
+            ocorrencias_aluno.filter(status='Aberta').update(status='Resolvida')
+
+        logger.info(
+            'AÇÃO DA COORDENAÇÃO REGISTRADA: Ação pk=%s (%s) para aluno=%s por usuário=%s',
+            acao.pk, tipo_acao, aluno.nome, request.user.username
+        )
+        messages.success(request, f'Ação da coordenação ({acao.get_tipo_acao_display()}) registrada com sucesso!')
+        return redirect('ocorrencia_revisao_aluno', aluno_pk=aluno.pk)
+
+    ocorrencias = Ocorrencia.objects.filter(
+        alunos=aluno,
+        turma__escola=request.escola,
+        turma__ano_letivo=request.ano_letivo
+    ).select_related('turma', 'professor', 'disciplina').order_by('-data', '-criado_em')
+
+    acoes = AcaoCoordenacao.objects.filter(aluno=aluno).select_related('coordenador').order_by('-data_acao', '-criado_em')
+
+    total_oc = ocorrencias.count()
+    abertas_oc = ocorrencias.filter(status='Aberta').count()
+    resolvidas_oc = ocorrencias.filter(status='Resolvida').count()
+
+    context = {
+        'prof': prof,
+        'aluno': aluno,
+        'ocorrencias': ocorrencias,
+        'acoes': acoes,
+        'total_oc': total_oc,
+        'abertas_oc': abertas_oc,
+        'resolvidas_oc': resolvidas_oc,
+        'tipos_acao': AcaoCoordenacao.TIPO_ACAO_CHOICES,
+        'today': date.today().isoformat(),
+        'pode_registrar_acao': (not prof) or (prof.cargo in ['ADMIN', 'DIRETOR', 'COORDENADOR', 'AUX_COORD', 'ORIENTADOR', 'AUX_ADMIN']),
+    }
+    return render(request, 'core/ocorrencia_revisao_aluno.html', context)
+
 

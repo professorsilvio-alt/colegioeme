@@ -4,7 +4,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.html import format_html
 from django.contrib import messages
 from .models import (Turma, Disciplina, GrupoDisciplina, Professor, Aluno, Ocorrencia,
-                     ConteudoProgramatico, GradeHoraria, InspetorProxy, ProfessorDocente,
+                     AcaoCoordenacao, ConteudoProgramatico, GradeHoraria, InspetorProxy, ProfessorDocente,
                      SugestaoConteudo, Configuracao, NotaBimestral, ProvaAuxiliar,
                      RecuperacaoFinal, ConselhoClasse, Aviso)
 import datetime
@@ -439,6 +439,17 @@ class OcorrenciaAdmin(admin.ModelAdmin):
     list_select_related = ['turma', 'professor', 'disciplina']
     filter_horizontal = ['alunos']
     date_hierarchy = 'data'
+
+
+@admin.register(AcaoCoordenacao)
+class AcaoCoordenacaoAdmin(admin.ModelAdmin):
+    list_display = ['pk', 'aluno', 'tipo_acao', 'coordenador', 'data_acao', 'criado_em']
+    list_filter = ['tipo_acao', 'data_acao']
+    search_fields = ['aluno__nome', 'descricao', 'coordenador__username']
+    list_select_related = ['aluno', 'coordenador']
+    filter_horizontal = ['ocorrencias']
+    date_hierarchy = 'data_acao'
+
 
 
 @admin.register(ConteudoProgramatico)

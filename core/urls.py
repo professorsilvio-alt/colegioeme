@@ -28,6 +28,8 @@ urlpatterns = [
 
     # Ocorrências
     path('ocorrencia/criar/', views.ocorrencia_criar, name='ocorrencia_criar'),
+    path('ocorrencias/atencao/', views.ocorrencias_alunos_criticos, name='ocorrencias_alunos_criticos'),
+    path('ocorrencias/revisao/<int:aluno_pk>/', views.ocorrencia_revisao_aluno, name='ocorrencia_revisao_aluno'),
     path('ocorrencia/<int:pk>/', views.ocorrencia_ver, name='ocorrencia_ver'),
     path('ocorrencia/<int:pk>/editar/', views.ocorrencia_editar, name='ocorrencia_editar'),
     path('ocorrencia/<int:pk>/excluir/', views.ocorrencia_excluir, name='ocorrencia_excluir'),
