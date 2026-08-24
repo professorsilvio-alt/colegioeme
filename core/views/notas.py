@@ -726,9 +726,9 @@ def remover_na(request):
 # ─────────────────────────────────────────────────────────────
 
 def _pode_gerenciar_composicao(user, prof):
-    if user.is_superuser or user.is_staff or user.username in ('silvio', 'samuel'):
+    if user.is_superuser:
         return True
-    if prof and (prof.pode_editar_tudo or prof.cargo in ('DIRETOR', 'ADMIN', 'COORDENADOR')):
+    if prof and prof.pode_editar_tudo:
         return True
     return False
 
