@@ -768,6 +768,29 @@ def escola_composicao_disciplinas(request):
         messages.success(request, f'Pontuações das subdisciplinas para {nome_serie} salvas com sucesso!')
         return redirect(f"{reverse('escola_composicao_disciplinas')}?serie={serie_post}")
 
+    # Identifica as disciplinas presentes nas turmas da série selecionada
+    disc_ids_serie = set(
+        Disciplina.objects.filter(
+            gradehoraria__turma__codigo__startswith=serie_sel
+        ).values_list('pk', flat=True)
+    )
+    if request.ano_letivo:
+        disc_ids_serie_ano = set(
+            Disciplina.objects.filter(
+                gradehoraria__turma__codigo__startswith=serie_sel,
+                gradehoraria__turma__ano_letivo=request.ano_letivo
+            ).values_list('pk', flat=True)
+        )
+        if disc_ids_serie_ano:
+            disc_ids_serie = disc_ids_serie_ano
+
+    if not disc_ids_serie:
+        disc_ids_serie = set(
+            Disciplina.objects.filter(
+                notabimestral__aluno__turma__codigo__startswith=serie_sel
+            ).values_list('pk', flat=True)
+        )
+
     grupos_qs = GrupoDisciplina.objects.prefetch_related('disciplinas').order_by('ordem_boletim')
     pontuacoes_existentes = {
         p.disciplina_id: p.pontuacao_maxima
@@ -780,22 +803,27 @@ def escola_composicao_disciplinas(request):
 
     grupos_data = []
     for grp in grupos_qs:
+        # Apenas subdisciplinas deste grupo que realmente existem nesta série
+        discs_grupo_na_serie = [d for d in grp.disciplinas.all() if d.pk in disc_ids_serie]
+        if len(discs_grupo_na_serie) <= 1:
+            continue
+
         subdiscs = []
         soma_grupo = Decimal('0.00')
-        for d in grp.disciplinas.all():
-            val = pontuacoes_existentes.get(d.pk, Decimal('10.00'))
+        for d in discs_grupo_na_serie:
+            val = pontuacoes_existentes.get(d.pk, Decimal('0.00'))
             soma_grupo += val
             subdiscs.append({
                 'disciplina': d,
                 'pontuacao_maxima': val,
             })
-        if subdiscs:
-            grupos_data.append({
-                'grupo': grp,
-                'subdisciplinas': subdiscs,
-                'soma_grupo': soma_grupo,
-                'soma_ok': soma_grupo == Decimal('10.00'),
-            })
+        
+        grupos_data.append({
+            'grupo': grp,
+            'subdisciplinas': subdiscs,
+            'soma_grupo': soma_grupo,
+            'soma_ok': soma_grupo == Decimal('10.00'),
+        })
 
     context = {
         'prof': prof,
