@@ -22,7 +22,7 @@
         <select name="periodo" id="selBimestre" required>
             <option value="">Selecione o período...</option>
             {% for p in periodos_lista %}
-            <option value="{{ p }}">{% if p == 'PA1' or p == 'PA2' %}{{ p }}{% else %}{{ p }}º Bimestre{% endif %}</option>
+            <option value="{{ p }}">{% if p == 'REC' %}Recuperação Final{% elif p == 'PA1' or p == 'PA2' %}{{ p }}{% else %}{{ p }}º Bimestre{% endif %}</option>
             {% endfor %}
         </select>
 

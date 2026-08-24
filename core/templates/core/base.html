@@ -59,11 +59,9 @@
             <a href="{% url 'migrar_alunos' %}" class="nav-item">🚀 Migrar Alunos</a>
             {% endif %}
 
-            {% if user.is_superuser or prof.cargo == 'DIRETOR' or prof.cargo == 'COORDENADOR' or prof.cargo == 'AUX_COORD' %}
             <a href="{% url 'mural_avisos' %}" class="nav-item">📌 Mural</a>
-            {% endif %}
 
-            {% if user.is_superuser or prof.pode_ver_tudo or prof.cargo == 'DIRETOR' or prof.cargo == 'SECRETARIA' %}
+            {% if user.is_superuser or prof.pode_acessar_modulo_notas %}
             <a href="{% url 'notas_index' %}" class="nav-item">📝 Notas</a>
             {% endif %}
 

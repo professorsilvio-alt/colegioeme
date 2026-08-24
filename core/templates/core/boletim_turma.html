@@ -25,10 +25,11 @@
 
 {# ── Legenda ── #}
 <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:14px; font-size:12px; color:#555;">
-    <span><strong style="color:#1a7a4a;">Verde</strong> = ≥ 5,0</span>
-    <span><strong style="color:#c0392b;">Vermelho</strong> = &lt; 5,0</span>
-    <span><span style="background:#f39c12; color:#fff; padding:1px 6px; border-radius:8px; font-weight:700;">N/A</span> = Não Avaliado</span>
+    <span><strong style="color:#1a7a4a;">Verde</strong> = ≥ 5,00</span>
+    <span><strong style="color:#c0392b;">Vermelho</strong> = &lt; 5,00</span>
+    <span><span style="background:#f39c12; color:#fff; padding:1px 6px; border-radius:8px; font-weight:700;">N/A</span> = Falta Suprida/Pendente</span>
     <span><span style="color:#7c3aed; font-weight:700;">(PA)</span> = Substituído por Prova Auxiliar</span>
+    <span><span style="color:#8e44ad; font-weight:700;">(CC)</span> = Promovido pelo Conselho</span>
 </div>
 
 <div style="overflow-x:auto;">
@@ -39,12 +40,12 @@
             <th style="padding:10px 12px; text-align:left; position:sticky; left:0;
                        background:#003366; min-width:200px; z-index:2;">Aluno</th>
             {% for disc in disciplinas %}
-            <th style="padding:8px 6px; text-align:center; min-width:180px; border-left:1px solid #1a5276;">
+            <th style="padding:8px 6px; text-align:center; min-width:200px; border-left:1px solid #1a5276;">
                 {{ disc.nome }}
-                <br><span style="font-size:10px; font-weight:400; opacity:.8;">B1 · B2 · B3 · B4 · Anual</span>
+                <br><span style="font-size:10px; font-weight:400; opacity:.8;">B1 · B2 · B3 · B4 · Final</span>
             </th>
             {% endfor %}
-            <th style="padding:8px 10px; text-align:center; min-width:90px; background:#001f3f; border-left:2px solid #fff;">
+            <th style="padding:8px 10px; text-align:center; min-width:95px; background:#001f3f; border-left:2px solid #fff;">
                 Média Geral
             </th>
         </tr>
@@ -64,26 +65,29 @@
                 <div style="display:flex; gap:3px; align-items:center; justify-content:center; flex-wrap:wrap;">
                     {# B1, B2, B3, B4 #}
                     {% for v in col.bimestres %}
-                    {% if v.valor == 'NA' %}
-                    <span style="background:#f39c12; color:#fff; font-weight:700; font-size:10px;
-                                 padding:1px 5px; border-radius:8px;">N/A</span>
-                    {% elif v.valor is not None %}
+                    {% if v.valor is not None %}
                     <span style="font-weight:600;
                                  {% if v.valor >= 5.0 %}color:#1a7a4a;{% else %}color:#c0392b;{% endif %}
                                  {% if v.substituido_por_pa %}font-style:italic;{% endif %}">
-                        {{ v.valor }}{% if v.substituido_por_pa %}<sup style="color:#7c3aed; font-size:8px;">PA</sup>{% endif %}
+                        {{ v.valor|floatformat:2 }}{% if v.substituido_por_pa %}<sup style="color:#7c3aed; font-size:8px;">PA</sup>{% endif %}
                     </span>
                     {% else %}
                     <span style="color:#ccc; font-size:11px;">—</span>
                     {% endif %}
                     {% if not forloop.last %}<span style="color:#ccc;">·</span>{% endif %}
                     {% endfor %}
-                    {# Separador + Anual #}
+                    {# Separador + Média Final #}
                     <span style="color:#aaa; margin:0 2px;">|</span>
-                    {% if col.media_anual is not None %}
+                    {% if col.media_final is not None %}
+                    <strong style="font-size:13px;
+                                   {% if col.media_final >= 5.0 %}color:#1a7a4a;{% else %}color:#c0392b;{% endif %}">
+                        {{ col.media_final|floatformat:2 }}
+                        {% if col.promovido_conselho %}<sup style="color:#8e44ad; font-size:9px;">CC</sup>{% endif %}
+                    </strong>
+                    {% elif col.media_anual is not None %}
                     <strong style="font-size:13px;
                                    {% if col.media_anual >= 5.0 %}color:#1a7a4a;{% else %}color:#c0392b;{% endif %}">
-                        {{ col.media_anual }}
+                        {{ col.media_anual|floatformat:2 }}
                     </strong>
                     {% else %}
                     <span style="color:#ccc;">—</span>
@@ -96,7 +100,7 @@
                 {% if linha.media_geral is not None %}
                 <strong style="font-size:14px;
                                {% if linha.media_geral >= 5.0 %}color:#1a7a4a;{% else %}color:#c0392b;{% endif %}">
-                    {{ linha.media_geral }}
+                    {{ linha.media_geral|floatformat:2 }}
                 </strong>
                 {% else %}
                 <span style="color:#bbb;">—</span>
@@ -115,7 +119,7 @@
 </div>
 
 <p style="margin-top:14px; color:#888; font-size:12px;">
-    ⓘ Nota mínima para aprovação: <strong>5,0</strong> — Clique no nome do aluno para ver o boletim detalhado.
+    ⓘ Nota mínima para aprovação: <strong>5,00</strong> — Clique no nome do aluno para ver o boletim detalhado.
 </p>
 {% endif %}
 {% endblock %}

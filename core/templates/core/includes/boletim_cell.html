@@ -1,0 +1,16 @@
+<td style="padding:10px; text-align:center; {% if highlight %}background:#eef4ff;{% endif %}">
+    {% if v.valor == 'NA' %}
+    <span style="background:#f39c12; color:#fff; font-weight:700; font-size:12px; padding:3px 8px; border-radius:12px; letter-spacing:.5px;">N/A</span>
+    {% elif v.valor is not None %}
+    <strong class="{% if v.valor >= 5.0 %}cor-verde{% else %}cor-vermelha{% endif %}" style="{% if highlight %}font-size:15px;{% else %}font-weight:600;{% endif %}">
+        {{ v.valor|floatformat:2 }}
+    </strong>
+    {% if v.substituido_por_pa and not hide_pa_label %}
+    <br><span style="font-size:10px; color:#7c3aed; font-weight:600;">(PA)</span>
+    {% elif v.is_na and not hide_pa_label %}
+    <br><span style="font-size:10px; color:#e67e22; font-weight:600;">(N/A)</span>
+    {% endif %}
+    {% else %}
+    <span style="color:#bbb;">—</span>
+    {% endif %}
+</td>

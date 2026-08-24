@@ -168,6 +168,22 @@ class Professor(models.Model):
         """Retorna True para cargos com acesso irrestrito a notas."""
         return self.cargo in ['ADMIN', 'DIRETOR', 'AUX_ADMIN']
 
+    @property
+    def pode_acessar_modulo_notas(self):
+        """Acesso ao módulo de notas (menu, visualização, boletins e lançamento).
+        Liberado durante a fase de testes para:
+        - ADMIN / Superuser
+        - DIRETOR (ex: Izail)
+        - SECRETARIA (ex: Josilma)
+        - COORDENADOR / AUX_COORD (ex: Samuel)
+        - PROFESSOR apenas se autorizado_lancar_notas for True (ex: Silvio) ou usuário específico
+        """
+        if self.cargo in ['ADMIN', 'DIRETOR', 'SECRETARIA', 'COORDENADOR', 'AUX_COORD']:
+            return True
+        if self.cargo == 'PROFESSOR':
+            return bool(self.autorizado_lancar_notas or (self.user and self.user.username in ['silvio', 'samuel']))
+        return False
+
     def get_turmas(self, ano_letivo=None, escola=None):
         qs = Turma.objects.all()
         if not (self.todas_turmas or self.pode_ver_tudo):
@@ -400,6 +416,8 @@ class Configuracao(models.Model):
     notas_b4_fim = models.DateField(null=True, blank=True, verbose_name='B4 — Fim do lançamento')
     notas_pa2_ini = models.DateField(null=True, blank=True, verbose_name='PA2 — Início do lançamento')
     notas_pa2_fim = models.DateField(null=True, blank=True, verbose_name='PA2 — Fim do lançamento')
+    notas_rec_final_ini = models.DateField(null=True, blank=True, verbose_name='REC Final — Início do lançamento')
+    notas_rec_final_fim = models.DateField(null=True, blank=True, verbose_name='REC Final — Fim do lançamento')
 
     # ── Período global (fallback) ─────────────────────────────────
     periodo_notas_ini = models.DateField(
@@ -445,6 +463,7 @@ class Configuracao(models.Model):
             '3': (self.notas_b3_ini, self.notas_b3_fim),
             '4': (self.notas_b4_ini, self.notas_b4_fim),
             'PA2': (self.notas_pa2_ini, self.notas_pa2_fim),
+            'REC': (self.notas_rec_final_ini, self.notas_rec_final_fim),
         }
         
         ini, fim = mapping.get(p, (None, None))
@@ -497,20 +516,20 @@ class NotaBimestral(models.Model):
     bimestre      = models.IntegerField(choices=BIMESTRE_CHOICES, db_index=True)
     ano_letivo    = models.ForeignKey(AnoLetivo, on_delete=models.CASCADE)
 
-    nota_prova    = models.DecimalField(max_digits=4, decimal_places=1,
+    nota_prova    = models.DecimalField(max_digits=5, decimal_places=2,
                         null=True, blank=True,
                         verbose_name='Nota da Prova')
-    nota_simulado = models.DecimalField(max_digits=4, decimal_places=1,
+    nota_simulado = models.DecimalField(max_digits=5, decimal_places=2,
                         null=True, blank=True,
                         verbose_name='Nota do Simulado (interno)')
-    nota_final    = models.DecimalField(max_digits=4, decimal_places=1,
+    nota_final    = models.DecimalField(max_digits=5, decimal_places=2,
                         editable=False,
                         verbose_name='Nota Final (calculada)')
     nao_avaliado  = models.BooleanField(
                         default=False,
                         verbose_name='Não Avaliado (ausente)',
                         help_text='Quando verdadeiro, o aluno não realizou a avaliação. '
-                                  'A nota final é contabilizada como 0,0.')
+                                  'A nota final é contabilizada como 0,00.')
 
     lancado_por   = models.ForeignKey(Professor, on_delete=models.SET_NULL,
                         null=True, blank=True, related_name='notas_lancadas')
@@ -531,17 +550,18 @@ class NotaBimestral(models.Model):
         """Calcula nota_final com bônus de simulado antes de salvar."""
         if self.nao_avaliado:
             # Aluno ausente: nota zerada, sem simulado
-            self.nota_prova = Decimal('0')
+            self.nota_prova = Decimal('0.00')
             self.nota_simulado = None
-            self.nota_final = Decimal('0')
+            self.nota_final = Decimal('0.00')
         elif self.nota_simulado is not None:
             bonus = float(self.nota_simulado) * 0.01
+            calc = self.nota_prova * Decimal(str(round(1 + bonus, 4)))
             self.nota_final = min(
-                Decimal('10.0'),
-                self.nota_prova * Decimal(str(round(1 + bonus, 4)))
+                Decimal('10.00'),
+                round(calc, 2)
             )
         else:
-            self.nota_final = self.nota_prova
+            self.nota_final = round(self.nota_prova, 2) if self.nota_prova is not None else None
         super().save(*args, **kwargs)
 
 
@@ -555,7 +575,7 @@ class ProvaAuxiliar(models.Model):
     disciplina  = models.ForeignKey(Disciplina, on_delete=models.CASCADE)
     ano_letivo  = models.ForeignKey(AnoLetivo, on_delete=models.CASCADE)
     numero_pa   = models.IntegerField(choices=NUMERO_CHOICES, verbose_name='Número da PA')
-    nota        = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True, verbose_name='Nota da PA')
+    nota        = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, verbose_name='Nota da PA')
 
     lancado_por = models.ForeignKey(Professor, on_delete=models.SET_NULL, null=True, blank=True)
     criado_em   = models.DateTimeField(auto_now_add=True)
@@ -569,6 +589,48 @@ class ProvaAuxiliar(models.Model):
 
     def __str__(self):
         return f"{self.aluno.nome} - {self.disciplina.nome} - PA{self.numero_pa} - Nota: {self.nota}"
+
+
+class RecuperacaoFinal(models.Model):
+    aluno       = models.ForeignKey(Aluno, on_delete=models.CASCADE, related_name='recuperacoes_finais')
+    disciplina  = models.ForeignKey(Disciplina, on_delete=models.CASCADE)
+    ano_letivo  = models.ForeignKey(AnoLetivo, on_delete=models.CASCADE)
+    nota        = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, verbose_name='Nota da Recuperação Final')
+
+    lancado_por = models.ForeignKey(Professor, on_delete=models.SET_NULL, null=True, blank=True)
+    criado_em   = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Recuperação Final'
+        verbose_name_plural = 'Recuperações Finais'
+        unique_together = ('aluno', 'disciplina', 'ano_letivo')
+        ordering = ['aluno__nome']
+
+    def __str__(self):
+        return f"{self.aluno.nome} - {self.disciplina.nome} - REC Final - Nota: {self.nota}"
+
+
+class ConselhoClasse(models.Model):
+    aluno       = models.ForeignKey(Aluno, on_delete=models.CASCADE, related_name='decisoes_conselho')
+    disciplina  = models.ForeignKey(Disciplina, on_delete=models.CASCADE)
+    ano_letivo  = models.ForeignKey(AnoLetivo, on_delete=models.CASCADE)
+    promovido   = models.BooleanField(default=False, verbose_name='Promovido pelo Conselho')
+    observacao  = models.CharField(max_length=255, blank=True, null=True, verbose_name='Observação / Ata')
+
+    lancado_por = models.ForeignKey(Professor, on_delete=models.SET_NULL, null=True, blank=True)
+    criado_em   = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Decisão do Conselho de Classe'
+        verbose_name_plural = 'Decisões do Conselho de Classe'
+        unique_together = ('aluno', 'disciplina', 'ano_letivo')
+        ordering = ['aluno__nome']
+
+    def __str__(self):
+        status = "Promovido" if self.promovido else "Não Promovido"
+        return f"{self.aluno.nome} - {self.disciplina.nome} - Conselho: {status}"
 
 
 # ──────────────────────────────────────────────

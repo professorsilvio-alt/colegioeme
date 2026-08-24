@@ -49,6 +49,8 @@ def config_periodos_notas(request):
         config.notas_b4_fim = parse_date('notas_b4_fim')
         config.notas_pa2_ini = parse_date('notas_pa2_ini')
         config.notas_pa2_fim = parse_date('notas_pa2_fim')
+        config.notas_rec_final_ini = parse_date('notas_rec_final_ini')
+        config.notas_rec_final_fim = parse_date('notas_rec_final_fim')
         config.save()
         messages.success(request, 'Períodos de lançamento atualizados com sucesso!')
         return redirect('config_periodos_notas')
@@ -72,6 +74,7 @@ def config_periodos_notas(request):
         ('3', '3º', 'Bimestre', 'notas_b3_ini', 'notas_b3_fim'),
         ('4', '4º', 'Bimestre', 'notas_b4_ini', 'notas_b4_fim'),
         ('PA2', 'PA 2', 'Prova Auxiliar', 'notas_pa2_ini', 'notas_pa2_fim'),
+        ('REC', 'Rec.', 'Recuperação Final', 'notas_rec_final_ini', 'notas_rec_final_fim'),
     ]
 
     for p_id, p_prin, p_sec, f_ini, f_fim in lista_db:

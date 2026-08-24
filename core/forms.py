@@ -12,7 +12,7 @@ class EscolaForm(forms.ModelForm):
 class ProfessorForm(forms.ModelForm):
     class Meta:
         model = Professor
-        fields = ['nome', 'cpf', 'cargo', 'email_contato', 'turmas', 'disciplinas', 'todas_turmas', 'todas_disciplinas']
+        fields = ['nome', 'cpf', 'cargo', 'email_contato', 'turmas', 'disciplinas', 'todas_turmas', 'todas_disciplinas', 'autorizado_lancar_notas']
         widgets = {
             'turmas': forms.CheckboxSelectMultiple(),
             'disciplinas': forms.CheckboxSelectMultiple(),

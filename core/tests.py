@@ -188,3 +188,147 @@ class OcorrenciaTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('João Silva', response.content.decode('utf-8'))
         self.assertNotIn('Maria Oliveira', response.content.decode('utf-8'))
+
+
+class CriteriosNotasTests(TestCase):
+    def setUp(self):
+        from decimal import Decimal
+        from .models import Escola, AnoLetivo, NotaBimestral, ProvaAuxiliar, RecuperacaoFinal, ConselhoClasse
+        from .services.calculo_notas import calcular_notas_disciplina, carregar_dados_boletim_aluno
+
+        self.escola = Escola.objects.create(nome='Escola Teste')
+        self.ano_letivo = AnoLetivo.objects.create(ano=2026)
+        self.turma = Turma.objects.create(codigo='31', escola=self.escola, ano_letivo=self.ano_letivo)
+        self.disc = Disciplina.objects.create(nome='Matemática')
+        self.aluno = Aluno.objects.create(nome='Aluno Teste', turma=self.turma)
+
+    def test_na_substituido_por_pa1_e_pa2(self):
+        from decimal import Decimal
+        from .models import NotaBimestral, ProvaAuxiliar
+        from .services.calculo_notas import carregar_dados_boletim_aluno
+
+        # B1 com falta (N/A) e B3 com falta (N/A)
+        NotaBimestral.objects.create(aluno=self.aluno, disciplina=self.disc, bimestre=1, ano_letivo=self.ano_letivo, nao_avaliado=True)
+        NotaBimestral.objects.create(aluno=self.aluno, disciplina=self.disc, bimestre=2, ano_letivo=self.ano_letivo, nota_prova=Decimal('6.00'))
+        NotaBimestral.objects.create(aluno=self.aluno, disciplina=self.disc, bimestre=3, ano_letivo=self.ano_letivo, nao_avaliado=True)
+        NotaBimestral.objects.create(aluno=self.aluno, disciplina=self.disc, bimestre=4, ano_letivo=self.ano_letivo, nota_prova=Decimal('7.00'))
+
+        # Fez PA1 = 8.00 e PA2 = 7.50
+        ProvaAuxiliar.objects.create(aluno=self.aluno, disciplina=self.disc, numero_pa=1, ano_letivo=self.ano_letivo, nota=Decimal('8.00'))
+        ProvaAuxiliar.objects.create(aluno=self.aluno, disciplina=self.disc, numero_pa=2, ano_letivo=self.ano_letivo, nota=Decimal('7.50'))
+
+        dados = carregar_dados_boletim_aluno(self.aluno, self.ano_letivo)
+        linha = dados[0]
+
+        # B1 assume nota da PA1 diretamente
+        self.assertEqual(linha['b1']['valor'], Decimal('8.00'))
+        self.assertTrue(linha['b1']['substituido_por_pa'])
+
+        # B3 assume nota da PA2 diretamente
+        self.assertEqual(linha['b3']['valor'], Decimal('7.50'))
+        self.assertTrue(linha['b3']['substituido_por_pa'])
+
+    def test_na_sem_pa_vira_zero(self):
+        from decimal import Decimal
+        from .models import NotaBimestral
+        from .services.calculo_notas import carregar_dados_boletim_aluno
+
+        NotaBimestral.objects.create(aluno=self.aluno, disciplina=self.disc, bimestre=1, ano_letivo=self.ano_letivo, nao_avaliado=True)
+        NotaBimestral.objects.create(aluno=self.aluno, disciplina=self.disc, bimestre=3, ano_letivo=self.ano_letivo, nao_avaliado=True)
+
+        dados = carregar_dados_boletim_aluno(self.aluno, self.ano_letivo)
+        linha = dados[0]
+
+        self.assertEqual(linha['b1']['valor'], Decimal('0.00'))
+        self.assertEqual(linha['b3']['valor'], Decimal('0.00'))
+
+    def test_pa2_nao_altera_se_soma_maior_igual_20(self):
+        from decimal import Decimal
+        from .models import NotaBimestral, ProvaAuxiliar
+        from .services.calculo_notas import carregar_dados_boletim_aluno
+
+        # Soma = 6.0 + 6.0 + 5.0 + 5.0 = 22.0 (>= 20.0)
+        NotaBimestral.objects.create(aluno=self.aluno, disciplina=self.disc, bimestre=1, ano_letivo=self.ano_letivo, nota_prova=Decimal('6.00'))
+        NotaBimestral.objects.create(aluno=self.aluno, disciplina=self.disc, bimestre=2, ano_letivo=self.ano_letivo, nota_prova=Decimal('6.00'))
+        NotaBimestral.objects.create(aluno=self.aluno, disciplina=self.disc, bimestre=3, ano_letivo=self.ano_letivo, nota_prova=Decimal('5.00'))
+        NotaBimestral.objects.create(aluno=self.aluno, disciplina=self.disc, bimestre=4, ano_letivo=self.ano_letivo, nota_prova=Decimal('5.00'))
+
+        # PA2 alta, mas aluno já atingiu os 20 pontos
+        ProvaAuxiliar.objects.create(aluno=self.aluno, disciplina=self.disc, numero_pa=2, ano_letivo=self.ano_letivo, nota=Decimal('10.00'))
+
+        dados = carregar_dados_boletim_aluno(self.aluno, self.ano_letivo)
+        linha = dados[0]
+
+        # B3 e B4 permanecem 5.00
+        self.assertEqual(linha['b3']['valor'], Decimal('5.00'))
+        self.assertFalse(linha['b3']['substituido_por_pa'])
+        self.assertEqual(linha['media_anual'], Decimal('5.50'))
+        self.assertEqual(linha['situacao'], 'Aprovado')
+
+    def test_pa2_recupera_quando_soma_menor_20(self):
+        from decimal import Decimal
+        from .models import NotaBimestral, ProvaAuxiliar
+        from .services.calculo_notas import carregar_dados_boletim_aluno
+
+        # Soma = 3.0 + 4.0 + 3.0 + 4.0 = 14.0 (< 20.0)
+        NotaBimestral.objects.create(aluno=self.aluno, disciplina=self.disc, bimestre=1, ano_letivo=self.ano_letivo, nota_prova=Decimal('3.00'))
+        NotaBimestral.objects.create(aluno=self.aluno, disciplina=self.disc, bimestre=2, ano_letivo=self.ano_letivo, nota_prova=Decimal('4.00'))
+        NotaBimestral.objects.create(aluno=self.aluno, disciplina=self.disc, bimestre=3, ano_letivo=self.ano_letivo, nota_prova=Decimal('3.00'))
+        NotaBimestral.objects.create(aluno=self.aluno, disciplina=self.disc, bimestre=4, ano_letivo=self.ano_letivo, nota_prova=Decimal('4.00'))
+
+        # PA2 = 8.00 -> (3 + 8)/2 = 5.50; (4 + 8)/2 = 6.00
+        ProvaAuxiliar.objects.create(aluno=self.aluno, disciplina=self.disc, numero_pa=2, ano_letivo=self.ano_letivo, nota=Decimal('8.00'))
+
+        dados = carregar_dados_boletim_aluno(self.aluno, self.ano_letivo)
+        linha = dados[0]
+
+        self.assertEqual(linha['b3']['valor'], Decimal('5.50'))
+        self.assertTrue(linha['b3']['substituido_por_pa'])
+        self.assertEqual(linha['b4']['valor'], Decimal('6.00'))
+        self.assertTrue(linha['b4']['substituido_por_pa'])
+
+        # Nova média anual = (3.0 + 4.0 + 5.50 + 6.0) / 4 = 18.5 / 4 = 4.63 (< 5.0)
+        self.assertEqual(linha['media_anual'], Decimal('4.63'))
+        self.assertEqual(linha['situacao'], 'Em Recuperação')
+
+    def test_recuperacao_final_aprovado_fixa_media_5(self):
+        from decimal import Decimal
+        from .models import NotaBimestral, RecuperacaoFinal
+        from .services.calculo_notas import carregar_dados_boletim_aluno
+
+        for b in (1, 2, 3, 4):
+            NotaBimestral.objects.create(aluno=self.aluno, disciplina=self.disc, bimestre=b, ano_letivo=self.ano_letivo, nota_prova=Decimal('4.00'))
+
+        # Média anual = 4.00. Aluno tira 8.50 na REC
+        RecuperacaoFinal.objects.create(aluno=self.aluno, disciplina=self.disc, ano_letivo=self.ano_letivo, nota=Decimal('8.50'))
+
+        dados = carregar_dados_boletim_aluno(self.aluno, self.ano_letivo)
+        linha = dados[0]
+
+        self.assertEqual(linha['rec_final']['valor'], Decimal('8.50'))
+        # Média final deve ser 5.00 e não 8.50
+        self.assertEqual(linha['media_final'], Decimal('5.00'))
+        self.assertEqual(linha['situacao'], 'Aprovado na REC')
+
+    def test_conselho_classe_promovido_fixa_media_5(self):
+        from decimal import Decimal
+        from .models import NotaBimestral, RecuperacaoFinal, ConselhoClasse
+        from .services.calculo_notas import carregar_dados_boletim_aluno
+
+        for b in (1, 2, 3, 4):
+            NotaBimestral.objects.create(aluno=self.aluno, disciplina=self.disc, bimestre=b, ano_letivo=self.ano_letivo, nota_prova=Decimal('4.00'))
+
+        # Tirou 3.00 na REC (< 5.0)
+        RecuperacaoFinal.objects.create(aluno=self.aluno, disciplina=self.disc, ano_letivo=self.ano_letivo, nota=Decimal('3.00'))
+
+        # Conselho de Classe promoveu o aluno
+        ConselhoClasse.objects.create(aluno=self.aluno, disciplina=self.disc, ano_letivo=self.ano_letivo, promovido=True, observacao='Ata 05')
+
+        dados = carregar_dados_boletim_aluno(self.aluno, self.ano_letivo)
+        linha = dados[0]
+
+        # Média final deve ser 5.00
+        self.assertEqual(linha['media_final'], Decimal('5.00'))
+        self.assertEqual(linha['situacao'], 'Aprovado pelo Conselho')
+        self.assertTrue(linha['promovido_conselho'])
+

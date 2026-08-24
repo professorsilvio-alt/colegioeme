@@ -5,7 +5,8 @@ from django.utils.html import format_html
 from django.contrib import messages
 from .models import (Turma, Disciplina, GrupoDisciplina, Professor, Aluno, Ocorrencia,
                      ConteudoProgramatico, GradeHoraria, InspetorProxy, ProfessorDocente,
-                     SugestaoConteudo, Configuracao, NotaBimestral, Aviso)
+                     SugestaoConteudo, Configuracao, NotaBimestral, ProvaAuxiliar,
+                     RecuperacaoFinal, ConselhoClasse, Aviso)
 import datetime
 
 
@@ -568,6 +569,33 @@ class NotaBimestralAdmin(admin.ModelAdmin):
         return super().get_queryset(request).select_related(
             'aluno', 'disciplina', 'ano_letivo', 'lancado_por'
         )
+
+
+@admin.register(ProvaAuxiliar)
+class ProvaAuxiliarAdmin(admin.ModelAdmin):
+    list_display = ['aluno', 'disciplina', 'numero_pa', 'nota', 'ano_letivo', 'lancado_por', 'atualizado_em']
+    list_filter = ['numero_pa', 'ano_letivo', 'disciplina', 'aluno__turma']
+    search_fields = ['aluno__nome', 'disciplina__nome']
+    readonly_fields = ['criado_em', 'atualizado_em']
+    ordering = ['aluno__nome', 'numero_pa']
+
+
+@admin.register(RecuperacaoFinal)
+class RecuperacaoFinalAdmin(admin.ModelAdmin):
+    list_display = ['aluno', 'disciplina', 'nota', 'ano_letivo', 'lancado_por', 'atualizado_em']
+    list_filter = ['ano_letivo', 'disciplina', 'aluno__turma']
+    search_fields = ['aluno__nome', 'disciplina__nome']
+    readonly_fields = ['criado_em', 'atualizado_em']
+    ordering = ['aluno__nome']
+
+
+@admin.register(ConselhoClasse)
+class ConselhoClasseAdmin(admin.ModelAdmin):
+    list_display = ['aluno', 'disciplina', 'promovido', 'observacao', 'ano_letivo', 'lancado_por', 'atualizado_em']
+    list_filter = ['promovido', 'ano_letivo', 'disciplina', 'aluno__turma']
+    search_fields = ['aluno__nome', 'disciplina__nome', 'observacao']
+    readonly_fields = ['criado_em', 'atualizado_em']
+    ordering = ['aluno__nome']
 
 
 @admin.register(Aviso)
