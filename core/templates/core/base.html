@@ -53,7 +53,7 @@
             <a href="{% url 'dashboard' %}?tab=conteudos" class="nav-item">📚 Diário</a>
             {% endif %}
 
-            {% if prof.pode_editar_tudo or user.is_superuser %}
+            {% if prof.pode_editar_tudo or user.is_superuser or user.is_staff or user.username == 'silvio' or user.username == 'samuel' %}
             <a href="{% url 'escola_professores_list' %}" class="nav-item">👥 Equipe</a>
             <a href="{% url 'escola_configurar' %}" class="nav-item">🎨 Escola</a>
             <a href="{% url 'escola_composicao_disciplinas' %}" class="nav-item">⚖️ Pontuação</a>

@@ -40,6 +40,18 @@
         </div>
     </form>
 </div>
+
+{% if prof.pode_editar_tudo or user.is_superuser or user.is_staff or user.username == 'silvio' or user.username == 'samuel' or prof.cargo in 'DIRETOR ADMIN COORDENADOR' %}
+<div style="margin-top: 25px; max-width: 500px; background: #fff; border: 1.5px solid #003366; border-left: 6px solid #003366; border-radius: 8px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+    <div>
+        <strong style="color: #003366; font-size: 15px; display: flex; align-items: center; gap: 6px;">⚖️ Composição de Pontuação</strong>
+        <span style="color: #64748b; font-size: 12px; display: block; margin-top: 2px;">Definir pontuação máxima das subdisciplinas por série.</span>
+    </div>
+    <a href="{% url 'escola_composicao_disciplinas' %}" style="background: #003366; color: #fff; text-decoration: none; padding: 9px 16px; border-radius: 6px; font-weight: 700; font-size: 13px; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,51,102,0.25);">
+        Configurar ➔
+    </a>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}

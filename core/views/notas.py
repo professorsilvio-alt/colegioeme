@@ -725,10 +725,18 @@ def remover_na(request):
 # GESTÃO / DIREÇÃO — COMPOSIÇÃO DE PONTUAÇÃO DE SUBDISCIPLINAS
 # ─────────────────────────────────────────────────────────────
 
+def _pode_gerenciar_composicao(user, prof):
+    if user.is_superuser or user.is_staff or user.username in ('silvio', 'samuel'):
+        return True
+    if prof and (prof.pode_editar_tudo or prof.cargo in ('DIRETOR', 'ADMIN', 'COORDENADOR')):
+        return True
+    return False
+
+
 @login_required
 def escola_composicao_disciplinas(request):
     prof = get_professor(request.user)
-    if prof and not prof.pode_editar_tudo and not request.user.is_superuser:
+    if not _pode_gerenciar_composicao(request.user, prof):
         messages.error(request, 'Acesso restrito à Direção e Administradores.')
         return redirect('dashboard')
 
