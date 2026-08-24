@@ -1,0 +1,138 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block title %}Composição de Pontuação de Subdisciplinas — SCA{% endblock %}
+
+{% block content %}
+<div class="tabs">
+    <a href="{% url 'dashboard' %}" class="tab-btn" style="text-decoration: none;">🏠 Dashboard</a>
+    <a href="{% url 'notas_index' %}" class="tab-btn" style="text-decoration: none;">📝 Notas</a>
+</div>
+
+<div class="content-container" style="max-width: 1000px; margin: 20px auto; padding: 0 15px;">
+    
+    <!-- HEADER -->
+    <div style="background: #fff; padding: 22px 25px; border-radius: 10px; box-shadow: 0 3px 12px rgba(0,0,0,0.08); border-left: 6px solid #003366; margin-bottom: 20px;">
+        <h1 style="margin: 0; color: #003366; font-size: 1.6em; display: flex; align-items: center; gap: 10px;">
+            <span>⚖️</span> Composição de Pontuação de Subdisciplinas
+        </h1>
+        <p style="margin: 6px 0 0; color: #555; font-size: 0.95em; line-height: 1.4;">
+            Defina a pontuação máxima de cada subdisciplina por série para o ano letivo. A nota final do grupo no boletim será a <strong>soma simples</strong> das notas lançadas pelos professores de cada subdisciplina.
+        </p>
+    </div>
+
+    <!-- SELETOR DE SÉRIES -->
+    <div style="background: #fff; padding: 15px 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+        <span style="font-weight: 700; color: #334155; font-size: 14px;">Selecione a Série / Ano:</span>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            {% for cod, rotulo in series_disponiveis %}
+            <a href="?serie={{ cod }}" 
+               style="padding: 8px 14px; border-radius: 6px; font-weight: 600; font-size: 13px; text-decoration: none; transition: 0.2s; {% if serie_sel == cod %}background: #003366; color: #fff; box-shadow: 0 2px 6px rgba(0,51,102,0.3);{% else %}background: #f1f5f9; color: #475569;{% endif %}">
+                {{ rotulo }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- FORMULÁRIO DE PONTUAÇÃO -->
+    <form method="post" action="">
+        {% csrf_token %}
+        <input type="hidden" name="serie" value="{{ serie_sel }}">
+
+        <div style="display: flex; flex-direction: column; gap: 20px; margin-bottom: 25px;">
+            {% for item in grupos_data %}
+            <div class="grupo-card" data-grupo-id="{{ item.grupo.pk }}" style="background: #fff; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.06); overflow: hidden; border: 1px solid #e2e8f0;">
+                
+                <!-- CABEÇALHO DO GRUPO -->
+                <div style="background: #f8fafc; padding: 14px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <strong style="color: #003366; font-size: 16px;">Grupo: {{ item.grupo.nome_boletim }}</strong>
+                        <span style="color: #64748b; font-size: 12px; margin-left: 8px;">({{ item.subdisciplinas|length }} subdisciplinas)</span>
+                    </div>
+                    <div>
+                        <span class="badge-soma" id="badge-soma-{{ item.grupo.pk }}" style="padding: 5px 12px; border-radius: 14px; font-weight: 700; font-size: 13px; {% if item.soma_ok %}background: #dcfce7; color: #166534; border: 1px solid #bbf7d0;{% else %}background: #fef3c7; color: #92400e; border: 1px solid #fde68a;{% endif %}">
+                            Soma: <span class="soma-val">{{ item.soma_grupo|floatformat:2 }}</span> / 10,00 pts
+                        </span>
+                    </div>
+                </div>
+
+                <!-- LISTA DE SUBDISCIPLINAS -->
+                <div style="padding: 15px 20px;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid #f1f5f9; text-align: left; font-size: 12px; color: #64748b; text-transform: uppercase;">
+                                <th style="padding: 6px 10px;">Subdisciplina</th>
+                                <th style="padding: 6px 10px; width: 180px; text-align: right;">Pontuação Máxima (pts)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sub in item.subdisciplinas %}
+                            <tr style="border-bottom: 1px solid #f8fafc;">
+                                <td style="padding: 10px; font-weight: 600; color: #1e293b; font-size: 14px;">
+                                    {{ sub.disciplina.nome }}
+                                </td>
+                                <td style="padding: 10px; text-align: right;">
+                                    <div style="display: inline-flex; align-items: center; gap: 6px;">
+                                        <input type="number" 
+                                               name="pontuacao_{{ sub.disciplina.pk }}" 
+                                               value="{{ sub.pontuacao_maxima|stringformat:'.2f' }}" 
+                                               step="0.1" min="0" max="10" 
+                                               required
+                                               class="input-pontuacao"
+                                               data-grupo-id="{{ item.grupo.pk }}"
+                                               oninput="recalcularSomaGrupo({{ item.grupo.pk }})"
+                                               style="width: 85px; padding: 7px 10px; border-radius: 6px; border: 1.5px solid #cbd5e1; font-size: 14px; font-weight: 700; text-align: center; color: #003366;">
+                                        <span style="color: #64748b; font-size: 13px;">pts</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+            {% empty %}
+            <div style="text-align: center; padding: 30px; background: #fff; border-radius: 8px; color: #64748b;">
+                Nenhum grupo de disciplina cadastrado no sistema.
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if grupos_data %}
+        <div style="background: #fff; padding: 18px 25px; border-radius: 10px; box-shadow: 0 3px 12px rgba(0,0,0,0.08); display: flex; justify-content: flex-end; align-items: center; gap: 15px; position: sticky; bottom: 15px;">
+            <a href="{% url 'dashboard' %}" class="btn-gray" style="padding: 10px 18px; text-decoration: none; border-radius: 6px;">Cancelar</a>
+            <button type="submit" class="btn-primary" style="background: #003366; color: #fff; padding: 10px 24px; border: none; border-radius: 6px; font-weight: 700; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(0,51,102,0.25);">
+                💾 Salvar Pontuações da Série
+            </button>
+        </div>
+        {% endif %}
+    </form>
+
+</div>
+
+<script>
+function recalcularSomaGrupo(grupoId) {
+    const inputs = document.querySelectorAll(`.input-pontuacao[data-grupo-id="${grupoId}"]`);
+    let soma = 0;
+    inputs.forEach(inp => {
+        let val = parseFloat(inp.value.replace(',', '.')) || 0;
+        soma += val;
+    });
+
+    const badge = document.getElementById(`badge-soma-${grupoId}`);
+    if (!badge) return;
+    const spanVal = badge.querySelector('.soma-val');
+    if (spanVal) spanVal.textContent = soma.toFixed(2);
+
+    if (Math.abs(soma - 10.0) < 0.001) {
+        badge.style.background = '#dcfce7';
+        badge.style.color = '#166534';
+        badge.style.borderColor = '#bbf7d0';
+    } else {
+        badge.style.background = '#fef3c7';
+        badge.style.color = '#92400e';
+        badge.style.borderColor = '#fde68a';
+    }
+}
+</script>
+{% endblock %}

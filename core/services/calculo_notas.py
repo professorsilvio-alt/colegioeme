@@ -201,23 +201,58 @@ def carregar_dados_boletim_aluno(aluno, ano_letivo):
             'is_grupo': True,
             'disciplina_pk': None,
         }
-        for b_key in ('b1', 'b2', 'b3', 'b4'):
-            vals = [r[b_key]['valor'] for r in res_discs if r[b_key]['valor'] is not None]
+        for b_key, b_num in [('b1', 1), ('b2', 2), ('b3', 3), ('b4', 4)]:
+            notas_b = [notas_map.get((aluno.pk, d.pk, b_num)) for d in discs_grupo]
+            notas_validas = [n for n in notas_b if n is not None]
+
+            if not notas_validas:
+                linha_grupo[b_key] = {'valor': None, 'substituido_por_pa': False, 'is_na': False}
+                continue
+
+            all_na = all(n.nao_avaliado for n in notas_validas) and len(notas_validas) == len(discs_grupo)
+
+            vals_subdiscs = []
+            teve_pa = False
+            for d in discs_grupo:
+                r_disc = next((r for r, disc_obj in zip(res_discs, discs_grupo) if disc_obj.pk == d.pk), None)
+                if r_disc and r_disc[b_key]['valor'] is not None:
+                    vals_subdiscs.append(r_disc[b_key]['valor'])
+                    if r_disc[b_key]['substituido_por_pa']:
+                        teve_pa = True
+
+            if all_na:
+                soma_grupo = Decimal('0.00')
+            elif vals_subdiscs:
+                soma_grupo = sum(vals_subdiscs)
+            else:
+                soma_grupo = None
+
+            # Aplicação do simulado sobre a nota fechada do grupo
+            if soma_grupo is not None and not all_na:
+                simulados = [n.nota_simulado for n in notas_validas if n.nota_simulado is not None]
+                if simulados:
+                    max_sim = max(simulados)
+                    bonus = float(max_sim) * 0.01
+                    calc_sim = soma_grupo * Decimal(str(round(1 + bonus, 4)))
+                    soma_grupo = min(Decimal('10.00'), round_2(calc_sim))
+                else:
+                    soma_grupo = min(Decimal('10.00'), round_2(soma_grupo))
+
             linha_grupo[b_key] = {
-                'valor': round_2(sum(vals) / Decimal(str(len(vals)))) if vals else None,
-                'substituido_por_pa': any(r[b_key]['substituido_por_pa'] for r in res_discs),
-                'is_na': all(r[b_key]['is_na'] for r in res_discs) if vals else False,
+                'valor': soma_grupo,
+                'substituido_por_pa': teve_pa,
+                'is_na': all_na,
             }
 
         for pa_key in ('pa1', 'pa2'):
             vals_pa = [r[pa_key]['valor'] for r in res_discs if r[pa_key]['valor'] is not None]
             linha_grupo[pa_key] = {
-                'valor': round_2(sum(vals_pa) / Decimal(str(len(vals_pa)))) if vals_pa else None
+                'valor': round_2(sum(vals_pa)) if vals_pa else None
             }
 
         vals_rec = [r['rec_final']['valor'] for r in res_discs if r['rec_final']['valor'] is not None]
         linha_grupo['rec_final'] = {
-            'valor': round_2(sum(vals_rec) / Decimal(str(len(vals_rec)))) if vals_rec else None
+            'valor': round_2(sum(vals_rec)) if vals_rec else None
         }
 
         b_vals_grp = [linha_grupo[f'b{b}']['valor'] for b in (1, 2, 3, 4) if linha_grupo[f'b{b}']['valor'] is not None]

@@ -1,6 +1,7 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
+from decimal import Decimal
 from .models import Turma, Disciplina, Professor, Aluno, SugestaoConteudo, ConteudoProgramatico, Ocorrencia
 import datetime
 
@@ -421,5 +422,122 @@ class AlertaOcorrenciasCoordenacaoTests(TestCase):
         # Ocorrências devem ter sido marcadas como resolvidas
         ocorrencias_abertas = Ocorrencia.objects.filter(alunos=self.aluno_critico, status='Aberta')
         self.assertEqual(ocorrencias_abertas.count(), 0)
+
+
+class ComposicaoSubdisciplinasTests(TestCase):
+    def setUp(self):
+        from decimal import Decimal
+        from .models import Escola, AnoLetivo, GrupoDisciplina, PontuacaoSubdisciplina, NotaBimestral, Configuracao
+        from .services.calculo_notas import carregar_dados_boletim_aluno
+
+        self.client = Client()
+        self.escola = Escola.objects.create(nome='Escola Teste')
+        self.ano_letivo = AnoLetivo.objects.create(ano=2026, atual=True)
+        hoje = datetime.date.today()
+        self.config = Configuracao.objects.create(
+            escola=self.escola,
+            ano_letivo=self.ano_letivo,
+            inicio_periodo_letivo=hoje - datetime.timedelta(days=30),
+            fim_periodo_letivo=hoje + datetime.timedelta(days=180),
+            notas_b1_ini=hoje - datetime.timedelta(days=10),
+            notas_b1_fim=hoje + datetime.timedelta(days=30)
+        )
+
+        self.turma81 = Turma.objects.create(codigo='81', escola=self.escola, ano_letivo=self.ano_letivo)
+        self.aluno = Aluno.objects.create(nome='Bruno Silva', turma=self.turma81)
+
+        self.grupo_mat, _ = GrupoDisciplina.objects.get_or_create(
+            nome_boletim='Matemática', defaults={'faz_simulado_ef': True, 'ordem_boletim': 1}
+        )
+        self.mat1, _ = Disciplina.objects.get_or_create(nome='Mat. I', defaults={'grupo': self.grupo_mat})
+        self.mat2, _ = Disciplina.objects.get_or_create(nome='Mat. II', defaults={'grupo': self.grupo_mat})
+        self.mat3, _ = Disciplina.objects.get_or_create(nome='Mat. III', defaults={'grupo': self.grupo_mat})
+        self.mat1.grupo = self.grupo_mat
+        self.mat1.save()
+        self.mat2.grupo = self.grupo_mat
+        self.mat2.save()
+        self.mat3.grupo = self.grupo_mat
+        self.mat3.save()
+
+        self.u_dir = User.objects.create_user(username='diretor1', password='123')
+        self.prof_dir = Professor.objects.create(user=self.u_dir, nome='Diretor Geral', cargo='DIRETOR')
+        self.prof_dir.escolas.add(self.escola)
+
+        self.u_prof = User.objects.create_user(username='prof_mat1', password='123')
+        self.prof_mat1 = Professor.objects.create(user=self.u_prof, nome='Prof Mat 1', cargo='PROFESSOR', autorizado_lancar_notas=True)
+        self.prof_mat1.escolas.add(self.escola)
+        self.prof_mat1.turmas.add(self.turma81)
+        self.prof_mat1.disciplinas.add(self.mat1)
+
+    def test_diretor_configura_pontuacao_subdisciplinas(self):
+        self.client.login(username='diretor1', password='123')
+        response = self.client.post(reverse('escola_composicao_disciplinas'), {
+            'serie': '8',
+            f'pontuacao_{self.mat1.pk}': '4.0',
+            f'pontuacao_{self.mat2.pk}': '5.0',
+            f'pontuacao_{self.mat3.pk}': '1.0',
+        })
+        self.assertEqual(response.status_code, 302)
+
+        p1 = self.mat1.get_pontuacao_maxima(serie='8', ano_letivo=self.ano_letivo, escola=self.escola)
+        p2 = self.mat2.get_pontuacao_maxima(serie='8', ano_letivo=self.ano_letivo, escola=self.escola)
+        p3 = self.mat3.get_pontuacao_maxima(serie='8', ano_letivo=self.ano_letivo, escola=self.escola)
+
+        self.assertEqual(p1, Decimal('4.00'))
+        self.assertEqual(p2, Decimal('5.00'))
+        self.assertEqual(p3, Decimal('1.00'))
+
+    def test_validacao_limite_maximo_no_lancamento_de_notas(self):
+        from .models import PontuacaoSubdisciplina
+        PontuacaoSubdisciplina.objects.create(
+            ano_letivo=self.ano_letivo, escola=self.escola, serie='8',
+            disciplina=self.mat1, pontuacao_maxima=Decimal('4.00')
+        )
+
+        self.client.login(username='prof_mat1', password='123')
+        # Tentar lançar 4.50 em disciplina de no máximo 4.00
+        res_invalido = self.client.post(reverse('nota_salvar'), {
+            'aluno_id': self.aluno.pk,
+            'disciplina_id': self.mat1.pk,
+            'bimestre': 1,
+            'nota_prova': '4.50'
+        })
+        self.assertEqual(res_invalido.status_code, 400)
+
+        # Lançar 3.50 (válido)
+        res_valido = self.client.post(reverse('nota_salvar'), {
+            'aluno_id': self.aluno.pk,
+            'disciplina_id': self.mat1.pk,
+            'bimestre': 1,
+            'nota_prova': '3.50'
+        })
+        self.assertEqual(res_valido.status_code, 200)
+
+    def test_somatorio_de_subdisciplinas_no_boletim_com_simulado(self):
+        from decimal import Decimal
+        from .models import NotaBimestral
+        from .services.calculo_notas import carregar_dados_boletim_aluno
+
+        # Mat I = 3.50, Mat II = 4.50, Mat III = 1.00 -> Soma = 9.00
+        # Simulado de 10% (nota_simulado = 10)
+        NotaBimestral.objects.create(
+            aluno=self.aluno, disciplina=self.mat1, bimestre=1, ano_letivo=self.ano_letivo,
+            nota_prova=Decimal('3.50'), nota_simulado=Decimal('10.00')
+        )
+        NotaBimestral.objects.create(
+            aluno=self.aluno, disciplina=self.mat2, bimestre=1, ano_letivo=self.ano_letivo,
+            nota_prova=Decimal('4.50')
+        )
+        NotaBimestral.objects.create(
+            aluno=self.aluno, disciplina=self.mat3, bimestre=1, ano_letivo=self.ano_letivo,
+            nota_prova=Decimal('1.00')
+        )
+
+        dados = carregar_dados_boletim_aluno(self.aluno, self.ano_letivo)
+        linha_mat = next(linha for linha in dados if linha['nome'] == 'Matemática')
+
+        # Sem média aritmética (que daria 3.0), o somatório é 9.00 + 10% de simulado = 9.90
+        self.assertEqual(linha_mat['b1']['valor'], Decimal('9.90'))
+
 
 

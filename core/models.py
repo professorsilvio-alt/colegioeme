@@ -90,10 +90,58 @@ class Disciplina(models.Model):
         return self.nome
 
     def elegivel_simulado_ef(self):
-        """Retorna True se esta disciplina qualifica para simul ado em turmas EF 8°/9°."""
+        """Retorna True se esta disciplina qualifica para simulado em turmas EF 8°/9°."""
         if self.grupo:
             return self.grupo.faz_simulado_ef
         return self.faz_simulado_ef
+
+    def get_pontuacao_maxima(self, serie=None, ano_letivo=None, escola=None):
+        """Retorna a pontuação máxima configurada para esta disciplina na série/ano. Default: 10.00."""
+        if not self.grupo:
+            return Decimal('10.00')
+        qs = self.pontuacoes_serie.all()
+        if ano_letivo:
+            qs = qs.filter(ano_letivo=ano_letivo)
+        if escola:
+            qs = qs.filter(escola=escola)
+        if serie:
+            qs = qs.filter(serie=serie)
+        obj = qs.first()
+        if obj and obj.pontuacao_maxima is not None:
+            return obj.pontuacao_maxima
+        return Decimal('10.00')
+
+
+class PontuacaoSubdisciplina(models.Model):
+    SERIE_CHOICES = [
+        ('6', '6º Ano EF'),
+        ('7', '7º Ano EF'),
+        ('8', '8º Ano EF'),
+        ('9', '9º Ano EF'),
+        ('1', '1ª Série EM'),
+        ('2', '2ª Série EM'),
+        ('3', '3ª Série EM'),
+    ]
+
+    ano_letivo = models.ForeignKey(AnoLetivo, on_delete=models.CASCADE, related_name='pontuacoes_subdisciplinas')
+    escola = models.ForeignKey(Escola, on_delete=models.CASCADE, null=True, blank=True, related_name='pontuacoes_subdisciplinas')
+    serie = models.CharField(max_length=2, choices=SERIE_CHOICES, verbose_name='Série / Ano')
+    disciplina = models.ForeignKey(Disciplina, on_delete=models.CASCADE, related_name='pontuacoes_serie')
+    pontuacao_maxima = models.DecimalField(
+        max_digits=4, decimal_places=2, default=Decimal('10.00'),
+        verbose_name='Pontuação Máxima',
+        help_text='Valor máximo da nota para esta subdisciplina nesta série (ex: 4,00).'
+    )
+
+    class Meta:
+        verbose_name = 'Pontuação de Subdisciplina'
+        verbose_name_plural = 'Pontuações de Subdisciplinas'
+        unique_together = ('ano_letivo', 'escola', 'serie', 'disciplina')
+        ordering = ['ano_letivo', 'serie', 'disciplina__grupo__ordem_boletim', 'disciplina__nome']
+
+    def __str__(self):
+        return f'{self.get_serie_display()} | {self.disciplina.nome}: {self.pontuacao_maxima} pts ({self.ano_letivo})'
+
 
 
 class Professor(models.Model):
@@ -578,13 +626,16 @@ class NotaBimestral(models.Model):
                 f'B{self.bimestre} | {self.nota_final}')
 
     def save(self, *args, **kwargs):
-        """Calcula nota_final com bônus de simulado antes de salvar."""
+        """Calcula nota_final antes de salvar."""
         if self.nao_avaliado:
             # Aluno ausente: nota zerada, sem simulado
             self.nota_prova = Decimal('0.00')
             self.nota_simulado = None
             self.nota_final = Decimal('0.00')
-        elif self.nota_simulado is not None:
+        elif self.disciplina_id and self.disciplina.grupo_id is not None:
+            # Subdisciplina de grupo: nota_final é a nota da prova (o simulado é aplicado na nota fechada do grupo)
+            self.nota_final = round(self.nota_prova, 2) if self.nota_prova is not None else None
+        elif self.nota_simulado is not None and self.nota_prova is not None:
             bonus = float(self.nota_simulado) * 0.01
             calc = self.nota_prova * Decimal(str(round(1 + bonus, 4)))
             self.nota_final = min(

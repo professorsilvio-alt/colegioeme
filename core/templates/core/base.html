@@ -56,6 +56,7 @@
             {% if prof.pode_editar_tudo or user.is_superuser %}
             <a href="{% url 'escola_professores_list' %}" class="nav-item">👥 Equipe</a>
             <a href="{% url 'escola_configurar' %}" class="nav-item">🎨 Escola</a>
+            <a href="{% url 'escola_composicao_disciplinas' %}" class="nav-item">⚖️ Pontuação</a>
             <a href="{% url 'migrar_alunos' %}" class="nav-item">🚀 Migrar Alunos</a>
             {% endif %}
 

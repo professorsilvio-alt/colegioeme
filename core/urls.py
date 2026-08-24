@@ -74,6 +74,7 @@ urlpatterns = [
     path('escola/professores/', views.escola_professores_list, name='escola_professores_list'),
     path('escola/professores/novo/', views.escola_professor_novo, name='escola_professor_novo'),
     path('escola/professores/<int:pk>/editar/', views.escola_professor_edit, name='escola_professor_edit'),
+    path('escola/composicao-disciplinas/', views.escola_composicao_disciplinas, name='escola_composicao_disciplinas'),
 
     # Notas
     path('notas/', views.notas_index, name='notas_index'),

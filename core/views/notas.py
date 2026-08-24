@@ -7,11 +7,12 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from ..models import (
     Aluno, AnoLetivo, Configuracao, Disciplina, GradeHoraria, GrupoDisciplina,
-    NotaBimestral, ProvaAuxiliar, RecuperacaoFinal, ConselhoClasse, Professor, Turma, turma_faz_simulado,
+    PontuacaoSubdisciplina, NotaBimestral, ProvaAuxiliar, RecuperacaoFinal, ConselhoClasse, Professor, Turma, turma_faz_simulado,
 )
 from ..services.calculo_notas import (
     carregar_dados_boletim_aluno, calcular_notas_disciplina, round_2
@@ -45,7 +46,8 @@ def _pode_lancar_notas(prof, config, periodo=None):
             if periodo:
                 ini, fim = config.periodo_para_bimestre(periodo)
             else:
-                ini, fim = config.periodo_notas_ini, config.periodo_notas_fim
+                ini = config.periodo_notas_ini or config.inicio_periodo_letivo
+                fim = config.periodo_notas_fim or config.fim_periodo_letivo
             if ini and fim:
                 return ini <= hoje <= fim
     return False
@@ -213,12 +215,15 @@ def notas_turma(request, codigo, periodo):
     recs_map = {(r.aluno_id, r.disciplina_id): r for r in rec_qs}
 
     # Monta grade de células para o template
+    serie_turma = turma.codigo[0] if turma and turma.codigo else ''
     grade = []
     for disc in disciplinas:
         faz_sim = turma_faz_simulado(turma, disc)
+        pontuacao_max = disc.get_pontuacao_maxima(serie=serie_turma, ano_letivo=request.ano_letivo, escola=request.escola)
         linha = {
             'disciplina': disc,
             'faz_simulado': faz_sim,
+            'pontuacao_maxima': pontuacao_max,
             'celulas': [],
         }
         for aluno in alunos:
@@ -294,13 +299,16 @@ def nota_salvar(request):
             status=403
         )
 
+    serie_aluno = aluno.turma.codigo[0] if aluno.turma and aluno.turma.codigo else ''
+    pontuacao_max = disc.get_pontuacao_maxima(serie=serie_aluno, ano_letivo=request.ano_letivo, escola=request.escola)
+
     try:
         nota_prova = Decimal(nota_prova_str.replace(',', '.'))
-        if not (Decimal('0') <= nota_prova <= Decimal('10')):
+        if not (Decimal('0') <= nota_prova <= pontuacao_max):
             raise ValueError
     except (InvalidOperation, ValueError):
         return JsonResponse(
-            {'ok': False, 'erro': 'Nota da prova inválida (0,0 – 10,0).'},
+            {'ok': False, 'erro': f'Nota da prova inválida (0,0 – {pontuacao_max}).'},
             status=400
         )
 
@@ -711,3 +719,81 @@ def remover_na(request):
     ).delete()
 
     return JsonResponse({'ok': True, 'removido': deleted > 0})
+
+
+# ─────────────────────────────────────────────────────────────
+# GESTÃO / DIREÇÃO — COMPOSIÇÃO DE PONTUAÇÃO DE SUBDISCIPLINAS
+# ─────────────────────────────────────────────────────────────
+
+@login_required
+def escola_composicao_disciplinas(request):
+    prof = get_professor(request.user)
+    if prof and not prof.pode_editar_tudo and not request.user.is_superuser:
+        messages.error(request, 'Acesso restrito à Direção e Administradores.')
+        return redirect('dashboard')
+
+    series_disponiveis = PontuacaoSubdisciplina.SERIE_CHOICES
+    serie_sel = request.GET.get('serie', '8')
+
+    if request.method == 'POST':
+        serie_post = request.POST.get('serie', serie_sel)
+        disciplinas_com_grupo = Disciplina.objects.filter(grupo__isnull=False).select_related('grupo')
+        count_salvo = 0
+        for disc in disciplinas_com_grupo:
+            field_name = f'pontuacao_{disc.pk}'
+            val_str = request.POST.get(field_name, '').strip()
+            if val_str:
+                try:
+                    val_dec = Decimal(val_str.replace(',', '.'))
+                    if Decimal('0') <= val_dec <= Decimal('10'):
+                        PontuacaoSubdisciplina.objects.update_or_create(
+                            ano_letivo=request.ano_letivo,
+                            escola=request.escola,
+                            serie=serie_post,
+                            disciplina=disc,
+                            defaults={'pontuacao_maxima': val_dec}
+                        )
+                        count_salvo += 1
+                except (InvalidOperation, ValueError):
+                    pass
+        nome_serie = dict(series_disponiveis).get(serie_post, serie_post)
+        messages.success(request, f'Pontuações das subdisciplinas para {nome_serie} salvas com sucesso!')
+        return redirect(f"{reverse('escola_composicao_disciplinas')}?serie={serie_post}")
+
+    grupos_qs = GrupoDisciplina.objects.prefetch_related('disciplinas').order_by('ordem_boletim')
+    pontuacoes_existentes = {
+        p.disciplina_id: p.pontuacao_maxima
+        for p in PontuacaoSubdisciplina.objects.filter(
+            ano_letivo=request.ano_letivo,
+            escola=request.escola,
+            serie=serie_sel
+        )
+    }
+
+    grupos_data = []
+    for grp in grupos_qs:
+        subdiscs = []
+        soma_grupo = Decimal('0.00')
+        for d in grp.disciplinas.all():
+            val = pontuacoes_existentes.get(d.pk, Decimal('10.00'))
+            soma_grupo += val
+            subdiscs.append({
+                'disciplina': d,
+                'pontuacao_maxima': val,
+            })
+        if subdiscs:
+            grupos_data.append({
+                'grupo': grp,
+                'subdisciplinas': subdiscs,
+                'soma_grupo': soma_grupo,
+                'soma_ok': soma_grupo == Decimal('10.00'),
+            })
+
+    context = {
+        'prof': prof,
+        'series_disponiveis': series_disponiveis,
+        'serie_sel': serie_sel,
+        'grupos_data': grupos_data,
+    }
+    return render(request, 'core/composicao_disciplinas.html', context)
+

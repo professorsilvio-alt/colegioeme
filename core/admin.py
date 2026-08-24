@@ -3,7 +3,7 @@ from django.urls import path
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.html import format_html
 from django.contrib import messages
-from .models import (Turma, Disciplina, GrupoDisciplina, Professor, Aluno, Ocorrencia,
+from .models import (Turma, Disciplina, GrupoDisciplina, PontuacaoSubdisciplina, Professor, Aluno, Ocorrencia,
                      AcaoCoordenacao, ConteudoProgramatico, GradeHoraria, InspetorProxy, ProfessorDocente,
                      SugestaoConteudo, Configuracao, NotaBimestral, ProvaAuxiliar,
                      RecuperacaoFinal, ConselhoClasse, Aviso)
@@ -303,6 +303,16 @@ class DisciplinaAdmin(admin.ModelAdmin):
     list_filter   = ['grupo', 'faz_simulado_ef']
     search_fields = ['nome']
     inlines = [SugestaoConteudoInline]
+
+
+@admin.register(PontuacaoSubdisciplina)
+class PontuacaoSubdisciplinaAdmin(admin.ModelAdmin):
+    list_display = ['ano_letivo', 'serie', 'disciplina', 'pontuacao_maxima', 'escola']
+    list_editable = ['pontuacao_maxima']
+    list_filter = ['ano_letivo', 'serie', 'disciplina__grupo', 'escola']
+    search_fields = ['disciplina__nome']
+    list_select_related = ['ano_letivo', 'disciplina', 'disciplina__grupo', 'escola']
+
 
 
 @admin.register(SugestaoConteudo)
