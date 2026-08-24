@@ -470,9 +470,11 @@ def relatorio_pendencias(request):
         return redirect('dashboard')
 
 
-    # Only include active professors (those with GradeHoraria entries)
-    prof_ids_com_grade = GradeHoraria.objects.filter(turma__ano_letivo=request.ano_letivo, turma__escola=request.escola).values_list('professor_id', flat=True).distinct()
-    professores = ordenar_por_nome(Professor.objects.filter(pk__in=prof_ids_com_grade))
+    # Inclui professores ativos (aqueles com GradeHoraria ou AulaExtraProgramada)
+    prof_ids_grade = set(GradeHoraria.objects.filter(turma__ano_letivo=request.ano_letivo, turma__escola=request.escola).values_list('professor_id', flat=True))
+    prof_ids_extra = set(AulaExtraProgramada.objects.filter(turma__ano_letivo=request.ano_letivo, turma__escola=request.escola).values_list('professor_id', flat=True))
+    prof_ids_ativos = prof_ids_grade | prof_ids_extra
+    professores = ordenar_por_nome(Professor.objects.filter(pk__in=prof_ids_ativos))
 
     # Filtering
     nome_filtro = request.GET.get('nome', '')
