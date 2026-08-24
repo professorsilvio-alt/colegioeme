@@ -29,12 +29,12 @@
         <div style="padding: 15px;">
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;">
                 {% for d in item.datas %}
-                <a href="{% url 'dashboard' %}?tab=conteudos&auto_lancar=1&turma={{ item.turma.codigo }}&disciplina={{ item.disciplina.id }}&professor={{ professor.id }}&data={{ d|date:'Y-m-d' }}" 
+                <a href="{% url 'dashboard' %}?tab=conteudos&auto_lancar=1&modo={% if d.is_extra or item.is_extra %}extra{% else %}normal{% endif %}&turma={{ item.turma.codigo }}&disciplina={{ item.disciplina.id }}&professor={{ professor.id }}&data={{ d.data|date:'Y-m-d' }}" 
                    style="text-decoration: none; display: block;" 
                    title="Clique para lançar este conteúdo">
                     <div class="date-box">
-                        <strong>{{ d|date:"d/m/Y" }}</strong><br>
-                        <span style="font-size: 11px;">({{ d|date:"l"|slice:":3" }})</span>
+                        <strong>{{ d.data|date:"d/m/Y" }}</strong><br>
+                        <span style="font-size: 11px;">({{ d.data|date:"l"|slice:":3" }})</span>
                     </div>
                 </a>
                 {% endfor %}

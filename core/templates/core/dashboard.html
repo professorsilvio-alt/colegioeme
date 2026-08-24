@@ -1175,33 +1175,48 @@
         const disciplina = p.get('disciplina');
         const professor = p.get('professor');
         const data = p.get('data');
+        const modo = p.get('modo') || 'normal';
 
         if (!turma || !disciplina || !professor || !data) return;
 
-        // 2. Abrir form (Isso limpa os campos, então fazemos ANTES de preencher)
-        toggleSectionConteudo('normal');
+        // 2. Abrir form no modo correto (Isso limpa os campos, então fazemos ANTES de preencher)
+        toggleSectionConteudo(modo);
 
         // 3. Preencher Turma 
         document.getElementById('turmaSelectCont').value = turma;
 
         // 4. Carregar e Preencher Disciplinas
-        await carregarDisciplinasDaTurmaAsync(turma);
+        await carregarDisciplinasDaTurmaAsync(turma, modo);
         document.getElementById('discSelectCont').value = disciplina;
 
         // 5. Carregar e Preencher Professores
-        await carregarProfessoresDaTurmaDiscAsync();
+        await carregarProfessoresDaTurmaDiscAsync(modo);
         document.getElementById('profSelectCont').value = professor;
 
         // 6. Agora que temos o professor, carregamos as turmas da mesma série
         await carregarTurmasMesmaSerie(turma);
 
         // 7. Carregar Datas e selecionar a correta
-        await carregarDatasValidasAsync();
+        if (modo === 'extra') {
+            const wrapper = document.getElementById('dataContWrapper');
+            const dataSel = document.getElementById('dataSelectCont');
+            const dataInputExtra = document.getElementById('dataInputExtra');
+            const dataHidden = document.getElementById('dataConteudo');
 
-        const dataSel = document.getElementById('dataSelectCont');
-        if (dataSel) {
-            dataSel.value = data;
-            document.getElementById('dataConteudo').value = data;
+            if (wrapper) wrapper.style.display = 'none';
+            if (dataSel) dataSel.style.display = 'none';
+            if (dataInputExtra) {
+                dataInputExtra.style.display = 'block';
+                dataInputExtra.value = data;
+            }
+            if (dataHidden) dataHidden.value = data;
+        } else {
+            await carregarDatasValidasAsync();
+            const dataSel = document.getElementById('dataSelectCont');
+            if (dataSel) {
+                dataSel.value = data;
+                document.getElementById('dataConteudo').value = data;
+            }
         }
 
         // Revalida as turmas companheiras após definir todas as caixas.
@@ -1214,27 +1229,29 @@
     }
 
     // Versões Async dos carregamentos para facilitar o fluxo sequencial
-    async function carregarDisciplinasDaTurmaAsync(codigo) {
+    async function carregarDisciplinasDaTurmaAsync(codigo, modo = 'normal') {
         const discSel = document.getElementById('discSelectCont');
         const profSel = document.getElementById('profSelectCont');
         discSel.innerHTML = '<option value="">Carregando...</option>';
         if (!codigo) return;
 
-        const r = await fetch('/api/turma/' + codigo + '/disciplinas/');
+        const isExtra = (modo === 'extra' || modoConteudo === 'extra') ? '1' : '0';
+        const r = await fetch('/api/turma/' + codigo + '/disciplinas/?extra=' + isExtra);
         const discs = await r.json();
 
         discSel.innerHTML = '<option value="">Selecione a disciplina...</option>' +
             discs.map(d => `<option value="${d.id}">${d.nome}</option>`).join('');
     }
 
-    async function carregarProfessoresDaTurmaDiscAsync() {
+    async function carregarProfessoresDaTurmaDiscAsync(modo = 'normal') {
         const codigo = document.getElementById('turmaSelectCont').value;
         const discId = document.getElementById('discSelectCont').value;
         const profSel = document.getElementById('profSelectCont');
         profSel.innerHTML = '<option value="">Carregando...</option>';
         if (!codigo || !discId) return;
 
-        const r = await fetch('/api/turma/' + codigo + '/disciplina/' + discId + '/professores/');
+        const isExtra = (modo === 'extra' || modoConteudo === 'extra') ? '1' : '0';
+        const r = await fetch('/api/turma/' + codigo + '/disciplina/' + discId + '/professores/?extra=' + isExtra);
         const profs = await r.json();
 
         profSel.innerHTML = '<option value="">Selecione...</option>' +

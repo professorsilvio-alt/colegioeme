@@ -593,14 +593,19 @@ def detalhe_pendencias_professor(request, prof_id):
             is_expected = (cur.weekday() in info['weekdays'] or cur in info['extra_dates'])
             if is_expected and cur not in feriados:
                 if cur not in lancados:
-                    missing_dates.append(cur)
+                    is_extra_date = (cur in info['extra_dates'] and cur.weekday() not in info['weekdays'])
+                    missing_dates.append({
+                        'data': cur,
+                        'is_extra': is_extra_date,
+                    })
             cur += datetime.timedelta(days=1)
         
         if missing_dates:
             pendencias.append({
                 'turma': info['turma'],
                 'disciplina': info['disc'],
-                'datas': missing_dates
+                'datas': missing_dates,
+                'is_extra': bool(info['extra_dates'] and not info['weekdays'])
             })
 
     context = {
