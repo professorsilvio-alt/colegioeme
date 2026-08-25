@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from ..models import (
-    Aluno, AnoLetivo, Configuracao, Disciplina, GradeHoraria, GrupoDisciplina,
+    Aluno, AnoLetivo, AulaExtraProgramada, Configuracao, Disciplina, GradeHoraria, GrupoDisciplina,
     PontuacaoSubdisciplina, NotaBimestral, ProvaAuxiliar, RecuperacaoFinal, ConselhoClasse, Professor, Turma, turma_faz_simulado,
 )
 from ..services.calculo_notas import (
