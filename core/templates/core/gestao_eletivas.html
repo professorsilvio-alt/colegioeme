@@ -1,0 +1,142 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block title %}Matrícula de Eletivas e Aprofundamentos — SCA{% endblock %}
+
+{% block content %}
+<div class="tabs">
+    <a href="{% url 'dashboard' %}" class="tab-btn" style="text-decoration: none;">🏠 Dashboard</a>
+    <a href="{% url 'notas_index' %}" class="tab-btn" style="text-decoration: none;">📝 Notas</a>
+    <a href="{% url 'escola_composicao_disciplinas' %}" class="tab-btn" style="text-decoration: none;">⚖️ Pontuações</a>
+</div>
+
+<div class="content-container" style="max-width: 1050px; margin: 20px auto; padding: 0 15px;">
+    
+    <!-- HEADER -->
+    <div style="background: #fff; padding: 22px 25px; border-radius: 10px; box-shadow: 0 3px 12px rgba(0,0,0,0.08); border-left: 6px solid #003366; margin-bottom: 20px;">
+        <h1 style="margin: 0; color: #003366; font-size: 1.6em; display: flex; align-items: center; gap: 10px;">
+            <span>🎯</span> Matrícula de Eletivas e Aprofundamentos
+        </h1>
+        <p style="margin: 6px 0 0; color: #555; font-size: 0.95em; line-height: 1.4;">
+            Defina as opções de eletivas (1ª e 2ª séries) ou aprofundamentos (3ª série) de cada aluno. A lista de alunos na tela de lançamento de notas exibirá exclusivamente os alunos matriculados para cada professor específico.
+        </p>
+    </div>
+
+    <!-- SELETOR DE TURMAS DO ENSINO MÉDIO -->
+    <div style="background: #fff; padding: 15px 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+        <span style="font-weight: 700; color: #334155; font-size: 14px;">Selecione a Turma:</span>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            {% for t in turmas_em %}
+            <a href="?turma={{ t.codigo }}" 
+               style="padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 13px; text-decoration: none; transition: 0.2s; {% if turma_sel.codigo == t.codigo %}background: #003366; color: #fff; box-shadow: 0 2px 6px rgba(0,51,102,0.3);{% else %}background: #f1f5f9; color: #475569;{% endif %}">
+                Turma {{ t.codigo }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- AVISO DE REGRAS POR SÉRIE -->
+    <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-left: 5px solid #0284c7; padding: 12px 18px; border-radius: 8px; margin-bottom: 20px; color: #0369a1; font-size: 13.5px;">
+        {% if serie_sel == '1' %}
+            ℹ️ <strong>1ª Série:</strong> Cada aluno deve optar por <strong>1 Eletiva</strong> (<em>Sociedade e Cidadania</em> ou <em>Sustentabilidade e Meio Ambiente</em>).
+        {% elif serie_sel == '2' %}
+            ℹ️ <strong>2ª Série:</strong> Cada aluno deve optar por <strong>1 Eletiva</strong> (<em>Educação Financeira</em> ou <em>Múltiplas Linguagens</em>).
+        {% elif serie_sel == '3' %}
+            ℹ️ <strong>3ª Série:</strong> Cada aluno deve optar por <strong>2 Áreas de Aprofundamento</strong>.
+        {% endif %}
+    </div>
+
+    <!-- FORMULÁRIO DE MATRÍCULAS -->
+    <form method="post" action="">
+        {% csrf_token %}
+
+        <div style="background: #fff; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.06); overflow: hidden; border: 1px solid #e2e8f0; margin-bottom: 25px;">
+            <div style="background: #f8fafc; padding: 14px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                <strong style="color: #003366; font-size: 15px;">Alunos da Turma {{ turma_sel.codigo }} ({{ alunos_data|length }} alunos)</strong>
+                <span style="font-size: 12px; color: #64748b;">Alterações entram em vigor imediatamente nas telas de notas.</span>
+            </div>
+
+            <div style="overflow-x: auto; padding: 10px 15px;">
+                <table style="width: 100%; border-collapse: collapse; min-width: 600px;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid #e2e8f0; text-align: left; font-size: 12px; color: #475569; text-transform: uppercase;">
+                            <th style="padding: 10px 12px; width: 40px;">#</th>
+                            <th style="padding: 10px 12px; width: 260px;">Nome do Aluno</th>
+                            {% for op in opcoes_eletivas %}
+                            <th style="padding: 10px 12px; text-align: center; background: #f8fafc; border-left: 1px solid #f1f5f9;">
+                                {{ op.rotulo }}
+                            </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in alunos_data %}
+                        <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                            <td style="padding: 10px 12px; color: #94a3b8; font-size: 13px; font-weight: 600;">
+                                {{ forloop.counter }}
+                            </td>
+                            <td style="padding: 10px 12px; font-weight: 600; color: #1e293b; font-size: 14px;">
+                                {{ item.aluno.nome }}
+                            </td>
+                            
+                            {% for op in opcoes_eletivas %}
+                            {% with op_key=op.tipo|add:'_'|add:op.id|stringformat:'s' %}
+                            <td style="padding: 10px 12px; text-align: center; border-left: 1px solid #f1f5f9;">
+                                {% if tipo_selecao == 'radio' %}
+                                <label style="cursor: pointer; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; padding: 4px;">
+                                    <input type="radio" 
+                                           name="eletiva_{{ item.aluno.pk }}" 
+                                           value="{{ op.tipo }}_{{ op.id }}"
+                                           {% if op_key in item.matriculas %}checked{% endif %}
+                                           style="width: 18px; height: 18px; cursor: pointer; accent-color: #003366;">
+                                </label>
+                                {% else %}
+                                <label style="cursor: pointer; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; padding: 4px;">
+                                    <input type="checkbox" 
+                                           name="eletiva_{{ item.aluno.pk }}" 
+                                           value="{{ op.tipo }}_{{ op.id }}"
+                                           class="chk-aluno-{{ item.aluno.pk }}"
+                                           onchange="limitarCheckboxes({{ item.aluno.pk }}, 2)"
+                                           {% if op_key in item.matriculas %}checked{% endif %}
+                                           style="width: 18px; height: 18px; cursor: pointer; accent-color: #003366;">
+                                </label>
+                                {% endif %}
+                            </td>
+                            {% endwith %}
+                            {% endfor %}
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="{{ opcoes_eletivas|length|add:2 }}" style="text-align: center; padding: 30px; color: #64748b;">
+                                Nenhum aluno cadastrado nesta turma.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if alunos_data %}
+            <div style="background: #f8fafc; padding: 16px 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; align-items: center; gap: 15px;">
+                <a href="{% url 'notas_index' %}" class="btn-gray" style="padding: 10px 18px; text-decoration: none; border-radius: 6px; background: #e2e8f0; color: #334155; font-weight: 600;">Voltar</a>
+                <button type="submit" class="btn-primary" style="background: #003366; color: #fff; padding: 10px 26px; border: none; border-radius: 6px; font-weight: 700; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(0,51,102,0.25);">
+                    💾 Salvar Matrículas da Turma {{ turma_sel.codigo }}
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </form>
+
+</div>
+
+{% if tipo_selecao == 'checkbox' %}
+<script>
+function limitarCheckboxes(alunoId, maxPermitido) {
+    const chks = document.querySelectorAll(`.chk-aluno-${alunoId}:checked`);
+    if (chks.length > maxPermitido) {
+        alert(`O aluno pode escolher no máximo ${maxPermitido} aprofundamentos.`);
+        event.target.checked = false;
+    }
+}
+</script>
+{% endif %}
+{% endblock %}

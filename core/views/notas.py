@@ -12,7 +12,7 @@ from django.views.decorators.http import require_POST
 
 from ..models import (
     Aluno, AnoLetivo, AulaExtraProgramada, Configuracao, Disciplina, GradeHoraria, GrupoDisciplina,
-    PontuacaoSubdisciplina, NotaBimestral, ProvaAuxiliar, RecuperacaoFinal, ConselhoClasse, Professor, Turma, turma_faz_simulado,
+    MatriculaEletiva, PontuacaoSubdisciplina, NotaBimestral, ProvaAuxiliar, RecuperacaoFinal, ConselhoClasse, Professor, Turma, turma_faz_simulado,
 )
 from ..services.calculo_notas import (
     carregar_dados_boletim_aluno, calcular_notas_disciplina, round_2
@@ -243,6 +243,8 @@ def notas_turma(request, codigo, periodo):
             'celulas': [],
         }
         for aluno in alunos:
+            if not MatriculaEletiva.aluno_cursa_disciplina(aluno, disc, ano_letivo=request.ano_letivo):
+                continue
             nota = notas_map.get((aluno.pk, disc.pk))
             pa = pas_map.get((aluno.pk, disc.pk))
             rec = recs_map.get((aluno.pk, disc.pk))
@@ -857,4 +859,118 @@ def escola_composicao_disciplinas(request):
         'grupos_data': grupos_data,
     }
     return render(request, 'core/composicao_disciplinas.html', context)
+
+
+# ─────────────────────────────────────────────────────────────
+# GESTÃO DE MATRÍCULAS EM ELETIVAS E APROFUNDAMENTOS (ENSINO MÉDIO)
+# ─────────────────────────────────────────────────────────────
+
+@login_required
+def escola_gestao_eletivas(request):
+    """Permite à Direção, Coordenação e Secretaria definir quais eletivas cada aluno cursa."""
+    prof = get_professor(request.user)
+    if not (request.user.is_superuser or (prof and (prof.pode_ver_tudo or prof.pode_editar_tudo))):
+        messages.error(request, 'Acesso restrito à Direção, Coordenação e Secretaria.')
+        return redirect('dashboard')
+
+    # Turmas do Ensino Médio
+    turmas_em = Turma.objects.filter(
+        codigo__regex=r'^[123]',
+        ano_letivo=request.ano_letivo,
+        escola=request.escola
+    ).order_by('ordem_exibicao', 'codigo')
+
+    turma_cod = request.GET.get('turma') or (turmas_em.first().codigo if turmas_em.exists() else '11')
+    turma_sel = get_object_or_404(Turma, codigo=turma_cod, ano_letivo=request.ano_letivo, escola=request.escola)
+
+    serie_sel = turma_cod[0]  # '1', '2' ou '3'
+    alunos = Aluno.objects.filter(turma=turma_sel).order_by('nome')
+
+    opcoes_eletivas = []
+    tipo_selecao = 'radio'  # 'radio' para 1ª e 2ª séries (1 escolha), 'checkbox' para 3ª série (2 escolhas)
+
+    if serie_sel == '1':
+        grp_soc = GrupoDisciplina.objects.filter(nome_boletim='Sociedade e Cidadania').first()
+        grp_sust = GrupoDisciplina.objects.filter(nome_boletim='Sustentabilidade e Meio Ambiente').first()
+        if grp_soc:
+            opcoes_eletivas.append({'tipo': 'grupo', 'id': grp_soc.pk, 'nome': grp_soc.nome_boletim, 'rotulo': 'Sociedade e Cidadania (Varanda / Gustavo)'})
+        if grp_sust:
+            opcoes_eletivas.append({'tipo': 'grupo', 'id': grp_sust.pk, 'nome': grp_sust.nome_boletim, 'rotulo': 'Sustentabilidade e Meio Ambiente (Diniz / Fernanda)'})
+    elif serie_sel == '2':
+        disc_fin = Disciplina.objects.filter(nome='Educação Financeira').first()
+        grp_mult = GrupoDisciplina.objects.filter(nome_boletim='Múltiplas Linguagens').first()
+        if disc_fin:
+            opcoes_eletivas.append({'tipo': 'disciplina', 'id': disc_fin.pk, 'nome': disc_fin.nome, 'rotulo': 'Educação Financeira (Leonardo / Silvio)'})
+        if grp_mult:
+            opcoes_eletivas.append({'tipo': 'grupo', 'id': grp_mult.pk, 'nome': grp_mult.nome_boletim, 'rotulo': 'Múltiplas Linguagens (Lorena / Luiz Otávio)'})
+    elif serie_sel == '3':
+        tipo_selecao = 'checkbox'
+        for nome_disc in [
+            'Aprofundamento em Matemática', 'Aprofundamento em Ciências da Natureza',
+            'Aprofundamento em Ciências Humanas', 'Aprofundamento em Linguagens'
+        ]:
+            d = Disciplina.objects.filter(nome=nome_disc).first()
+            if d:
+                opcoes_eletivas.append({'tipo': 'disciplina', 'id': d.pk, 'nome': d.nome, 'rotulo': d.nome})
+
+    if request.method == 'POST':
+        count_salvo = 0
+        for aluno in alunos:
+            MatriculaEletiva.objects.filter(aluno=aluno, ano_letivo=request.ano_letivo).delete()
+
+            if tipo_selecao == 'radio':
+                val = request.POST.get(f'eletiva_{aluno.pk}', '').strip()
+                if val:
+                    parts = val.split('_')
+                    if len(parts) == 2:
+                        tipo, pk_str = parts
+                        if tipo == 'grupo':
+                            grp = GrupoDisciplina.objects.filter(pk=pk_str).first()
+                            if grp:
+                                MatriculaEletiva.objects.create(aluno=aluno, ano_letivo=request.ano_letivo, grupo=grp)
+                                count_salvo += 1
+                        elif tipo == 'disciplina':
+                            disc = Disciplina.objects.filter(pk=pk_str).first()
+                            if disc:
+                                MatriculaEletiva.objects.create(aluno=aluno, ano_letivo=request.ano_letivo, disciplina=disc)
+                                count_salvo += 1
+            else:
+                selected_vals = request.POST.getlist(f'eletiva_{aluno.pk}')
+                for val in selected_vals[:2]:
+                    if val.startswith('disciplina_'):
+                        pk_str = val.replace('disciplina_', '')
+                        disc = Disciplina.objects.filter(pk=pk_str).first()
+                        if disc:
+                            MatriculaEletiva.objects.create(aluno=aluno, ano_letivo=request.ano_letivo, disciplina=disc)
+                            count_salvo += 1
+
+        messages.success(request, f'Matrículas em eletivas/aprofundamentos da Turma {turma_sel.codigo} salvas com sucesso!')
+        return redirect(f"{reverse('escola_gestao_eletivas')}?turma={turma_sel.codigo}")
+
+    matriculas_map = defaultdict(set)
+    for m in MatriculaEletiva.objects.filter(aluno__turma=turma_sel, ano_letivo=request.ano_letivo):
+        if m.grupo_id:
+            matriculas_map[m.aluno_id].add(f'grupo_{m.grupo_id}')
+        if m.disciplina_id:
+            matriculas_map[m.aluno_id].add(f'disciplina_{m.disciplina_id}')
+
+    alunos_data = []
+    for a in alunos:
+        m_keys = matriculas_map.get(a.pk, set())
+        alunos_data.append({
+            'aluno': a,
+            'matriculas': m_keys,
+        })
+
+    context = {
+        'prof': prof,
+        'turmas_em': turmas_em,
+        'turma_sel': turma_sel,
+        'serie_sel': serie_sel,
+        'tipo_selecao': tipo_selecao,
+        'opcoes_eletivas': opcoes_eletivas,
+        'alunos_data': alunos_data,
+    }
+    return render(request, 'core/gestao_eletivas.html', context)
+
 

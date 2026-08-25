@@ -740,3 +740,63 @@ class Aviso(models.Model):
 
     def __str__(self):
         return self.titulo
+
+
+# ──────────────────────────────────────────────
+# MATRÍCULA / OPÇÃO DE ELETIVAS E APROFUNDAMENTOS
+# ──────────────────────────────────────────────
+
+class MatriculaEletiva(models.Model):
+    """Armazena a escolha de eletivas (1ª e 2ª séries) ou aprofundamentos (3ª série) do aluno."""
+    aluno = models.ForeignKey(Aluno, on_delete=models.CASCADE, related_name='matriculas_eletivas', verbose_name='Aluno')
+    ano_letivo = models.ForeignKey(AnoLetivo, on_delete=models.CASCADE, related_name='matriculas_eletivas', verbose_name='Ano Letivo')
+    grupo = models.ForeignKey(GrupoDisciplina, on_delete=models.CASCADE, null=True, blank=True, related_name='matriculas_alunos', verbose_name='Grupo Eletivo')
+    disciplina = models.ForeignKey(Disciplina, on_delete=models.CASCADE, null=True, blank=True, related_name='matriculas_alunos', verbose_name='Disciplina / Aprofundamento')
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Matrícula em Eletiva / Aprofundamento'
+        verbose_name_plural = 'Matrículas em Eletivas / Aprofundamentos'
+        ordering = ['aluno__nome']
+
+    def __str__(self):
+        alvo = self.grupo.nome_boletim if self.grupo else (self.disciplina.nome if self.disciplina else "N/A")
+        return f"{self.aluno.nome} - {alvo} ({self.ano_letivo})"
+
+    @classmethod
+    def aluno_cursa_disciplina(cls, aluno, disciplina, ano_letivo=None):
+        """Retorna True se o aluno deve ser avaliado nesta disciplina (BNCC/comum ou eletiva escolhida)."""
+        if not aluno or not disciplina:
+            return True
+        
+        # Identifica se é eletiva ou aprofundamento
+        grupos_eletivos = ['Sociedade e Cidadania', 'Sustentabilidade e Meio Ambiente', 'Múltiplas Linguagens']
+        discs_eletivas = [
+            'Educação Financeira',
+            'Aprofundamento em Matemática', 'Aprofundamento em Ciências da Natureza',
+            'Aprofundamento em Ciências Humanas', 'Aprofundamento em Linguagens'
+        ]
+
+        eh_grupo_eletivo = disciplina.grupo and disciplina.grupo.nome_boletim in grupos_eletivos
+        eh_disc_eletiva = disciplina.nome in discs_eletivas
+
+        if not (eh_grupo_eletivo or eh_disc_eletiva):
+            return True  # Disciplina regular/BNCC (Artes, Mat I, Português, Projeto de Vida, etc.) -> Todos cursam
+
+        # Para disciplinas/grupos eletivos:
+        qs_matriculas = cls.objects.filter(aluno=aluno)
+        if ano_letivo:
+            qs_matriculas = qs_matriculas.filter(ano_letivo=ano_letivo)
+
+        # Se o aluno ainda não possui nenhuma matrícula de eletiva registrada na turma, permite visualização
+        turma_tem_matriculas = cls.objects.filter(aluno__turma=aluno.turma)
+        if ano_letivo:
+            turma_tem_matriculas = turma_tem_matriculas.filter(ano_letivo=ano_letivo)
+        if not turma_tem_matriculas.exists():
+            return True
+
+        if eh_grupo_eletivo:
+            return qs_matriculas.filter(grupo=disciplina.grupo).exists()
+        else:
+            return qs_matriculas.filter(disciplina=disciplina).exists()

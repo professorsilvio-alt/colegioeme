@@ -3,7 +3,7 @@ from django.urls import path
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.html import format_html
 from django.contrib import messages
-from .models import (Turma, Disciplina, GrupoDisciplina, PontuacaoSubdisciplina, Professor, Aluno, Ocorrencia,
+from .models import (Turma, Disciplina, GrupoDisciplina, PontuacaoSubdisciplina, MatriculaEletiva, Professor, Aluno, Ocorrencia,
                      AcaoCoordenacao, ConteudoProgramatico, GradeHoraria, InspetorProxy, ProfessorDocente,
                      SugestaoConteudo, Configuracao, NotaBimestral, ProvaAuxiliar,
                      RecuperacaoFinal, ConselhoClasse, Aviso)
@@ -312,6 +312,26 @@ class PontuacaoSubdisciplinaAdmin(admin.ModelAdmin):
     list_filter = ['ano_letivo', 'serie', 'disciplina__grupo', 'escola']
     search_fields = ['disciplina__nome']
     list_select_related = ['ano_letivo', 'disciplina', 'disciplina__grupo', 'escola']
+
+
+@admin.register(MatriculaEletiva)
+class MatriculaEletivaAdmin(admin.ModelAdmin):
+    list_display = ['aluno', 'turma_aluno', 'grupo_ou_disciplina', 'ano_letivo', 'criado_em']
+    list_filter = ['ano_letivo', 'aluno__turma', 'grupo', 'disciplina']
+    search_fields = ['aluno__nome']
+    list_select_related = ['aluno', 'aluno__turma', 'ano_letivo', 'grupo', 'disciplina']
+
+    def turma_aluno(self, obj):
+        return obj.aluno.turma.codigo if obj.aluno and obj.aluno.turma else '-'
+    turma_aluno.short_description = 'Turma'
+
+    def grupo_ou_disciplina(self, obj):
+        if obj.grupo:
+            return f"Grupo: {obj.grupo.nome_boletim}"
+        if obj.disciplina:
+            return f"Disciplina: {obj.disciplina.nome}"
+        return '-'
+    grupo_ou_disciplina.short_description = 'Eletiva / Aprofundamento'
 
 
 
