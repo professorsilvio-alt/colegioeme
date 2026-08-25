@@ -114,12 +114,20 @@ def api_disciplinas_turma(request, codigo):
         turmas_3_ano = ['31', '32']
 
         if codigo in turmas_1_ano:
-            areas = ['Sociedade e Cidadania', 'Sustentabilidade e Meio Ambiente']
+            areas = [
+                'Sociedade e Cidadania', 'Sustentabilidade e Meio Ambiente',
+                'Projeto de Vida', 'Comp. Texto', 'Artes',
+                'Física', 'Física I', 'História', 'História I'
+            ]
             extras = Disciplina.objects.filter(nome__in=areas)
             discs = (discs | extras).distinct()
             
         elif codigo in turmas_2_ano:
-            areas = ['Educação Financeira', 'Múltiplas Linguagens']
+            areas = [
+                'Educação Financeira', 'Múltiplas Linguagens',
+                'Projeto de Vida', 'Artes',
+                'Física', 'Física I', 'História', 'História I'
+            ]
             extras = Disciplina.objects.filter(nome__in=areas)
             discs = (discs | extras).distinct()
             
