@@ -27,7 +27,7 @@ from reportlab.lib.units import cm
 from reportlab.platypus import (Image, Paragraph, SimpleDocTemplate, Spacer, Table,
                                 TableStyle)
 
-from ..models import (Aluno, AnoLetivo, ConteudoProgramatico, Disciplina,
+from ..models import (Aluno, AnoLetivo, AulaExtraProgramada, ConteudoProgramatico, Disciplina,
                      Escola, GradeHoraria, Ocorrencia, Professor,
                      SugestaoConteudo, Turma, Configuracao)
 from ..utils import get_professor, get_feriados, get_client_ip, ordenar_por_nome
@@ -152,10 +152,12 @@ def api_disciplinas_turma(request, codigo):
                 
         return JsonResponse(lista_discs, safe=False)
     else:
-        qs = GradeHoraria.objects.filter(turma__codigo=codigo, turma__ano_letivo=request.ano_letivo, turma__escola=request.escola)
+        qs_gh = GradeHoraria.objects.filter(turma__codigo=codigo, turma__ano_letivo=request.ano_letivo, turma__escola=request.escola)
+        qs_ae = AulaExtraProgramada.objects.filter(turma__codigo=codigo, turma__ano_letivo=request.ano_letivo, turma__escola=request.escola)
         if prof_logado and not prof_logado.pode_ver_tudo:
-            qs = qs.filter(professor=prof_logado)
-        disc_ids = qs.values_list('disciplina_id', flat=True).distinct()
+            qs_gh = qs_gh.filter(professor=prof_logado)
+            qs_ae = qs_ae.filter(professor=prof_logado)
+        disc_ids = set(qs_gh.values_list('disciplina_id', flat=True)) | set(qs_ae.values_list('disciplina_id', flat=True))
         discs = Disciplina.objects.filter(pk__in=disc_ids).order_by('nome')
         
     return JsonResponse(list(discs.values('id', 'nome')), safe=False)
@@ -172,12 +174,19 @@ def api_professores_turma_disc(request, codigo, disc_id):
         # Modo Aula extra: ignora a grade. Todos os professores aptos (ou si mesmo).
         profs = Professor.objects.all()
     else:
-        prof_ids = GradeHoraria.objects.filter(
+        prof_ids_gh = GradeHoraria.objects.filter(
             turma__codigo=codigo,
             turma__ano_letivo=request.ano_letivo,
             turma__escola=request.escola,
             disciplina__pk=disc_id
-        ).values_list('professor_id', flat=True).distinct()
+        ).values_list('professor_id', flat=True)
+        prof_ids_ae = AulaExtraProgramada.objects.filter(
+            turma__codigo=codigo,
+            turma__ano_letivo=request.ano_letivo,
+            turma__escola=request.escola,
+            disciplina__pk=disc_id
+        ).values_list('professor_id', flat=True)
+        prof_ids = set(prof_ids_gh) | set(prof_ids_ae)
         profs = Professor.objects.filter(pk__in=prof_ids)
         
     # If the logged-in user is a professor (not admin/coord), limit to themselves
