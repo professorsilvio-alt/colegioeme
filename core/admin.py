@@ -407,14 +407,14 @@ class ProfessorAdmin(admin.ModelAdmin):
 
 @admin.register(Aluno)
 class AlunoAdmin(admin.ModelAdmin):
-    list_display = ['foto_thumb', 'nome', 'turma', 'email_responsavel']
+    list_display = ['foto_thumb', 'nome', 'turma', 'telefone_responsavel', 'email_responsavel']
     list_filter = ['turma']
-    search_fields = ['nome', 'email_responsavel']
+    search_fields = ['nome', 'telefone_responsavel', 'email_responsavel']
     ordering = ['turma__ordem_exibicao', 'turma__codigo', 'nome']
     readonly_fields = ['foto_preview']
     fieldsets = [
         ('Dados do Aluno', {
-            'fields': ['nome', 'turma', 'email_responsavel'],
+            'fields': ['nome', 'turma', 'telefone_responsavel', 'email_responsavel'],
         }),
         ('Foto', {
             'fields': ['foto_preview', 'foto'],

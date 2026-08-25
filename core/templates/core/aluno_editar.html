@@ -1,0 +1,106 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block title %}Editar Aluno — {{ aluno.nome }} — SCA{% endblock %}
+
+{% block content %}
+<div class="tabs">
+    <a href="{% url 'dashboard' %}" class="tab-btn" style="text-decoration: none;">🏠 Dashboard</a>
+    <a href="{% url 'alunos_list' %}" class="tab-btn" style="text-decoration: none;">🎓 Alunos</a>
+    <a href="{% url 'aluno_detalhe' aluno.pk %}" class="tab-btn" style="text-decoration: none;">👤 Ficha do Aluno</a>
+</div>
+
+<div class="content-container" style="max-width: 650px; margin: 25px auto; padding: 0 15px;">
+    
+    <div style="background: #fff; padding: 25px 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border-top: 6px solid #003366;">
+        <h1 style="margin: 0 0 8px; color: #003366; font-size: 1.5em; display: flex; align-items: center; gap: 8px;">
+            <span>✏️</span> Editar Dados do Aluno
+        </h1>
+        <p style="margin: 0 0 25px; color: #64748b; font-size: 0.95em;">
+            Atualize as informações cadastrais, contatos do responsável e foto de <strong>{{ aluno.nome }}</strong>.
+        </p>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div style="display: flex; flex-direction: column; gap: 18px;">
+                
+                <div>
+                    <label style="display: block; font-weight: 700; font-size: 13.5px; color: #334155; margin-bottom: 6px;">
+                        Nome Completo do Aluno <span style="color: #ef4444;">*</span>
+                    </label>
+                    {{ form.nome }}
+                    {% if form.nome.errors %}
+                    <span style="color: #ef4444; font-size: 12px; margin-top: 3px; display: block;">{{ form.nome.errors.0 }}</span>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label style="display: block; font-weight: 700; font-size: 13.5px; color: #334155; margin-bottom: 6px;">
+                        Turma <span style="color: #ef4444;">*</span>
+                    </label>
+                    {{ form.turma }}
+                    {% if form.turma.errors %}
+                    <span style="color: #ef4444; font-size: 12px; margin-top: 3px; display: block;">{{ form.turma.errors.0 }}</span>
+                    {% endif %}
+                </div>
+
+                <div style="background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 14px;">
+                    <strong style="color: #003366; font-size: 14px; display: flex; align-items: center; gap: 6px;">
+                        <span>📱</span> Contatos do Responsável (Notificações / WhatsApp)
+                    </strong>
+
+                    <div>
+                        <label style="display: block; font-weight: 600; font-size: 13px; color: #475569; margin-bottom: 5px;">
+                            Telefone / WhatsApp do Responsável:
+                        </label>
+                        {{ form.telefone_responsavel }}
+                        <span style="font-size: 12px; color: #64748b; margin-top: 3px; display: block;">
+                            Utilizado para o botão de envio rápido de ocorrências via WhatsApp.
+                        </span>
+                        {% if form.telefone_responsavel.errors %}
+                        <span style="color: #ef4444; font-size: 12px; margin-top: 3px; display: block;">{{ form.telefone_responsavel.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label style="display: block; font-weight: 600; font-size: 13px; color: #475569; margin-bottom: 5px;">
+                            E-mail do Responsável:
+                        </label>
+                        {{ form.email_responsavel }}
+                        {% if form.email_responsavel.errors %}
+                        <span style="color: #ef4444; font-size: 12px; margin-top: 3px; display: block;">{{ form.email_responsavel.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div>
+                    <label style="display: block; font-weight: 700; font-size: 13.5px; color: #334155; margin-bottom: 6px;">
+                        Foto do Aluno
+                    </label>
+                    {% if aluno.foto %}
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                        <img src="{{ aluno.foto.url }}" alt="{{ aluno.nome }}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #003366;">
+                        <span style="font-size: 13px; color: #64748b;">Foto atual cadastrada</span>
+                    </div>
+                    {% endif %}
+                    {{ form.foto }}
+                    {% if form.foto.errors %}
+                    <span style="color: #ef4444; font-size: 12px; margin-top: 3px; display: block;">{{ form.foto.errors.0 }}</span>
+                    {% endif %}
+                </div>
+
+            </div>
+
+            <div style="margin-top: 30px; display: flex; justify-content: flex-end; align-items: center; gap: 12px; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+                <a href="{% url 'aluno_detalhe' aluno.pk %}" style="padding: 10px 18px; border-radius: 6px; background: #e2e8f0; color: #475569; text-decoration: none; font-weight: 600; font-size: 14px;">
+                    Cancelar
+                </a>
+                <button type="submit" style="background: #003366; color: #fff; padding: 10px 24px; border: none; border-radius: 6px; font-weight: 700; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(0,51,102,0.25);">
+                    💾 Salvar Alterações
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

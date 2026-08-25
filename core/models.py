@@ -260,6 +260,13 @@ class Aluno(models.Model):
     nome = models.CharField(max_length=200)
     turma = models.ForeignKey(Turma, on_delete=models.CASCADE, related_name='alunos')
     email_responsavel = models.EmailField(blank=True, null=True, verbose_name='E-mail do Responsável')
+    telefone_responsavel = models.CharField(
+        max_length=30,
+        blank=True,
+        null=True,
+        verbose_name='Telefone / WhatsApp do Responsável',
+        help_text='Ex: (21) 99999-9999'
+    )
     foto = models.ImageField(
         upload_to='alunos/fotos/',
         blank=True,
@@ -273,6 +280,19 @@ class Aluno(models.Model):
 
     def __str__(self):
         return f'{self.nome} ({self.turma.codigo})'
+
+    def get_whatsapp_link(self, mensagem=""):
+        """Gera link direto para envio de mensagem via WhatsApp para o responsável."""
+        if not self.telefone_responsavel:
+            return None
+        import re, urllib.parse
+        apenas_num = re.sub(r'\D', '', self.telefone_responsavel)
+        if not apenas_num:
+            return None
+        if len(apenas_num) in (10, 11):
+            apenas_num = '55' + apenas_num
+        msg_enc = urllib.parse.quote(mensagem) if mensagem else ""
+        return f"https://wa.me/{apenas_num}" + (f"?text={msg_enc}" if msg_enc else "")
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

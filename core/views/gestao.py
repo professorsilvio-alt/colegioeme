@@ -502,10 +502,22 @@ def escola_professor_novo(request):
 # MÓDULO ALUNOS (LISTA E FICHA COMPLETA 360°)
 # ──────────────────────────────────────────────
 
+def _pode_gerenciar_alunos(user, prof):
+    """Verifica se o usuário tem permissão de gestão de alunos (Direção, Coordenação, Secretaria, Admin)."""
+    if user.is_superuser:
+        return True
+    if prof and (prof.pode_ver_tudo or prof.pode_editar_tudo or prof.cargo in ('DIRETOR', 'COORDENADOR', 'SECRETARIA', 'AUX_COORDENACAO', 'AUX_ADMIN')):
+        return True
+    return False
+
+
 @login_required
 def alunos_list(request):
     """Lista todos os alunos da escola com busca, filtro por turma e resumo de eletivas."""
     prof = get_professor(request.user)
+    if not _pode_gerenciar_alunos(request.user, prof):
+        messages.error(request, 'Acesso restrito à Direção, Coordenação e Secretaria.')
+        return redirect('dashboard')
     
     turmas = Turma.objects.filter(ano_letivo=request.ano_letivo, escola=request.escola).order_by('ordem_exibicao', 'codigo')
     
@@ -554,8 +566,12 @@ def alunos_list(request):
 
 @login_required
 def aluno_detalhe(request, pk):
-    """Ficha 360° do aluno: cadastro, turma, opção de eletiva, boletim/notas e ocorrências."""
+    """Ficha 360° do aluno: cadastro, contatos, turma, opção de eletiva, boletim/notas e ocorrências."""
     prof = get_professor(request.user)
+    if not _pode_gerenciar_alunos(request.user, prof):
+        messages.error(request, 'Acesso restrito à Direção, Coordenação e Secretaria.')
+        return redirect('dashboard')
+
     aluno = get_object_or_404(Aluno, pk=pk)
     
     # 1. Opções de Eletivas / Aprofundamento no ano letivo atual
@@ -601,4 +617,32 @@ def aluno_detalhe(request, pk):
         'ano_letivo': request.ano_letivo,
     }
     return render(request, 'core/aluno_detalhe.html', context)
+
+
+@login_required
+def aluno_editar(request, pk):
+    """Edição cadastral do aluno: nome, turma, contatos e foto."""
+    from ..forms import AlunoForm
+    prof = get_professor(request.user)
+    if not _pode_gerenciar_alunos(request.user, prof):
+        messages.error(request, 'Acesso restrito à Direção, Coordenação e Secretaria.')
+        return redirect('dashboard')
+
+    aluno = get_object_or_404(Aluno, pk=pk)
+
+    if request.method == 'POST':
+        form = AlunoForm(request.POST, request.FILES, instance=aluno, escola=request.escola, ano_letivo=request.ano_letivo)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Cadastro do aluno {aluno.nome} atualizado com sucesso!')
+            return redirect('aluno_detalhe', pk=aluno.pk)
+    else:
+        form = AlunoForm(instance=aluno, escola=request.escola, ano_letivo=request.ano_letivo)
+
+    return render(request, 'core/aluno_editar.html', {
+        'prof': prof,
+        'aluno': aluno,
+        'form': form,
+    })
+
 

@@ -99,9 +99,16 @@
                             <a href="{% url 'aluno_detalhe' item.aluno.pk %}" style="font-weight: 700; color: #003366; text-decoration: none; font-size: 14.5px;">
                                 {{ item.aluno.nome }}
                             </a>
-                            {% if item.aluno.email_responsavel %}
-                            <span style="display: block; font-size: 12px; color: #64748b; margin-top: 2px;">✉️ {{ item.aluno.email_responsavel }}</span>
-                            {% endif %}
+                            <div style="display: flex; gap: 8px; align-items: center; margin-top: 3px; flex-wrap: wrap;">
+                                {% if item.aluno.telefone_responsavel %}
+                                <a href="{{ item.aluno.get_whatsapp_link }}" target="_blank" style="font-size: 11.5px; color: #166534; background: #dcfce7; border: 1px solid #bbf7d0; padding: 1px 6px; border-radius: 4px; text-decoration: none; font-weight: 600;">
+                                    💬 {{ item.aluno.telefone_responsavel }}
+                                </a>
+                                {% endif %}
+                                {% if item.aluno.email_responsavel %}
+                                <span style="font-size: 11.5px; color: #64748b;">✉️ {{ item.aluno.email_responsavel }}</span>
+                                {% endif %}
+                            </div>
                         </td>
                         <td style="padding: 12px 14px; text-align: center;">
                             <span style="background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 13px;">
@@ -132,13 +139,18 @@
                             <div style="display: inline-flex; gap: 6px;">
                                 <a href="{% url 'aluno_detalhe' item.aluno.pk %}" 
                                    title="Ver Ficha Completa"
-                                   style="background: #003366; color: #fff; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 12.5px; font-weight: 700;">
+                                   style="background: #003366; color: #fff; text-decoration: none; padding: 6px 10px; border-radius: 5px; font-size: 12px; font-weight: 700;">
                                     👤 Ficha
+                                </a>
+                                <a href="{% url 'aluno_editar' item.aluno.pk %}" 
+                                   title="Editar Cadastro do Aluno"
+                                   style="background: #0284c7; color: #fff; text-decoration: none; padding: 6px 8px; border-radius: 5px; font-size: 12px; font-weight: 700;">
+                                    ✏️
                                 </a>
                                 <a href="{% url 'boletim_aluno' item.aluno.pk %}" 
                                    title="Ver Boletim de Notas"
-                                   style="background: #16a085; color: #fff; text-decoration: none; padding: 6px 10px; border-radius: 5px; font-size: 12.5px; font-weight: 700;">
-                                    📄 Boletim
+                                   style="background: #16a085; color: #fff; text-decoration: none; padding: 6px 8px; border-radius: 5px; font-size: 12px; font-weight: 700;">
+                                    📄
                                 </a>
                             </div>
                         </td>
