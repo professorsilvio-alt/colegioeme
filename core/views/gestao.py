@@ -28,8 +28,9 @@ from reportlab.platypus import (Image, Paragraph, SimpleDocTemplate, Spacer, Tab
                                 TableStyle)
 
 from ..models import (Aluno, AnoLetivo, ConteudoProgramatico, Disciplina,
-                     Escola, GradeHoraria, Ocorrencia, Professor,
+                     Escola, GradeHoraria, MatriculaEletiva, Ocorrencia, Professor,
                      SugestaoConteudo, Turma, Configuracao)
+from ..services.calculo_notas import carregar_dados_boletim_aluno
 from ..utils import get_professor, get_feriados, get_client_ip, ordenar_por_nome
 
 # Logger para auditoria de ações sensíveis
@@ -495,3 +496,109 @@ def escola_professor_novo(request):
         'titulo': 'Cadastrar Novo Professor',
         'novo': True
     })
+
+
+# ──────────────────────────────────────────────
+# MÓDULO ALUNOS (LISTA E FICHA COMPLETA 360°)
+# ──────────────────────────────────────────────
+
+@login_required
+def alunos_list(request):
+    """Lista todos os alunos da escola com busca, filtro por turma e resumo de eletivas."""
+    prof = get_professor(request.user)
+    
+    turmas = Turma.objects.filter(ano_letivo=request.ano_letivo, escola=request.escola).order_by('ordem_exibicao', 'codigo')
+    
+    turma_cod = request.GET.get('turma', '').strip()
+    busca = request.GET.get('q', '').strip()
+    
+    alunos_qs = Aluno.objects.filter(turma__ano_letivo=request.ano_letivo, turma__escola=request.escola)
+    
+    if turma_cod:
+        alunos_qs = alunos_qs.filter(turma__codigo=turma_cod)
+    if busca:
+        alunos_qs = alunos_qs.filter(nome__icontains=busca)
+        
+    alunos_qs = alunos_qs.select_related('turma').prefetch_related(
+        'matriculas_eletivas__grupo',
+        'matriculas_eletivas__disciplina'
+    ).order_by('turma__ordem_exibicao', 'turma__codigo', 'nome')
+    
+    # Montar estrutura com dados de eletivas por aluno
+    alunos_data = []
+    for a in alunos_qs:
+        eletivas_nomes = []
+        for m in a.matriculas_eletivas.filter(ano_letivo=request.ano_letivo):
+            if m.grupo:
+                eletivas_nomes.append(m.grupo.nome_boletim)
+            elif m.disciplina:
+                eletivas_nomes.append(m.disciplina.nome)
+                
+        is_ensino_medio = a.turma.codigo[0] in ['1', '2', '3'] if a.turma and a.turma.codigo else False
+        alunos_data.append({
+            'aluno': a,
+            'eletivas': eletivas_nomes,
+            'is_ensino_medio': is_ensino_medio,
+        })
+        
+    context = {
+        'prof': prof,
+        'turmas': turmas,
+        'turma_cod': turma_cod,
+        'busca': busca,
+        'alunos_data': alunos_data,
+        'total_alunos': len(alunos_data),
+    }
+    return render(request, 'core/alunos_list.html', context)
+
+
+@login_required
+def aluno_detalhe(request, pk):
+    """Ficha 360° do aluno: cadastro, turma, opção de eletiva, boletim/notas e ocorrências."""
+    prof = get_professor(request.user)
+    aluno = get_object_or_404(Aluno, pk=pk)
+    
+    # 1. Opções de Eletivas / Aprofundamento no ano letivo atual
+    matriculas = MatriculaEletiva.objects.filter(
+        aluno=aluno,
+        ano_letivo=request.ano_letivo
+    ).select_related('grupo', 'disciplina')
+    
+    eletivas_info = []
+    for m in matriculas:
+        if m.grupo:
+            subdiscs = list(m.grupo.disciplinas.values_list('nome', flat=True))
+            eletivas_info.append({
+                'tipo': 'Grupo',
+                'nome': m.grupo.nome_boletim,
+                'detalhes': f"Subdisciplinas: {', '.join(subdiscs)}" if subdiscs else ''
+            })
+        elif m.disciplina:
+            eletivas_info.append({
+                'tipo': 'Disciplina',
+                'nome': m.disciplina.nome,
+                'detalhes': 'Aprofundamento / Eletiva Individual'
+            })
+            
+    is_ensino_medio = aluno.turma.codigo[0] in ['1', '2', '3'] if aluno.turma and aluno.turma.codigo else False
+
+    # 2. Boletim / Notas Completas
+    grupos_no_boletim = carregar_dados_boletim_aluno(aluno, request.ano_letivo)
+
+    # 3. Ocorrências disciplinares do aluno
+    ocorrencias = Ocorrencia.objects.filter(
+        alunos=aluno,
+        turma__ano_letivo=request.ano_letivo
+    ).select_related('turma', 'professor', 'disciplina').order_by('-data', '-criado_em')
+
+    context = {
+        'prof': prof,
+        'aluno': aluno,
+        'is_ensino_medio': is_ensino_medio,
+        'eletivas_info': eletivas_info,
+        'grupos_no_boletim': grupos_no_boletim,
+        'ocorrencias': ocorrencias,
+        'ano_letivo': request.ano_letivo,
+    }
+    return render(request, 'core/aluno_detalhe.html', context)
+

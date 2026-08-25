@@ -1,0 +1,263 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block title %}{{ aluno.nome }} — Ficha do Aluno — SCA{% endblock %}
+
+{% block content %}
+<div class="tabs">
+    <a href="{% url 'dashboard' %}" class="tab-btn" style="text-decoration: none;">🏠 Dashboard</a>
+    <a href="{% url 'alunos_list' %}" class="tab-btn" style="text-decoration: none;">🎓 Alunos</a>
+    <a href="{% url 'notas_index' %}" class="tab-btn" style="text-decoration: none;">📝 Notas</a>
+</div>
+
+<div class="content-container" style="max-width: 1100px; margin: 20px auto; padding: 0 15px;">
+
+    <!-- CARD PERFIL DO ALUNO -->
+    <div style="background: #fff; padding: 24px 28px; border-radius: 12px; box-shadow: 0 3px 12px rgba(0,0,0,0.08); border-left: 6px solid #003366; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+        <div style="display: flex; align-items: center; gap: 20px;">
+            {% if aluno.foto %}
+            <img src="{{ aluno.foto.url }}" alt="{{ aluno.nome }}" style="width: 75px; height: 75px; border-radius: 50%; object-fit: cover; border: 3px solid #003366; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+            {% else %}
+            <div style="width: 75px; height: 75px; border-radius: 50%; background: #003366; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 700; box-shadow: 0 2px 8px rgba(0,51,102,0.3);">
+                {{ aluno.nome|slice:":1" }}
+            </div>
+            {% endif %}
+
+            <div>
+                <h1 style="margin: 0; color: #003366; font-size: 1.6em; line-height: 1.2;">
+                    {{ aluno.nome }}
+                </h1>
+                <div style="display: flex; gap: 10px; align-items: center; margin-top: 8px; flex-wrap: wrap;">
+                    <span style="background: #e0f2fe; color: #0369a1; padding: 4px 12px; border-radius: 14px; font-weight: 700; font-size: 13px;">
+                        🏫 Turma {{ aluno.turma.codigo }}
+                    </span>
+                    <span style="background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 14px; font-size: 13px; font-weight: 600;">
+                        Ano Letivo: {{ ano_letivo.ano }}
+                    </span>
+                    {% if aluno.email_responsavel %}
+                    <span style="font-size: 13px; color: #64748b;">
+                        ✉️ Responsável: <strong>{{ aluno.email_responsavel }}</strong>
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a href="{% url 'exportar_boletim_aluno_pdf' aluno.pk %}" target="_blank" 
+               style="background: #16a085; color: #fff; text-decoration: none; padding: 10px 18px; border-radius: 6px; font-weight: 700; font-size: 13.5px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(22,160,133,0.3);">
+                📄 Imprimir Boletim PDF
+            </a>
+            {% if is_ensino_medio %}
+            <a href="{% url 'escola_gestao_eletivas' %}?turma={{ aluno.turma.codigo }}" 
+               style="background: #003366; color: #fff; text-decoration: none; padding: 10px 18px; border-radius: 6px; font-weight: 700; font-size: 13.5px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(0,51,102,0.25);">
+                🎯 Alterar Eletiva
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- SEÇÃO 1: OPÇÃO DE ELETIVA / APROFUNDAMENTO -->
+    {% if is_ensino_medio %}
+    <div style="background: #fff; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; margin-bottom: 25px; overflow: hidden;">
+        <div style="background: #f8fafc; padding: 14px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+            <strong style="color: #003366; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+                <span>🎯</span> Opção de Eletivas e Aprofundamentos do Aluno
+            </strong>
+            <a href="{% url 'escola_gestao_eletivas' %}?turma={{ aluno.turma.codigo }}" style="color: #0284c7; font-weight: 700; font-size: 13px; text-decoration: none;">
+                Gerenciar Matrículas ➔
+            </a>
+        </div>
+        <div style="padding: 20px;">
+            {% if eletivas_info %}
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+                    {% for el in eletivas_info %}
+                    <div style="background: #fefce8; border: 1.5px solid #fef08a; padding: 16px 18px; border-radius: 8px; border-left: 5px solid #ca8a04;">
+                        <span style="font-size: 11px; text-transform: uppercase; font-weight: 800; color: #a16207; letter-spacing: 0.5px;">
+                            {{ el.tipo }} Eletivo
+                        </span>
+                        <h3 style="margin: 4px 0 6px; color: #854d0e; font-size: 16px;">
+                            {{ el.nome }}
+                        </h3>
+                        {% if el.detalhes %}
+                        <p style="margin: 0; font-size: 12.5px; color: #713f12;">
+                            {{ el.detalhes }}
+                        </p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div style="text-align: center; padding: 20px; background: #f8fafc; border-radius: 8px; color: #64748b;">
+                    <p style="margin: 0; font-size: 14px;">Nenhuma eletiva definida para este aluno no ano letivo atual.</p>
+                    <a href="{% url 'escola_gestao_eletivas' %}?turma={{ aluno.turma.codigo }}" style="display: inline-block; margin-top: 8px; background: #003366; color: #fff; padding: 6px 14px; border-radius: 5px; text-decoration: none; font-size: 13px; font-weight: 700;">
+                        Definir Eletiva do Aluno Agora
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- SEÇÃO 2: BOLETIM / NOTAS COMPLETAS -->
+    <div style="background: #fff; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; margin-bottom: 25px; overflow: hidden;">
+        <div style="background: #f8fafc; padding: 14px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+            <strong style="color: #003366; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+                <span>📊</span> Boletim Escolar e Notas
+            </strong>
+            <span style="font-size: 12px; color: #64748b;">Médias calculadas automaticamente conforme o regimento.</span>
+        </div>
+
+        <div style="overflow-x: auto; padding: 10px 15px;">
+            <table style="width: 100%; border-collapse: collapse; min-width: 750px;">
+                <thead>
+                    <tr style="text-align: center; font-size: 12px; text-transform: uppercase;">
+                        <th style="padding: 10px; text-align: left; background: #003366; color: #ffffff; width: 220px;">Disciplina / Grupo</th>
+                        <th style="padding: 10px; background: #003366; color: #ffffff;">1º Bim</th>
+                        <th style="padding: 10px; background: #003366; color: #ffffff;">2º Bim</th>
+                        <th style="padding: 10px; background: #002244; color: #ffffff;">PA 1</th>
+                        <th style="padding: 10px; background: #003366; color: #ffffff;">3º Bim</th>
+                        <th style="padding: 10px; background: #003366; color: #ffffff;">4º Bim</th>
+                        <th style="padding: 10px; background: #002244; color: #ffffff;">PA 2</th>
+                        <th style="padding: 10px; background: #003366; color: #ffffff;">Média Anual</th>
+                        <th style="padding: 10px; background: #002244; color: #ffffff;">REC</th>
+                        <th style="padding: 10px; background: #003366; color: #ffffff;">Média Final</th>
+                        <th style="padding: 10px; background: #003366; color: #ffffff;">Situação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for linha in grupos_no_boletim %}
+                    <tr style="border-bottom: 1px solid #f1f5f9; text-align: center; font-size: 13.5px;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                        <td style="padding: 10px 12px; text-align: left; font-weight: 700; color: #1e293b;">
+                            {{ linha.nome }}
+                            {% if linha.is_grupo %}
+                            <span style="font-size: 10px; background: #e0e7ff; color: #3730a3; padding: 2px 6px; border-radius: 4px; margin-left: 4px;">Composta</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- B1 -->
+                        <td style="padding: 10px; font-weight: 600;">
+                            {% if linha.b1.valor is not None %}{{ linha.b1.valor|floatformat:2 }}{% else %}<span style="color:#cbd5e1">-</span>{% endif %}
+                        </td>
+                        <!-- B2 -->
+                        <td style="padding: 10px; font-weight: 600;">
+                            {% if linha.b2.valor is not None %}{{ linha.b2.valor|floatformat:2 }}{% else %}<span style="color:#cbd5e1">-</span>{% endif %}
+                        </td>
+                        <!-- PA1 -->
+                        <td style="padding: 10px; background: #f8fafc; font-weight: 600; color: #0284c7;">
+                            {% if linha.pa1.valor is not None %}{{ linha.pa1.valor|floatformat:2 }}{% else %}<span style="color:#cbd5e1">-</span>{% endif %}
+                        </td>
+                        <!-- B3 -->
+                        <td style="padding: 10px; font-weight: 600;">
+                            {% if linha.b3.valor is not None %}{{ linha.b3.valor|floatformat:2 }}{% else %}<span style="color:#cbd5e1">-</span>{% endif %}
+                        </td>
+                        <!-- B4 -->
+                        <td style="padding: 10px; font-weight: 600;">
+                            {% if linha.b4.valor is not None %}{{ linha.b4.valor|floatformat:2 }}{% else %}<span style="color:#cbd5e1">-</span>{% endif %}
+                        </td>
+                        <!-- PA2 -->
+                        <td style="padding: 10px; background: #f8fafc; font-weight: 600; color: #0284c7;">
+                            {% if linha.pa2.valor is not None %}{{ linha.pa2.valor|floatformat:2 }}{% else %}<span style="color:#cbd5e1">-</span>{% endif %}
+                        </td>
+                        <!-- Media Anual -->
+                        <td style="padding: 10px; font-weight: 700; {% if linha.media_anual and linha.media_anual < 5.0 %}color: #dc2626;{% else %}color: #003366;{% endif %}">
+                            {% if linha.media_anual is not None %}{{ linha.media_anual|floatformat:2 }}{% else %}<span style="color:#cbd5e1">-</span>{% endif %}
+                        </td>
+                        <!-- REC -->
+                        <td style="padding: 10px; background: #f8fafc; font-weight: 600; color: #d97706;">
+                            {% if linha.rec_final.valor is not None %}{{ linha.rec_final.valor|floatformat:2 }}{% else %}<span style="color:#cbd5e1">-</span>{% endif %}
+                        </td>
+                        <!-- Media Final -->
+                        <td style="padding: 10px; font-weight: 800; {% if linha.media_final and linha.media_final < 5.0 %}color: #dc2626;{% else %}color: #166534;{% endif %}">
+                            {% if linha.media_final is not None %}{{ linha.media_final|floatformat:2 }}{% else %}<span style="color:#cbd5e1">-</span>{% endif %}
+                        </td>
+                        <!-- Situacao -->
+                        <td style="padding: 10px;">
+                            {% if linha.situacao == 'Aprovado' or linha.situacao == 'Aprovado na REC' or linha.situacao == 'Aprovado pelo Conselho' %}
+                            <span style="background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 12px; font-size: 11.5px; font-weight: 700;">
+                                {{ linha.situacao }}
+                            </span>
+                            {% elif linha.situacao == 'Reprovado' %}
+                            <span style="background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 12px; font-size: 11.5px; font-weight: 700;">
+                                {{ linha.situacao }}
+                            </span>
+                            {% elif linha.situacao == 'Em Recuperação' %}
+                            <span style="background: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 12px; font-size: 11.5px; font-weight: 700;">
+                                {{ linha.situacao }}
+                            </span>
+                            {% else %}
+                            <span style="color: #64748b; font-size: 12px;">{{ linha.situacao }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="11" style="text-align: center; padding: 30px; color: #64748b;">
+                            Nenhuma nota lançada para este aluno ainda.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- SEÇÃO 3: HISTÓRICO DE OCORRÊNCIAS -->
+    <div style="background: #fff; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; margin-bottom: 25px; overflow: hidden;">
+        <div style="background: #f8fafc; padding: 14px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+            <strong style="color: #003366; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+                <span>📋</span> Histórico de Ocorrências Disciplinares ({{ ocorrencias|length }})
+            </strong>
+        </div>
+
+        <div style="overflow-x: auto; padding: 10px 15px;">
+            <table style="width: 100%; border-collapse: collapse; min-width: 650px;">
+                <thead>
+                    <tr style="text-align: left; font-size: 12px; text-transform: uppercase;">
+                        <th style="padding: 10px 12px; width: 95px; background: #003366; color: #ffffff;">Data</th>
+                        <th style="padding: 10px 12px; width: 140px; background: #003366; color: #ffffff;">Disciplina</th>
+                        <th style="padding: 10px 12px; background: #003366; color: #ffffff;">Descrição</th>
+                        <th style="padding: 10px 12px; width: 150px; background: #003366; color: #ffffff;">Professor</th>
+                        <th style="padding: 10px 12px; width: 95px; text-align: center; background: #003366; color: #ffffff;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for oc in ocorrencias %}
+                    <tr style="border-bottom: 1px solid #f1f5f9; font-size: 13.5px;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                        <td style="padding: 10px 12px; font-weight: 600; color: #475569;">
+                            {{ oc.data|date:"d/m/Y" }}
+                        </td>
+                        <td style="padding: 10px 12px; font-weight: 700; color: #003366;">
+                            {{ oc.disciplina.nome|default:"-" }}
+                        </td>
+                        <td style="padding: 10px 12px; color: #334155; line-height: 1.4;">
+                            {{ oc.descricao }}
+                        </td>
+                        <td style="padding: 10px 12px; color: #64748b; font-size: 12.5px;">
+                            {{ oc.professor.nome|default:"Sistema" }}
+                        </td>
+                        <td style="padding: 10px 12px; text-align: center;">
+                            {% if oc.status == 'Resolvida' %}
+                            <span style="background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 10px; font-size: 11.5px; font-weight: 700;">
+                                Resolvida
+                            </span>
+                            {% else %}
+                            <span style="background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 10px; font-size: 11.5px; font-weight: 700;">
+                                Aberta
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 25px; color: #64748b;">
+                            Nenhuma ocorrência registrada para este aluno.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
