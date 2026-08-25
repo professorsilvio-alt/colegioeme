@@ -233,9 +233,14 @@ class Professor(models.Model):
         return False
 
     def get_turmas(self, ano_letivo=None, escola=None):
-        qs = Turma.objects.all()
-        if not (self.todas_turmas or self.pode_ver_tudo):
-            qs = self.turmas.all()
+        if self.todas_turmas or self.pode_ver_tudo:
+            qs = Turma.objects.all()
+        else:
+            turmas_m2m = self.turmas.values_list('id', flat=True)
+            turmas_gh = self.grade_horaria.values_list('turma_id', flat=True)
+            turmas_ae = self.aulaextraprogramada_set.values_list('turma_id', flat=True)
+            turma_ids = set(turmas_m2m) | set(turmas_gh) | set(turmas_ae)
+            qs = Turma.objects.filter(id__in=turma_ids)
         
         if escola:
             qs = qs.filter(escola=escola)

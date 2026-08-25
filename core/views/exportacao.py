@@ -241,8 +241,9 @@ def calcular_stats_conteudo(prof, data_ini=None, data_fim=None, feriados=None, a
     
     disciplinas_peso_2 = [
         'Eletiva 1', 'Eletiva 2', 'Estendido', # Nomes legados
-        'Sociedade e Cidadania', 'Sustentabilidade e Meio Ambiente',
-        'Educação Financeira', 'Múltiplas Linguagens',
+        'Sociedade e Cidadania', 'Sociedade e Cidadania I', 'Sociedade e Cidadania II',
+        'Sustentabilidade e Meio Ambiente', 'Sustentabilidade e Meio Ambiente I', 'Sustentabilidade e Meio Ambiente II',
+        'Educação Financeira', 'Múltiplas Linguagens', 'Múltiplas Linguagens I', 'Múltiplas Linguagens II',
         'Aprofundamento em Matemática', 'Aprofundamento em Ciências da Natureza', 
         'Aprofundamento em Ciências Humanas', 'Aprofundamento em Linguagens'
     ]

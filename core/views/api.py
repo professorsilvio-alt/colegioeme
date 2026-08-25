@@ -115,7 +115,8 @@ def api_disciplinas_turma(request, codigo):
 
         if codigo in turmas_1_ano:
             areas = [
-                'Sociedade e Cidadania', 'Sustentabilidade e Meio Ambiente',
+                'Sociedade e Cidadania', 'Sociedade e Cidadania I', 'Sociedade e Cidadania II',
+                'Sustentabilidade e Meio Ambiente', 'Sustentabilidade e Meio Ambiente I', 'Sustentabilidade e Meio Ambiente II',
                 'Projeto de Vida', 'Comp. Texto', 'Artes',
                 'Física', 'Física I', 'História', 'História I'
             ]
@@ -124,7 +125,7 @@ def api_disciplinas_turma(request, codigo):
             
         elif codigo in turmas_2_ano:
             areas = [
-                'Educação Financeira', 'Múltiplas Linguagens',
+                'Educação Financeira', 'Múltiplas Linguagens', 'Múltiplas Linguagens I', 'Múltiplas Linguagens II',
                 'Projeto de Vida', 'Artes',
                 'Física', 'Física I', 'História', 'História I'
             ]

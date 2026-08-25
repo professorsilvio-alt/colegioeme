@@ -73,5 +73,10 @@ db_fixture_mysql.json
 
 # Dados sensíveis (fotos de alunos = PII)
 fotos_alunos.zip
-
 db_fixture_mysql.json
+
+# Scratch / Temp files
+scratch/*
+!scratch/init_escola.py
+!scratch/init_mestre_hiram.py
+!scratch/reset_admin.py

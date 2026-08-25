@@ -90,9 +90,14 @@ def notas_index(request):
     )
 
     if prof and prof.cargo == 'PROFESSOR':
-        disc_ids = GradeHoraria.objects.filter(
+        disc_ids_gh = GradeHoraria.objects.filter(
             professor=prof, turma__ano_letivo=request.ano_letivo
-        ).values_list('disciplina_id', flat=True).distinct()
+        ).values_list('disciplina_id', flat=True)
+        disc_ids_ae = AulaExtraProgramada.objects.filter(
+            professor=prof, turma__ano_letivo=request.ano_letivo
+        ).values_list('disciplina_id', flat=True)
+        disc_ids_m2m = prof.disciplinas.values_list('id', flat=True)
+        disc_ids = set(disc_ids_gh) | set(disc_ids_ae) | set(disc_ids_m2m)
         disciplinas = Disciplina.objects.filter(pk__in=disc_ids).order_by('nome')
     else:
         disciplinas = Disciplina.objects.all().order_by('nome')
@@ -159,14 +164,25 @@ def notas_turma(request, codigo, periodo):
 
     # Disciplinas visíveis para este professor/turma
     if prof and prof.cargo == 'PROFESSOR':
-        disc_ids = GradeHoraria.objects.filter(
+        disc_ids_gh = GradeHoraria.objects.filter(
             turma=turma, professor=prof
-        ).values_list('disciplina_id', flat=True).distinct()
+        ).values_list('disciplina_id', flat=True)
+        disc_ids_ae = AulaExtraProgramada.objects.filter(
+            turma=turma, professor=prof
+        ).values_list('disciplina_id', flat=True)
+        disc_ids_m2m = set()
+        if turma in prof.turmas.all():
+            disc_ids_m2m = set(prof.disciplinas.values_list('id', flat=True))
+        disc_ids = set(disc_ids_gh) | set(disc_ids_ae) | disc_ids_m2m
         disciplinas = Disciplina.objects.filter(pk__in=disc_ids).order_by('nome')
     elif prof and prof.pode_ver_tudo:
-        disc_ids = GradeHoraria.objects.filter(
+        disc_ids_gh = GradeHoraria.objects.filter(
             turma=turma
-        ).values_list('disciplina_id', flat=True).distinct()
+        ).values_list('disciplina_id', flat=True)
+        disc_ids_ae = AulaExtraProgramada.objects.filter(
+            turma=turma
+        ).values_list('disciplina_id', flat=True)
+        disc_ids = set(disc_ids_gh) | set(disc_ids_ae)
         disciplinas = Disciplina.objects.filter(pk__in=disc_ids).order_by('nome')
     else:
         disciplinas = Disciplina.objects.none()
@@ -768,10 +784,14 @@ def escola_composicao_disciplinas(request):
         messages.success(request, f'Pontuações das subdisciplinas para {nome_serie} salvas com sucesso!')
         return redirect(f"{reverse('escola_composicao_disciplinas')}?serie={serie_post}")
 
-    # Identifica as disciplinas presentes nas turmas da série selecionada
+    # Identifica as disciplinas presentes nas turmas da série selecionada (GradeHoraria + AulaExtraProgramada)
     disc_ids_serie = set(
         Disciplina.objects.filter(
             gradehoraria__turma__codigo__startswith=serie_sel
+        ).values_list('pk', flat=True)
+    ) | set(
+        Disciplina.objects.filter(
+            aulaextraprogramada__turma__codigo__startswith=serie_sel
         ).values_list('pk', flat=True)
     )
     if request.ano_letivo:
@@ -779,6 +799,11 @@ def escola_composicao_disciplinas(request):
             Disciplina.objects.filter(
                 gradehoraria__turma__codigo__startswith=serie_sel,
                 gradehoraria__turma__ano_letivo=request.ano_letivo
+            ).values_list('pk', flat=True)
+        ) | set(
+            Disciplina.objects.filter(
+                aulaextraprogramada__turma__codigo__startswith=serie_sel,
+                aulaextraprogramada__turma__ano_letivo=request.ano_letivo
             ).values_list('pk', flat=True)
         )
         if disc_ids_serie_ano:
