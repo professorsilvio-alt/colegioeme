@@ -1,4 +1,4 @@
-﻿{% extends 'core/base.html' %}
+{% extends 'core/base.html' %}
 {% load static %}
 
 {% block title %}Gerenciar Aulas Extras - SCA - Sistema de Controle Academico{% endblock %}
@@ -71,8 +71,18 @@
                 style="padding: 7px 18px; font-size: 13px; background: #1a7a4a; border-color: #1a7a4a;">
                 &#128260; Reatribuir Selecionadas
             </button>
+            <button type="button" onclick="executarExclusaoMassa()" class="btn-primary"
+                style="padding: 7px 18px; font-size: 13px; background: #c0392b; border-color: #a93226;">
+                &#128465; Excluir Selecionadas
+            </button>
         </div>
     </div>
+
+    <!-- Form oculto para exclusao em massa -->
+    <form id="excluirMassaForm" method="post" action="{% url 'aulas_extras_excluir_varios' %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    </form>
 
     <!-- Resumo -->
     <p style="font-size: 13px; color: #666; margin-bottom: 8px;">
@@ -125,6 +135,14 @@
                                 style="padding: 5px 12px; font-size: 12px; background: #c49000; border-color: #b08000;">
                                 &#9999; Editar
                             </button>
+                            <form method="post" action="{% url 'aula_extra_excluir' aula.pk %}" style="display:inline;" onsubmit="return confirm('Excluir esta aula extra?')">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                <button type="submit" class="btn-primary" title="Excluir"
+                                    style="padding: 5px 12px; font-size: 12px; background: #c0392b; border-color: #a93226;">
+                                    &#128465; Excluir
+                                </button>
+                            </form>
                         </td>
                     </tr>
                     {% empty %}
@@ -222,6 +240,19 @@ function atualizarContador() {
     sAll.indeterminate = n > 0 && n < total;
     sAll.checked = n === total && total > 0;
     if (n === 0) sAll.checked = false;
+}
+
+function executarExclusaoMassa() {
+    var selecionados = document.querySelectorAll('.aula-cb:checked');
+    if (selecionados.length === 0) { alert('Selecione pelo menos uma aula extra para excluir.'); return; }
+    if (!confirm('Deseja EXCLUIR permanentemente ' + selecionados.length + ' aula(s) extra(s) selecionada(s)?')) return;
+    var excluirForm = document.getElementById('excluirMassaForm');
+    selecionados.forEach(function(cb) {
+        var inp = document.createElement('input');
+        inp.type = 'hidden'; inp.name = 'aula_id'; inp.value = cb.value;
+        excluirForm.appendChild(inp);
+    });
+    excluirForm.submit();
 }
 
 function executarReatribuicao() {

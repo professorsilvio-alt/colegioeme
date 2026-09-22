@@ -432,3 +432,43 @@ def _safe_redirect(url):
     if url and url.startswith('/') and not url.startswith('//'):
         return url
     return 'gerenciar_aulas_extras'
+
+
+@login_required
+@require_POST
+def aula_extra_excluir(request, pk):
+    """Exclui uma única AulaExtraProgramada."""
+    prof = get_professor(request.user)
+    if not prof or not prof.pode_editar_tudo:
+        messages.error(request, 'Acesso restrito à administração e direção.')
+        return redirect('dashboard')
+
+    aula = get_object_or_404(AulaExtraProgramada, pk=pk)
+    desc = str(aula)
+    aula.delete()
+    messages.success(request, f'Aula extra excluída: {desc}')
+
+    next_url = request.POST.get('next', '')
+    return redirect(_safe_redirect(next_url))
+
+
+@login_required
+@require_POST
+def aulas_extras_excluir_varios(request):
+    """Exclui em massa as aulas extras selecionadas."""
+    prof = get_professor(request.user)
+    if not prof or not prof.pode_editar_tudo:
+        messages.error(request, 'Acesso restrito à administração e direção.')
+        return redirect('dashboard')
+
+    ids = request.POST.getlist('aula_id')
+    next_url = request.POST.get('next', '')
+
+    if not ids:
+        messages.error(request, 'Nenhuma aula extra selecionada.')
+        return redirect(_safe_redirect(next_url))
+
+    count, _ = AulaExtraProgramada.objects.filter(pk__in=ids).delete()
+    messages.success(request, f'{count} aula(s) extra(s) excluída(s) com sucesso.')
+    return redirect(_safe_redirect(next_url))
+

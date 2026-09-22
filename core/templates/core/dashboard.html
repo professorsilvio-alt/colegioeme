@@ -373,8 +373,10 @@
             <a href="{% url 'admin:core_configuracao_add' %}" class="btn-action btn-purple" style="text-decoration:none;">⚙️ Criar Configuração</a>
             {% endif %}
             <a href="{% url 'upload_aulas_extras' %}" class="btn-action" style="background: #e67e22; text-decoration:none;">📤 Upload Aulas Extras</a>
+            <a href="{% url 'gerenciar_aulas_extras' %}" class="btn-action" style="background: #c0392b; text-decoration:none;">📅 Gerenciar Aulas Extras</a>
         {% elif prof.cargo == 'DIRETOR' %}
             <a href="{% url 'upload_aulas_extras' %}" class="btn-action" style="background: #e67e22; text-decoration:none;">📤 Upload Aulas Extras</a>
+            <a href="{% url 'gerenciar_aulas_extras' %}" class="btn-action" style="background: #c0392b; text-decoration:none;">📅 Gerenciar Aulas Extras</a>
         {% endif %}
     </div>
 
