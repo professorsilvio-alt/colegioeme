@@ -1,0 +1,258 @@
+﻿{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Gerenciar Aulas Extras - SCA - Sistema de Controle Academico{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1 style="color: #003366; margin: 0;">&#128197; Gerenciar Aulas Extras</h1>
+        <div style="display: flex; gap: 10px;">
+            <a href="{% url 'upload_aulas_extras' %}" class="btn-primary" style="text-decoration: none; padding: 8px 16px;">&#128228; Importar Aulas</a>
+            <a href="{% url 'dashboard' %}" class="btn-gray" style="text-decoration: none; padding: 8px 16px;">Voltar ao Dashboard</a>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div style="background: white; padding: 18px 20px; border-radius: 10px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.07);">
+        <form method="get" action="{% url 'gerenciar_aulas_extras' %}" id="filtroForm" style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+            <div style="flex: 1.5; min-width: 200px;">
+                <label for="fil_prof" style="font-size: 12px; font-weight: bold; color: #555; display: block; margin-bottom: 5px;">Professor</label>
+                <select id="fil_prof" name="professor" style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px;">
+                    <option value="">- Todos os professores -</option>
+                    {% for p in professores %}
+                    <option value="{{ p.pk }}" {% if filtro_prof == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="flex: 1; min-width: 140px;">
+                <label for="fil_turma" style="font-size: 12px; font-weight: bold; color: #555; display: block; margin-bottom: 5px;">Turma</label>
+                <select id="fil_turma" name="turma" style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px;">
+                    <option value="">- Todas -</option>
+                    {% for t in turmas %}
+                    <option value="{{ t.pk }}" {% if filtro_turma == t.pk|stringformat:"s" %}selected{% endif %}>{{ t.codigo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="flex: 1; min-width: 140px;">
+                <label for="fil_inicio" style="font-size: 12px; font-weight: bold; color: #555; display: block; margin-bottom: 5px;">Data Inicio</label>
+                <input type="date" id="fil_inicio" name="data_inicio" value="{{ filtro_data_inicio }}"
+                    style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px;">
+            </div>
+            <div style="flex: 1; min-width: 140px;">
+                <label for="fil_fim" style="font-size: 12px; font-weight: bold; color: #555; display: block; margin-bottom: 5px;">Data Fim</label>
+                <input type="date" id="fil_fim" name="data_fim" value="{{ filtro_data_fim }}"
+                    style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px;">
+            </div>
+            <div style="display: flex; gap: 8px; align-items: flex-end;">
+                <button type="submit" class="btn-primary" style="padding: 8px 18px; height: 37px; font-size: 13px;">&#128269; Filtrar</button>
+                {% if filtro_aplicado %}
+                <a href="{% url 'gerenciar_aulas_extras' %}" class="btn-gray" style="padding: 8px 14px; height: 37px; text-decoration: none; display: inline-flex; align-items: center; font-size: 13px;">Limpar</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    {% if filtro_aplicado %}
+
+    <!-- Barra de Acao em Massa -->
+    <div style="background: #eef2ff; border: 1px solid #b3c5f0; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <span id="contadorSelecionados" style="font-size: 13px; font-weight: bold; color: #003366; min-width: 130px;">0 selecionada(s)</span>
+        <div style="display: flex; align-items: center; gap: 8px; flex: 1; flex-wrap: wrap;">
+            <label style="font-size: 13px; font-weight: bold; color: #555; white-space: nowrap;">Reatribuir para:</label>
+            <select id="novoProfSelect" style="padding: 7px 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px; min-width: 220px;">
+                <option value="">- Selecione o novo professor -</option>
+                {% for p in professores %}
+                <option value="{{ p.pk }}">{{ p.nome }}</option>
+                {% endfor %}
+            </select>
+            <button type="button" onclick="executarReatribuicao()" class="btn-primary"
+                style="padding: 7px 18px; font-size: 13px; background: #1a7a4a; border-color: #1a7a4a;">
+                &#128260; Reatribuir Selecionadas
+            </button>
+        </div>
+    </div>
+
+    <!-- Resumo -->
+    <p style="font-size: 13px; color: #666; margin-bottom: 8px;">
+        {% if total == 0 %}
+            Nenhuma aula extra encontrada com os filtros aplicados.
+        {% else %}
+            <strong>{{ total }}</strong> aula(s) extra(s) encontrada(s).
+        {% endif %}
+    </p>
+
+    <!-- Tabela -->
+    <form id="mainForm" method="post" action="{% url 'aulas_extras_reatribuir' %}">
+        {% csrf_token %}
+        <input type="hidden" name="novo_professor" id="novoProfHidden">
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+        <div style="background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); overflow: hidden;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead style="background: #003366; color: white;">
+                    <tr>
+                        <th style="padding: 12px 14px; text-align: center; width: 40px;">
+                            <input type="checkbox" id="selecionarTodos" onclick="toggleAll(this)" title="Selecionar todos" style="cursor:pointer; width:15px; height:15px;">
+                        </th>
+                        <th style="padding: 12px 14px; text-align: left;">Data</th>
+                        <th style="padding: 12px 14px; text-align: left;">Turma</th>
+                        <th style="padding: 12px 14px; text-align: left;">Disciplina</th>
+                        <th style="padding: 12px 14px; text-align: left;">Professor Atual</th>
+                        <th style="padding: 12px 14px; text-align: center;">Acoes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for aula in aulas %}
+                    <tr style="border-bottom: 1px solid #f0f0f0; transition: background 0.15s;" onmouseover="this.style.background='#f8faff'" onmouseout="this.style.background='white'">
+                        <td style="padding: 11px 14px; text-align: center;">
+                            <input type="checkbox" name="aula_id" value="{{ aula.pk }}" class="aula-cb"
+                                onchange="atualizarContador()" style="cursor:pointer; width:15px; height:15px;">
+                        </td>
+                        <td style="padding: 11px 14px; font-size: 13px; white-space: nowrap;">
+                            <strong>{{ aula.data|date:"d/m/Y" }}</strong>
+                        </td>
+                        <td style="padding: 11px 14px;">
+                            <span style="background: #eef2ff; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: #003366;">{{ aula.turma.codigo }}</span>
+                        </td>
+                        <td style="padding: 11px 14px; font-size: 13px;">{{ aula.disciplina.nome }}</td>
+                        <td style="padding: 11px 14px; font-size: 13px; color: #444;">{{ aula.professor.nome }}</td>
+                        <td style="padding: 11px 14px; text-align: center;">
+                            <button type="button"
+                                onclick="abrirModalEditar({{ aula.pk }}, '{{ aula.data|date:'Y-m-d' }}', {{ aula.turma.pk }}, {{ aula.disciplina.pk }}, {{ aula.professor.pk }}, '{{ request.get_full_path }}')"
+                                class="btn-primary" title="Editar esta aula"
+                                style="padding: 5px 12px; font-size: 12px; background: #c49000; border-color: #b08000;">
+                                &#9999; Editar
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="padding: 50px; text-align: center; color: #999;">
+                            <div style="font-size: 32px; margin-bottom: 10px;">&#128173;</div>
+                            <p style="font-size: 15px; margin: 0;">Nenhuma aula extra encontrada com os filtros selecionados.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </form>
+
+    {% else %}
+    <!-- Estado inicial sem filtros -->
+    <div style="background: white; border-radius: 10px; padding: 60px 40px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.07);">
+        <div style="font-size: 48px; margin-bottom: 16px;">&#128269;</div>
+        <p style="color: #003366; font-size: 18px; font-weight: bold; margin: 0 0 10px;">Selecione ao menos um filtro para visualizar as aulas extras</p>
+        <p style="color: #666; font-size: 14px; margin: 0;">Filtre por <strong>Professor</strong>, <strong>Turma</strong> e/ou <strong>Periodo</strong> acima e clique em <strong>Filtrar</strong>.</p>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- Modal de Edicao Individual -->
+<div id="modalEditar" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.55); align-items:center; justify-content:center;">
+    <div style="background:white; padding:32px; border-radius:14px; width:92%; max-width:560px; box-shadow:0 12px 40px rgba(0,0,0,0.25);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; border-bottom:2px solid #f0f0f0; padding-bottom:12px;">
+            <h2 style="margin:0; color:#003366; font-size:18px;">&#9999; Editar Aula Extra</h2>
+            <button onclick="fecharModal()" style="background:none; border:none; font-size:26px; cursor:pointer; color:#888; line-height:1;">&times;</button>
+        </div>
+
+        <form id="editForm" method="post" action="">
+            {% csrf_token %}
+            <input type="hidden" name="next" id="editNext">
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+                <div>
+                    <label style="display:block; font-size:12px; font-weight:bold; color:#555; margin-bottom:5px;">Data</label>
+                    <input type="date" name="data" id="edit_data" required
+                        style="width:100%; padding:9px 10px; border-radius:6px; border:1px solid #ccc; font-size:13px;">
+                </div>
+                <div>
+                    <label style="display:block; font-size:12px; font-weight:bold; color:#555; margin-bottom:5px;">Turma</label>
+                    <select name="turma" id="edit_turma" required
+                        style="width:100%; padding:9px 10px; border-radius:6px; border:1px solid #ccc; font-size:13px;">
+                        {% for t in turmas %}
+                        <option value="{{ t.pk }}">{{ t.codigo }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin-bottom:16px;">
+                <label style="display:block; font-size:12px; font-weight:bold; color:#555; margin-bottom:5px;">Disciplina</label>
+                <select name="disciplina" id="edit_disciplina" required
+                    style="width:100%; padding:9px 10px; border-radius:6px; border:1px solid #ccc; font-size:13px;">
+                    {% for d in disciplinas_todas %}
+                    <option value="{{ d.pk }}">{{ d.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="margin-bottom:24px;">
+                <label style="display:block; font-size:12px; font-weight:bold; color:#555; margin-bottom:5px;">Professor</label>
+                <select name="professor" id="edit_professor" required
+                    style="width:100%; padding:9px 10px; border-radius:6px; border:1px solid #ccc; font-size:13px;">
+                    {% for p in professores %}
+                    <option value="{{ p.pk }}">{{ p.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" onclick="fecharModal()" class="btn-gray" style="padding:10px 20px;">Cancelar</button>
+                <button type="submit" class="btn-primary" style="padding:10px 24px;">&#128190; Salvar Alteracoes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleAll(source) {
+    document.querySelectorAll('.aula-cb').forEach(cb => cb.checked = source.checked);
+    atualizarContador();
+}
+
+function atualizarContador() {
+    const n = document.querySelectorAll('.aula-cb:checked').length;
+    const total = document.querySelectorAll('.aula-cb').length;
+    document.getElementById('contadorSelecionados').textContent = n + ' selecionada(s)';
+    const sAll = document.getElementById('selecionarTodos');
+    sAll.indeterminate = n > 0 && n < total;
+    sAll.checked = n === total && total > 0;
+    if (n === 0) sAll.checked = false;
+}
+
+function executarReatribuicao() {
+    const selecionados = document.querySelectorAll('.aula-cb:checked');
+    const novoProfId = document.getElementById('novoProfSelect').value;
+    if (selecionados.length === 0) { alert('Selecione pelo menos uma aula extra.'); return; }
+    if (!novoProfId) { alert('Selecione o professor de destino para reatribuicao.'); return; }
+    const nomeProf = document.getElementById('novoProfSelect').selectedOptions[0].text;
+    if (!confirm('Deseja reatribuir ' + selecionados.length + ' aula(s) extra(s) para "' + nomeProf + '"?')) return;
+    document.getElementById('novoProfHidden').value = novoProfId;
+    document.getElementById('mainForm').submit();
+}
+
+function abrirModalEditar(pk, data, turmaId, discId, profId, nextUrl) {
+    const form = document.getElementById('editForm');
+    form.action = '/aulas-extras/' + pk + '/editar/';
+    document.getElementById('edit_data').value = data;
+    document.getElementById('edit_turma').value = turmaId;
+    document.getElementById('edit_disciplina').value = discId;
+    document.getElementById('edit_professor').value = profId;
+    document.getElementById('editNext').value = nextUrl;
+    document.getElementById('modalEditar').style.display = 'flex';
+}
+
+function fecharModal() {
+    document.getElementById('modalEditar').style.display = 'none';
+}
+
+window.addEventListener('click', function(e) {
+    const modal = document.getElementById('modalEditar');
+    if (e.target === modal) fecharModal();
+});
+</script>
+{% endblock %}

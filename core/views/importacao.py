@@ -3,8 +3,9 @@ import datetime
 import json
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.db import transaction
+from django.views.decorators.http import require_POST
 
 from ..models import AulaExtraProgramada, Disciplina, Professor, Turma
 from ..utils import get_professor
@@ -255,3 +256,179 @@ def upload_aulas_extras(request):
         return render(request, 'core/upload_aulas_extras.html', context)
 
     return render(request, 'core/upload_aulas_extras.html')
+
+
+@login_required
+def gerenciar_aulas_extras(request):
+    """Lista as aulas extras cadastradas com filtros por professor, turma e período,
+    permitindo reatribuição individual ou em massa para outro professor."""
+    from ..models import AnoLetivo
+    prof = get_professor(request.user)
+    if not prof or not prof.pode_editar_tudo:
+        messages.error(request, 'Acesso restrito à administração e direção.')
+        return redirect('dashboard')
+
+    professores = Professor.objects.filter(escolas=request.escola).order_by('nome')
+    turmas = Turma.objects.filter(
+        ano_letivo=request.ano_letivo, escola=request.escola
+    ).order_by('ordem_exibicao', 'codigo')
+
+    filtro_prof = request.GET.get('professor', '')
+    filtro_turma = request.GET.get('turma', '')
+    filtro_data_inicio = request.GET.get('data_inicio', '')
+    filtro_data_fim = request.GET.get('data_fim', '')
+
+    qs = AulaExtraProgramada.objects.filter(
+        turma__ano_letivo=request.ano_letivo,
+        turma__escola=request.escola
+    ).select_related('turma', 'disciplina', 'professor').order_by('-data', 'turma__codigo', 'professor__nome')
+
+    if filtro_prof:
+        qs = qs.filter(professor_id=filtro_prof)
+    if filtro_turma:
+        qs = qs.filter(turma_id=filtro_turma)
+    if filtro_data_inicio:
+        try:
+            dt = datetime.datetime.strptime(filtro_data_inicio, '%Y-%m-%d').date()
+            qs = qs.filter(data__gte=dt)
+        except ValueError:
+            pass
+    if filtro_data_fim:
+        try:
+            dt = datetime.datetime.strptime(filtro_data_fim, '%Y-%m-%d').date()
+            qs = qs.filter(data__lte=dt)
+        except ValueError:
+            pass
+
+    filtro_aplicado = bool(filtro_prof or filtro_turma or filtro_data_inicio or filtro_data_fim)
+
+    context = {
+        'prof': prof,
+        'aulas': qs if filtro_aplicado else AulaExtraProgramada.objects.none(),
+        'professores': professores,
+        'turmas': turmas,
+        'disciplinas_todas': Disciplina.objects.all().order_by('nome'),
+        'filtro_prof': filtro_prof,
+        'filtro_turma': filtro_turma,
+        'filtro_data_inicio': filtro_data_inicio,
+        'filtro_data_fim': filtro_data_fim,
+        'filtro_aplicado': filtro_aplicado,
+        'total': qs.count() if filtro_aplicado else 0,
+    }
+    return render(request, 'core/gerenciar_aulas_extras.html', context)
+
+
+@login_required
+def aula_extra_editar(request, pk):
+    """Edita os dados de uma única AulaExtraProgramada (troca professor, data, turma ou disciplina)."""
+    from ..models import Disciplina as Disc
+    prof = get_professor(request.user)
+    if not prof or not prof.pode_editar_tudo:
+        messages.error(request, 'Acesso restrito à administração e direção.')
+        return redirect('dashboard')
+
+    aula = get_object_or_404(AulaExtraProgramada, pk=pk)
+
+    if request.method == 'POST':
+        novo_prof_id = request.POST.get('professor')
+        nova_turma_id = request.POST.get('turma')
+        nova_disc_id = request.POST.get('disciplina')
+        nova_data_str = request.POST.get('data')
+
+        try:
+            nova_data = datetime.datetime.strptime(nova_data_str, '%Y-%m-%d').date()
+            novo_prof = Professor.objects.get(pk=novo_prof_id)
+            nova_turma = Turma.objects.get(pk=nova_turma_id)
+            nova_disc = Disc.objects.get(pk=nova_disc_id)
+
+            # Verifica conflito unique_together antes de salvar
+            conflito = AulaExtraProgramada.objects.filter(
+                data=nova_data, turma=nova_turma, disciplina=nova_disc, professor=novo_prof
+            ).exclude(pk=aula.pk).exists()
+
+            if conflito:
+                messages.error(request, 'Já existe uma aula extra com esses dados. Nenhuma alteração foi feita.')
+            else:
+                aula.data = nova_data
+                aula.professor = novo_prof
+                aula.turma = nova_turma
+                aula.disciplina = nova_disc
+                aula.save()
+                messages.success(request, f'Aula extra atualizada com sucesso!')
+
+        except Exception as e:
+            messages.error(request, f'Erro ao salvar: {str(e)}')
+
+        return redirect(request.POST.get('next', 'gerenciar_aulas_extras'))
+
+    return redirect('gerenciar_aulas_extras')
+
+
+@login_required
+@require_POST
+def aulas_extras_reatribuir(request):
+    """Ação em massa: reatribui as aulas extras selecionadas de qualquer professor para um novo professor."""
+    from ..models import Disciplina as Disc
+    prof = get_professor(request.user)
+    if not prof or not prof.pode_editar_tudo:
+        messages.error(request, 'Acesso restrito à administração e direção.')
+        return redirect('dashboard')
+
+    ids = request.POST.getlist('aula_id')
+    novo_prof_id = request.POST.get('novo_professor')
+    next_url = request.POST.get('next', '')
+
+    if not ids:
+        messages.error(request, 'Nenhuma aula extra selecionada.')
+        return redirect(_safe_redirect(next_url))
+
+    if not novo_prof_id:
+        messages.error(request, 'Selecione o professor de destino.')
+        return redirect(_safe_redirect(next_url))
+
+    try:
+        novo_prof = Professor.objects.get(pk=novo_prof_id)
+    except Professor.DoesNotExist:
+        messages.error(request, 'Professor de destino não encontrado.')
+        return redirect(_safe_redirect(next_url))
+
+    sucesso = 0
+    ignorados = 0
+
+    with transaction.atomic():
+        for aula in AulaExtraProgramada.objects.filter(pk__in=ids).select_related('turma', 'disciplina', 'professor'):
+            if aula.professor_id == novo_prof.pk:
+                # Já é o professor alvo — nada a fazer
+                ignorados += 1
+                continue
+
+            conflito = AulaExtraProgramada.objects.filter(
+                data=aula.data,
+                turma=aula.turma,
+                disciplina=aula.disciplina,
+                professor=novo_prof
+            ).exists()
+
+            if conflito:
+                ignorados += 1
+            else:
+                aula.professor = novo_prof
+                aula.save()
+                sucesso += 1
+
+    if sucesso:
+        msg = f'{sucesso} aula(s) extra(s) reatribuída(s) para {novo_prof.nome} com sucesso.'
+        if ignorados:
+            msg += f' {ignorados} não foram alteradas (já vinculadas ao professor ou conflito de duplicidade).'
+        messages.success(request, msg)
+    else:
+        messages.warning(request, f'Nenhuma aula extra foi reatribuída. {ignorados} entradas já pertenciam ao professor ou apresentaram conflito de duplicidade.')
+
+    return redirect(_safe_redirect(next_url))
+
+
+def _safe_redirect(url):
+    """Retorna a URL se for relativa e segura, caso contrário retorna a view padrão."""
+    if url and url.startswith('/') and not url.startswith('//'):
+        return url
+    return 'gerenciar_aulas_extras'
