@@ -475,15 +475,17 @@ def relatorio_pendencias(request):
     prof_ids_grade = set(GradeHoraria.objects.filter(turma__ano_letivo=request.ano_letivo, turma__escola=request.escola).values_list('professor_id', flat=True))
     prof_ids_extra = set(AulaExtraProgramada.objects.filter(turma__ano_letivo=request.ano_letivo, turma__escola=request.escola).values_list('professor_id', flat=True))
     prof_ids_ativos = prof_ids_grade | prof_ids_extra
-    professores = ordenar_por_nome(Professor.objects.filter(pk__in=prof_ids_ativos))
 
     # Filtering
     nome_filtro = request.GET.get('nome', '')
     data_ini = request.GET.get('data_ini', '')
     data_fim = request.GET.get('data_fim', '')
 
+    # Apply queryset filters BEFORE ordenar_por_nome, which converts the queryset to a list
+    professores_qs = Professor.objects.filter(pk__in=prof_ids_ativos)
     if nome_filtro:
-        professores = professores.filter(nome__icontains=nome_filtro)
+        professores_qs = professores_qs.filter(nome__icontains=nome_filtro)
+    professores = ordenar_por_nome(professores_qs)
 
     # Pre-fetch feriados once to avoid N+1 queries inside the loop
     feriados_set = get_feriados(ano_letivo=request.ano_letivo, escola=request.escola)
