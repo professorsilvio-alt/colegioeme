@@ -213,7 +213,7 @@ def api_datas_validas(request, codigo, prof_id):
     # Weekday numbers in GradeHoraria: '1'=Segunda=Monday(0), ..., '5'=Sexta=Friday(4)
     DIA_TO_WEEKDAY = {'1': 0, '2': 1, '3': 2, '4': 3, '5': 4}
 
-    # Find which days of week this professor teaches this turma
+    # Find which days of week this professor teaches this turma in GradeHoraria
     query = GradeHoraria.objects.filter(
         turma__codigo=codigo,
         turma__ano_letivo=request.ano_letivo,
@@ -224,11 +224,6 @@ def api_datas_validas(request, codigo, prof_id):
         query = query.filter(disciplina__pk=disc_id)
         
     dias = query.values_list('dia_semana', flat=True).distinct()
-
-    if not dias:
-        return JsonResponse([], safe=False)
-
-    weekdays = {DIA_TO_WEEKDAY[d] for d in dias if d in DIA_TO_WEEKDAY}
 
     # School year boundaries from configuration or defaults
     config = Configuracao.objects.filter(ano_letivo=request.ano_letivo, escola=request.escola).first()
@@ -243,11 +238,29 @@ def api_datas_validas(request, codigo, prof_id):
     # Generate all valid school dates (excluding holidays)
     feriados = get_feriados(ano_letivo=request.ano_letivo, escola=request.escola)
     datas_validas = []
-    cur = inicio
-    while cur <= fim:
-        if cur.weekday() in weekdays and cur not in feriados:
-            datas_validas.append(cur)
-        cur += datetime.timedelta(days=1)
+    if dias:
+        weekdays = {DIA_TO_WEEKDAY[d] for d in dias if d in DIA_TO_WEEKDAY}
+        cur = inicio
+        while cur <= fim:
+            if cur.weekday() in weekdays and cur not in feriados:
+                datas_validas.append(cur)
+            cur += datetime.timedelta(days=1)
+
+    # Aulas extras programadas para este professor, turma e disciplina
+    query_ae = AulaExtraProgramada.objects.filter(
+        turma__codigo=codigo,
+        turma__ano_letivo=request.ano_letivo,
+        turma__escola=request.escola,
+        professor__pk=prof_id
+    )
+    if disc_id:
+        query_ae = query_ae.filter(disciplina__pk=disc_id)
+        
+    datas_extras = query_ae.values_list('data', flat=True)
+    datas_validas = sorted(list(set(datas_validas) | set(datas_extras)))
+
+    if not datas_validas:
+        return JsonResponse([], safe=False)
 
     # Find which dates already have a content entry for this professor+turma
     query_lancados = ConteudoProgramatico.objects.filter(
@@ -296,6 +309,19 @@ def api_professor_grades(request, prof_id):
     mapping = defaultdict(list)
     for g in grades:
         mapping[g['turma__codigo']].append(g['dia_semana'])
+
+    # Inclui dias das aulas extras programadas para validação de turmas companheiras
+    ae_query = AulaExtraProgramada.objects.filter(
+        professor_id=prof_id,
+        turma__ano_letivo=request.ano_letivo,
+        turma__escola=request.escola
+    )
+    if disc_id:
+        ae_query = ae_query.filter(disciplina_id=disc_id)
+    for ae in ae_query.values('turma__codigo', 'data').distinct():
+        dia_semana_str = str(ae['data'].weekday() + 1)
+        if dia_semana_str not in mapping[ae['turma__codigo']]:
+            mapping[ae['turma__codigo']].append(dia_semana_str)
     
     return JsonResponse(dict(mapping), safe=False)
     
