@@ -598,8 +598,8 @@ def conteudo_desconfirmar(request, pk):
     """
     prof = get_professor(request.user)
 
-    if not prof or not prof.pode_editar_tudo:
-        messages.error(request, 'Apenas Admin ou Diretor podem desconfirmar lançamentos.')
+    if not prof or prof.cargo not in ['SECRETARIA', 'ADMIN', 'DIRETOR']:
+        messages.error(request, 'Apenas Secretaria, Admin ou Diretor podem desconfirmar lançamentos.')
         return redirect('lancamentos_coletivos')
 
     cont = get_object_or_404(ConteudoProgramatico, pk=pk)
@@ -619,8 +619,8 @@ def conteudo_desconfirmar_varios(request):
     """
     prof = get_professor(request.user)
 
-    if not prof or not prof.pode_editar_tudo:
-        messages.error(request, 'Apenas Admin ou Diretor podem desconfirmar lançamentos.')
+    if not prof or prof.cargo not in ['SECRETARIA', 'ADMIN', 'DIRETOR']:
+        messages.error(request, 'Apenas Secretaria, Admin ou Diretor podem desconfirmar lançamentos.')
         return redirect('lancamentos_coletivos')
 
     ids_raw = request.POST.get('ids_desconfirmacao', '')

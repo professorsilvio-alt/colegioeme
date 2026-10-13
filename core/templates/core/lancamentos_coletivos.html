@@ -131,7 +131,7 @@
     {% endif %}
 
     {# ─── MODO DESCONFIRMAÇÃO (itens confirmados — somente admin/diretor) ─── #}
-    {% if prof.pode_editar_tudo and filtro_confirmado != "0" %}
+    {% if is_secretaria and filtro_confirmado != "0" %}
     <div class="selall-bar" id="selallBarDesconf" style="background:#fff5f5; border-color:#f5c6cb;">
         <label>
             <input type="checkbox" id="checkAllConfirmados" onchange="toggleTudo('confirmado', this)">
@@ -160,7 +160,7 @@
             <td style="text-align:center;">
                 {% if not g.confirmado and is_secretaria and filtro_confirmado != "1" %}
                 <input type="checkbox" class="check-pendente" data-ids="{{ g.ids_str }}" onchange="atualizarContador('pendente')">
-                {% elif g.confirmado and prof.pode_editar_tudo and filtro_confirmado != "0" %}
+                {% elif g.confirmado and is_secretaria and filtro_confirmado != "0" %}
                 <input type="checkbox" class="check-confirmado" data-ids="{{ g.ids_str }}" onchange="atualizarContador('confirmado')">
                 {% endif %}
             </td>
@@ -203,7 +203,7 @@
 {% endif %}
 
 {# ─── Barra de ação — DESCONFIRMAR ─── #}
-{% if prof.pode_editar_tudo and filtro_confirmado != "0" %}
+{% if is_secretaria and filtro_confirmado != "0" %}
     <div class="action-bar deconfirm-mode" id="barDesconfirmar">
         <span class="count-badge" id="badgeConfirmado">0 selecionado(s)</span>
         <button type="submit" class="btn-desconfirmar" id="btnDesconfirmar" disabled
