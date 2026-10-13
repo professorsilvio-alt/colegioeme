@@ -163,6 +163,10 @@ Ignore células com seta "←" (elas indicam que é a mesma aula da turma ao lad
                     break  # Sucesso — sai do loop
                 except Exception as e:
                     last_error = e
+                    if '503' in str(e) or 'UNAVAILABLE' in str(e):
+                        import time
+                        time.sleep(2)  # sobrecarga temporária: aguarda e tenta o próximo modelo
+                        continue
                     if '429' in str(e) or '404' in str(e) or '400' in str(e) or 'INVALID_ARGUMENT' in str(e) or 'not found' in str(e).lower() or 'exhausted' in str(e).lower():
                         continue  # Tenta o próximo modelo
                     else:
