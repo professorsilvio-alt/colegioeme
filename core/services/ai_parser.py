@@ -82,7 +82,7 @@ Ignore células com seta "←" (elas indicam que é a mesma aula da turma ao lad
                 mime_type = 'application/pdf'
 
             # Tenta os modelos em ordem de prioridade (do mais leve ao mais pesado)
-            models_to_try = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-2.5-flash', 'gemini-2.5-flash-lite']
+            models_to_try = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash-lite', 'gemini-3.8-flash']
             # Descobre dinamicamente modelos disponíveis na conta (evita quebrar quando modelos são aposentados)
             try:
                 discovered = []
@@ -112,7 +112,7 @@ Ignore células com seta "←" (elas indicam que é a mesma aula da turma ao lad
                     break  # Sucesso — sai do loop
                 except Exception as e:
                     last_error = e
-                    if '429' in str(e) or '404' in str(e) or 'not found' in str(e).lower() or 'exhausted' in str(e).lower():
+                    if '429' in str(e) or '404' in str(e) or '400' in str(e) or 'INVALID_ARGUMENT' in str(e) or 'not found' in str(e).lower() or 'exhausted' in str(e).lower():
                         continue  # Tenta o próximo modelo
                     else:
                         raise e  # Erro diferente — re-levanta
