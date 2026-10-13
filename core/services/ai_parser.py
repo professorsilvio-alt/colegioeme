@@ -71,15 +71,36 @@ Ignore células com seta "←" (elas indicam que é a mesma aula da turma ao lad
             with open(temp_path, 'rb') as f:
                 file_bytes = f.read()
 
-            # Detectar mime_type
-            if ext in ['.pdf']:
+            if not file_bytes:
+                raise Exception("O arquivo enviado está vazio.")
+
+            # Detectar mime_type pelo conteúdo real (assinatura), com a extensão como apoio
+            file_part = None
+            if file_bytes.startswith(b'%PDF'):
                 mime_type = 'application/pdf'
-            elif ext in ['.jpg', '.jpeg']:
+            elif file_bytes.startswith(b'\xff\xd8'):
                 mime_type = 'image/jpeg'
-            elif ext == '.png':
+            elif file_bytes.startswith(b'\x89PNG'):
                 mime_type = 'image/png'
+            elif ext in ['.xlsx', '.xlsm']:
+                import openpyxl
+                wb = openpyxl.load_workbook(temp_path, data_only=True)
+                linhas = []
+                for ws in wb.worksheets:
+                    linhas.append(f"## Planilha: {ws.title}")
+                    for row in ws.iter_rows(values_only=True):
+                        if any(c is not None for c in row):
+                            linhas.append(' | '.join('' if c is None else str(c) for c in row))
+                file_part = '\n'.join(linhas)
+            elif ext == '.csv':
+                file_part = file_bytes.decode('utf-8', errors='replace')
             else:
-                mime_type = 'application/pdf'
+                raise Exception(
+                    "Formato de arquivo não suportado ou arquivo corrompido. "
+                    "Envie um PDF, JPG, PNG, XLSX ou CSV válido."
+                )
+            if file_part is None:
+                file_part = types.Part.from_bytes(data=file_bytes, mime_type=mime_type)
 
             # Tenta os modelos em ordem de prioridade (do mais leve ao mais pesado)
             models_to_try = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash-lite', 'gemini-3.8-flash']
@@ -105,7 +126,7 @@ Ignore células com seta "←" (elas indicam que é a mesma aula da turma ao lad
                     response = client.models.generate_content(
                         model=model_name,
                         contents=[
-                            types.Part.from_bytes(data=file_bytes, mime_type=mime_type),
+                            file_part,
                             prompt
                         ]
                     )
