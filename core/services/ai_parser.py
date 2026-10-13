@@ -92,6 +92,36 @@ Ignore células com seta "←" (elas indicam que é a mesma aula da turma ao lad
                         if any(c is not None for c in row):
                             linhas.append(' | '.join('' if c is None else str(c) for c in row))
                 file_part = '\n'.join(linhas)
+            elif ext == '.docx' or file_bytes.startswith(b'PK'):
+                import zipfile
+                import xml.etree.ElementTree as ET
+                W = '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}'
+
+                def _texto(el):
+                    return ''.join(t.text or '' for t in el.iter(W + 't')).strip()
+
+                try:
+                    with zipfile.ZipFile(temp_path) as z:
+                        root = ET.fromstring(z.read('word/document.xml'))
+                except Exception:
+                    raise Exception("Não foi possível abrir o arquivo DOCX (corrompido ou formato inválido).")
+                linhas = []
+                body = root.find(W + 'body')
+                for el in (body if body is not None else []):
+                    if el.tag == W + 'p':
+                        t = _texto(el)
+                        if t:
+                            linhas.append(t)
+                    elif el.tag == W + 'tbl':
+                        linhas.append('[TABELA]')
+                        for tr in el.iter(W + 'tr'):
+                            celulas = [_texto(tc) for tc in tr.findall(W + 'tc')]
+                            if any(celulas):
+                                linhas.append(' | '.join(celulas))
+                        linhas.append('[/TABELA]')
+                file_part = '\n'.join(linhas)
+                if not file_part.strip():
+                    raise Exception("O arquivo DOCX não contém texto legível (pode ter apenas imagens).")
             elif ext == '.csv':
                 file_part = file_bytes.decode('utf-8', errors='replace')
             else:
