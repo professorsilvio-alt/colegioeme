@@ -82,7 +82,22 @@ Ignore células com seta "←" (elas indicam que é a mesma aula da turma ao lad
                 mime_type = 'application/pdf'
 
             # Tenta os modelos em ordem de prioridade (do mais leve ao mais pesado)
-            models_to_try = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash-lite', 'gemini-2.0-flash']
+            models_to_try = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-2.5-flash', 'gemini-2.5-flash-lite']
+            # Descobre dinamicamente modelos disponíveis na conta (evita quebrar quando modelos são aposentados)
+            try:
+                discovered = []
+                for m in client.models.list():
+                    name = (getattr(m, 'name', '') or '').replace('models/', '')
+                    actions = getattr(m, 'supported_actions', None) or []
+                    if 'flash' in name and name.startswith('gemini-') and 'generateContent' in actions \
+                            and not any(x in name for x in ('image', 'tts', 'live', 'audio', 'thinking', 'exp')):
+                        discovered.append(name)
+                discovered.sort(reverse=True)
+                for name in discovered:
+                    if name not in models_to_try:
+                        models_to_try.append(name)
+            except Exception:
+                pass
             last_error = None
             response = None
             for model_name in models_to_try:
